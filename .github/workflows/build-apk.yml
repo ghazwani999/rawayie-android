@@ -68,7 +68,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="build-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" app/build/outputs/apk/release/*.apk \
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" apksigner.jar
+          gh release create "$TAG" app/build/outputs/apk/release/*.apk apksigner.jar \
             --title "روائع الأذان - بناء ${GITHUB_RUN_NUMBER}" \
             --notes "ملف التثبيت لأجهزة أندرويد (5 فما فوق) وأجهزة التلفاز. نزّل ملف .apk من الأسفل." \
             --latest
