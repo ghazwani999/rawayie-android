@@ -1,4 +1,5 @@
 # بناء ملف APK تلقائياً عند كل رفع للمشروع، أو يدوياً من تبويب Actions ← Build APK ← Run workflow
+# الملف الناتج يُنشر في صفحة Releases للمستودع، ويُرفق أيضاً في Artifacts
 name: Build APK
 
 on:
@@ -6,18 +7,34 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      # أدوات أندرويد: موجودة مسبقاً في Ubuntu 24.04، وإن لم توجد تُنزَّل
+      - name: Android SDK
+        run: |
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          if [ -z "$SDK" ] || [ ! -d "$SDK" ]; then
+            SDK="$HOME/android-sdk"; mkdir -p "$SDK/cmdline-tools"
+            curl -sSL -o /tmp/ct.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q /tmp/ct.zip -d "$SDK/cmdline-tools" && mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"; echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          SM="$SDK/cmdline-tools/latest/bin/sdkmanager"; [ -x "$SM" ] || SM="$(ls -d $SDK/cmdline-tools/*/bin/sdkmanager | head -1)"
+          yes | "$SM" --licenses > /dev/null || true
+          "$SM" "platforms;android-35" "build-tools;35.0.0" "platform-tools" > /dev/null
+          echo "sdk.dir=$SDK" > local.properties
 
       # التوقيع بمفتاحك الخاص (اختياري): أضف الأسرار في Settings ← Secrets and variables ← Actions
       - name: Prepare signing key
@@ -28,7 +45,7 @@ jobs:
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/rawayie.jks"
             echo "RAWAYIE_KEYSTORE=$RUNNER_TEMP/rawayie.jks" >> "$GITHUB_ENV"
           else
-            echo "لا يوجد مفتاح خاص: سيُوقَّع الملف بمفتاح التجربة"
+            echo "No signing key secret: signing with a temporary debug key"
           fi
 
       - name: Build
@@ -38,9 +55,20 @@ jobs:
           RAWAYIE_KEY_PASS: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleRelease
+          ./gradlew --no-daemon --stacktrace assembleRelease
+          ls -la app/build/outputs/apk/release/
 
       - uses: actions/upload-artifact@v4
         with:
           name: rawayie-azan-apk
           path: app/build/outputs/apk/release/*.apk
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" app/build/outputs/apk/release/*.apk \
+            --title "روائع الأذان - بناء ${GITHUB_RUN_NUMBER}" \
+            --notes "ملف التثبيت لأجهزة أندرويد (5 فما فوق) وأجهزة التلفاز. نزّل ملف .apk من الأسفل." \
+            --latest
