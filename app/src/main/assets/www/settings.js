@@ -123,7 +123,7 @@ R.mosque = function(){
       tog("إظهار الشعار", "look.logo", "شعار روائع الأذان في وسط الشاشة") +
       '<div class="fld"><span><b>صورة الشعار</b><small>' + (S.look.logoId ? "شعار مخصص من الجهاز" : "شعار روائع الأذان") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الشعار<input type="file" accept="image/*" data-up="logo" hidden></label>' + (S.look.logoId ? btn("الشعار الافتراضي", "logoReset", "sm ghost") : "") + '</span></div>' +
       (S.look.logo !== false && S.look.logo !== "none" ? numIn("شفافية الشعار", "look.logoOp", 0.05, 1, 0.05, "", "1 = ظاهر بالكامل") + numIn("حجم دائرة الشعار", "look.embSize", 0.4, 1.2, 0.05, "", "أصغر = مساحة أكبر للمتبقي للصلاة والتاريخ الميلادي بجانبه. الافتراضي 0.7") +
-        sel("لون الشعار", "look.logoColor", [["auto","يتكيف مع لون الخلفية (يستخدم شكل الشعار فقط)"],["gold","ألوان الصورة الأصلية"],["custom","لون مخصص"]]) +
+        sel("لون الشعار", "look.logoColor", [["auto","يتكيف مع لون الخلفية (يستخدم شكل الشعار فقط)"],["gold","ألوان الصورة الأصلية"],["silver","فضي شفاف"],["custom","لون مخصص"]]) +
         (S.look.logoColor === "custom" ? colorIn("اختر لون الشعار", "look.logoCustom") : "") : "")) +
     card("موقع المسجد",
       '<label class="fld"><span><b>المدينة</b><small>مواقيت أم القرى الرسمية لـ 118 مدينة سعودية</small></span><input type="search" id="csearch" placeholder="ابحث عن المدينة" aria-label="ابحث عن المدينة"></label>' +

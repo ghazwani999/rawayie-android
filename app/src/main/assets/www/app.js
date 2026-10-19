@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, flag:false, rowColor:"#000000", rowOpacity:0.3, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"auto", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, flag:false, rowColor:"#000000", rowOpacity:0.3, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -75,6 +75,9 @@ if (S.lookV < 10) { // استُبدلت خلفيات الصور بنسخة أع�
   if (/^l\d\d\.jpg$/.test(S.look.bgL)) S.look.bgL = DEF.look.bgL;
   S.look.bgHidden = (S.look.bgHidden || []).filter(function(f){ return !/^[pl]\d\d\.jpg$/.test(f); });
   S.lookV = 10; }
+if (S.lookV < 11) { // الشعار الفضي الشفاف صار الشكل الافتراضي (يبقى الذهبي أو اللون المخصص إن اختاره المستخدم)
+  if (!S.look.logoColor || S.look.logoColor === "auto") S.look.logoColor = "silver";
+  S.lookV = 11; }
 function save(){ if (window.RAWAYIE_PREVIEW) return; try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ===== التخزين المحلي للصور والأصوات ===== */
@@ -385,7 +388,10 @@ function applyLook(){
   st.setProperty("--emb", L.embSize == null ? .7 : +L.embSize);
   var lc = L.logoColor === "custom" ? (L.logoCustom || "#EBD1A0") : (light ? (auto ? acc : shade(L.accent)) : (auto ? accRaw : L.accent));
   if (lc.indexOf("rgb") === 0) { var m3 = lc.match(/\d+/g); lc = "#" + m3.slice(0, 3).map(function(v){ v = (+v).toString(16); return v.length < 2 ? "0" + v : v; }).join(""); }
-  st.setProperty("--logog", "linear-gradient(165deg," + mixHex(lc, "#ffffff", light ? .25 : .45) + " 0%," + lc + " 45%," + mixHex(lc, "#000000", light ? .25 : .35) + " 100%)");
+  st.setProperty("--logog", L.logoColor === "silver"
+    // فضي شفاف بخطوط أفقية ناعمة (مثل الشعارات الزجاجية)
+    ? "repeating-linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px),linear-gradient(180deg,#f2f2f2 0%,#d2d2d2 50%,#b9b9b9 100%)"
+    : "linear-gradient(165deg," + mixHex(lc, "#ffffff", light ? .25 : .45) + " 0%," + lc + " 45%," + mixHex(lc, "#000000", light ? .25 : .35) + " 100%)");
   if (S.look.logoId && customLogo) st.setProperty("--logom", "url(" + customLogo + ")"); else if (window.LOGO_DATA) st.setProperty("--logom", "url(" + window.LOGO_DATA + ")");
   stage.classList.toggle("lightbg", !!light);
   var tl = window.BG_TOP && !L.customBg ? window.BG_TOP[b.file] : null, topLight = tl == null ? light : tl > 150;
@@ -421,7 +427,7 @@ function logoHTML(cls){
   var c = cls || "logo";
   if (S.look.logoId && !customLogo) return "";
   if ((S.look.logoColor || "auto") === "gold") return '<img class="' + c + '" src="' + (S.look.logoId ? customLogo : "img/logo.png") + '" alt="">';
-  return '<div class="' + c + ' lgw' + (S.look.logoId ? " sq" : "") + '"><div class="lgm"></div></div>';
+  return '<div class="' + c + ' lgw' + (S.look.logoId ? " sq" : "") + (S.look.logoColor === "silver" ? " silver" : "") + '"><div class="lgm"></div></div>';
 }
 function build(){
   layout = orient();
