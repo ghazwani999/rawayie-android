@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -118,6 +120,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        applyDisplayMode();
         if (saved != null) web.restoreState(saved);
         else web.loadUrl(START);
         hideBars();
@@ -248,6 +251,53 @@ public class MainActivity extends Activity {
         }
     }
 
+    /* ===== دقة مخرج HDMI =====
+       يطلب من الجهاز أعلى دقة يدعمها مخرج الشاشة (مثل 4K) بنفس معدل التحديث الحالي.
+       ملاحظة: كثير من أجهزة التلفاز ترسم واجهة التطبيقات بدقة 1080p ثم تكبّرها إلى 4K، وهذا من نظام الجهاز */
+    private boolean prefer4k() { return getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("prefer4k", true); }
+
+    private void applyDisplayMode() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+        try {
+            Display d = getWindowManager().getDefaultDisplay();
+            Display.Mode cur = d.getMode(), best = cur;
+            if (prefer4k()) {
+                for (Display.Mode m : d.getSupportedModes()) {
+                    long px = (long) m.getPhysicalWidth() * m.getPhysicalHeight(), bp = (long) best.getPhysicalWidth() * best.getPhysicalHeight();
+                    boolean sameRate = Math.abs(m.getRefreshRate() - cur.getRefreshRate()) < 1.5f;
+                    if (sameRate && px > bp) best = m;
+                }
+            }
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            int want = prefer4k() ? best.getModeId() : 0;
+            if (lp.preferredDisplayModeId != want) { lp.preferredDisplayModeId = want; getWindow().setAttributes(lp); }
+        } catch (Exception ignored) { }
+    }
+
+    @SuppressWarnings("deprecation")
+    private String displayInfo() {
+        StringBuilder j = new StringBuilder("{");
+        try {
+            DisplayMetrics dm = new DisplayMetrics();
+            Display d = getWindowManager().getDefaultDisplay();
+            d.getRealMetrics(dm);
+            j.append("\"uiW\":").append(dm.widthPixels).append(",\"uiH\":").append(dm.heightPixels)
+             .append(",\"dpi\":").append(dm.densityDpi).append(",\"density\":").append(dm.density);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Display.Mode m = d.getMode();
+                j.append(",\"outW\":").append(m.getPhysicalWidth()).append(",\"outH\":").append(m.getPhysicalHeight())
+                 .append(",\"hz\":").append(Math.round(m.getRefreshRate()));
+                int mw = 0, mh = 0;
+                for (Display.Mode x : d.getSupportedModes()) if ((long) x.getPhysicalWidth() * x.getPhysicalHeight() > (long) mw * mh) { mw = x.getPhysicalWidth(); mh = x.getPhysicalHeight(); }
+                j.append(",\"maxW\":").append(mw).append(",\"maxH\":").append(mh);
+            }
+            j.append(",\"prefer4k\":").append(prefer4k());
+            j.append(",\"model\":\"").append((Build.MANUFACTURER + " " + Build.MODEL).replace("\"", "")).append("\"");
+            j.append(",\"android\":\"").append(Build.VERSION.RELEASE).append("\"");
+        } catch (Exception e) { j.append("\"err\":\"").append(String.valueOf(e.getMessage()).replace("\"", "")).append("\""); }
+        return j.append("}").toString();
+    }
+
     /* ===== التشغيل التلقائي بعد إعادة تشغيل الجهاز =====
        من أندرويد 10 يحتاج التطبيق إذن «الظهور فوق التطبيقات الأخرى» حتى يفتح نفسه بعد التشغيل */
     static boolean canAutostart(Activity a) {
@@ -287,5 +337,10 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void requestAutostart() { runOnUiThread(MainActivity.this::openOverlaySettings); }
         @JavascriptInterface public void reload() { runOnUiThread(() -> { if (web != null) web.reload(); }); }
         @JavascriptInterface public void exit() { runOnUiThread(MainActivity.this::finish); }
+        @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
+        @JavascriptInterface public void setPrefer4k(boolean on) {
+            getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();
+            runOnUiThread(MainActivity.this::applyDisplayMode);
+        }
     }
 }

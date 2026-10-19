@@ -106,6 +106,7 @@ R.rotate = function(){
   card("اتجاه التصميم",
     '<div class="rots o3">' + O3.map(function(x){ return '<button type="button" class="rot' + (x[0] === o ? " on" : "") + '" data-act="setOri" data-x="' + x[0] + '" aria-pressed="' + (x[0] === o) + '"><span class="rscr ' + x[0] + '"><i></i></span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join("") + '</div>',
     "الوضع الرأسي يعرض الصلوات في جدول طولي، والأفقي يعرضها بجانب الساعة.") +
+  hdmiCard() +
   card("أزرار التحكم على الشاشة",
     sel("شريط الاختصارات أعلى الشاشة", "look.scMode", [["move","يظهر عند تحريك الفأرة أو اللمس"],["always","ظاهر دائماً"],["hidden","مخفي"]], "أزرار: الإعدادات، ملء الشاشة، تدوير الشاشة، تفعيل الصوت") +
     tog("إظهار زر القائمة ☰ أعلى الشاشة", "look.menuBtn", "عند إخفائه تُفتح الإعدادات بالضغط المطوّل على الشاشة، أو بزر S أو Enter"));
@@ -242,6 +243,23 @@ R.hide = function(){
     '<div class="fld"><span><b>الحالة</b><small>' + esc(awakeText()) + '</small></span></div>' +
     '<p class="note">يمنع التطبيق المتصفح والجهاز من إطفاء الشاشة أو الدخول في السكون طوال الوقت. في بعض أجهزة التلفاز أوقف أيضاً من إعداداتها: «توفير الطاقة» و«الإيقاف التلقائي» و«مؤقت النوم»، وفي الكمبيوتر: إعدادات الطاقة ← عدم إيقاف الشاشة أبداً.</p>');
 };
+/* دقة العرض على التلفاز (تطبيق أندرويد فقط) */
+function hdmiCard(){
+  var AN = window.RawayieAndroid; if (!AN || !AN.displayInfo) return "";
+  var d = {}; try { d = JSON.parse(AN.displayInfo()); } catch(e){}
+  var ui = d.uiW ? Math.max(d.uiW, d.uiH) + "×" + Math.min(d.uiW, d.uiH) : "؟", out = d.outW ? Math.max(d.outW, d.outH) + "×" + Math.min(d.outW, d.outH) + (d.hz ? " @" + d.hz + "Hz" : "") : "غير معروف";
+  var mx = d.maxW ? Math.max(d.maxW, d.maxH) + "×" + Math.min(d.maxW, d.maxH) : "";
+  var uiLow = d.uiW && Math.max(d.uiW, d.uiH) < 1900, up = d.outW && d.uiW && Math.max(d.outW, d.outH) > Math.max(d.uiW, d.uiH) + 10;
+  return card("دقة العرض على التلفاز (HDMI)",
+    '<div class="fld"><span><b>مخرج HDMI الآن</b><small><span dir="ltr">' + esc(out) + '</span>' + (mx && mx !== out.split(" ")[0] ? ' · أعلى دقة يدعمها الجهاز: <span dir="ltr">' + esc(mx) + '</span>' : "") + '</small></span></div>' +
+    '<div class="fld"><span><b>دقة رسم الشاشة في الجهاز</b><small><span dir="ltr">' + esc(ui) + '</span>' + (uiLow ? " ⚠ منخفضة" : "") + (up ? ' ثم يكبّرها الجهاز إلى <span dir="ltr">' + esc(out.split(" ")[0]) + '</span>' : "") + '</small></span></div>' +
+    '<label class="fld tog" for="hd4k"><span><b>تشغيل مخرج HDMI بأعلى دقة يدعمها الجهاز</b><small>مثل 4K إن كان الجهاز والتلفاز يدعمانها</small></span><input type="checkbox" id="hd4k"' + (d.prefer4k !== false ? " checked" : "") + '><i></i></label>' +
+    '<p class="note">' + esc(uiLow ? "الجهاز يرسم الشاشة بدقة أقل من 1080، فتظهر النصوص أقل حدة. من إعدادات الجهاز ← العرض (Display) ← الدقة (Resolution) اختر 1080p أو 4K، وإن وُجد خيار «دقة واجهة المستخدم» أو «UI resolution» فاجعله 1080p أو أعلى." :
+      "أغلب أجهزة أندرويد للتلفاز ترسم واجهة التطبيقات بدقة 1080p ثم تكبّرها إلى 4K. هذا من نظام الجهاز وليس من التطبيق، وتبقى الصورة واضحة إذا ضُبط ما يلي:") + '</p>' +
+    '<ul class="tips"><li>في التلفاز: اجعل «حجم الصورة» على «Just Scan» أو «ملاءمة الشاشة» أو «1:1» وأوقف «Overscan»، لأن التكبير يقلل الحدة.</li>' +
+    '<li>في جهاز التشغيل: إعدادات ← العرض ← «موضع الشاشة» أو «Screen zoom» اجعله 100%.</li>' +
+    '<li>في التلفاز: أوقف «تحسين الحدة» الزائد واختر وضع صورة «قياسي» أو «Standard».</li></ul>');
+}
 /* اختيار خلفية شاشة الإخفاء أو السكون: النوع ثم اللون أو الصورة ثم درجة الإضاءة */
 function sbTab(){ var t = R.hide.sb || (S.sleepIsha || !S.sleepSunrise ? "isha" : "sunrise"); if (t === "isha" && !S.sleepIsha && S.sleepSunrise) t = "sunrise"; if (t === "sunrise" && !S.sleepSunrise) t = "isha"; return t; }
 function bgSpecUI(P, sleep){
@@ -987,6 +1005,7 @@ function onChange(e){
   if (el.id === "tfile") { importFile(el.files[0]); el.value = ""; return; }
   if (el.id === "tmode" || el.id === "tarea") return;
   if (el.id === "ntype") { $("#ndays").hidden = el.value !== "week"; $("#ndatew").hidden = el.value !== "date"; return; }
+  if (el.id === "hd4k") { try { window.RawayieAndroid.setPrefer4k(el.checked); } catch(e){} setTimeout(render, 2500); return; }
   if (el.dataset.up) { upload(el); return; }
   if (!el.dataset.p) return;
   var v = el.dataset.t === "bool" ? el.checked : el.dataset.t === "num" ? parseFloat(el.value) : el.value;
