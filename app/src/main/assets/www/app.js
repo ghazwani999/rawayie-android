@@ -426,6 +426,7 @@ function logoHTML(cls){
   if (S.look.logo === false || S.look.logo === "none") return "";
   var c = cls || "logo";
   if (S.look.logoId && !customLogo) return "";
+  if (S.look.logoColor === "silver" && !S.look.logoId) return '<img class="' + c + '" src="img/logo-silver.png" alt="">'; // الشعار الفضي المعتمد
   if ((S.look.logoColor || "auto") === "gold") return '<img class="' + c + '" src="' + (S.look.logoId ? customLogo : "img/logo.png") + '" alt="">';
   return '<div class="' + c + ' lgw' + (S.look.logoId ? " sq" : "") + (S.look.logoColor === "silver" ? " silver" : "") + '"><div class="lgm"></div></div>';
 }
