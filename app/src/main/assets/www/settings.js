@@ -622,7 +622,9 @@ R.look = function(){
   var vis = function(b){ return showHid ? hid.indexOf(b[0]) >= 0 : hid.indexOf(b[0]) < 0; };
   var wrap = function(b, i){ if (!vis(b)) return ""; var x = bgBtn(b, i);
     return del || showHid ? '<span class="bgw">' + x + '<button type="button" class="bgx' + (showHid ? " re" : "") + '" data-act="' + (showHid ? "bgRestore" : "bgHide") + '" data-x="' + b[0] + '" aria-label="' + (showHid ? "استعادة" : "حذف") + ' الخلفية">' + (showHid ? "↺" : "×") + '</button></span>' : x; };
-  var bgs = list.map(function(b, i){ return /\.svg$/.test(b[0]) ? wrap(b, i) : ""; }).join("") + list.map(function(b, i){ return /\.svg$/.test(b[0]) ? "" : wrap(b, i); }).join("");
+  // الأحدث أولاً: النقوش الإسلامية الشفافة، ثم الخلفيات المتجهة، ثم الصور
+  var grp = function(f){ return /^z.*\.svg$/.test(f) ? 0 : /\.svg$/.test(f) ? 1 : 2; };
+  var bgs = [0, 1, 2].map(function(g){ return list.map(function(b, i){ return grp(b[0]) === g ? wrap(b, i) : ""; }).join(""); }).join("");
   var nHid = list.filter(function(b){ return hid.indexOf(b[0]) >= 0; }).length;
   var accents = ["#E7B65B","#F4D58D","#FFFFFF","#7FD1C7","#9CC7FF","#F2A07B","#C9E265"];
   return card("صورة الخلفية",
