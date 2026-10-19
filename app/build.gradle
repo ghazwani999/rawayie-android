@@ -1,0 +1,61 @@
+plugins {
+    id 'com.android.application'
+}
+
+// التوقيع: من متغيرات البيئة (أسرار GitHub) إن وُجدت، وإلا يُوقَّع بمفتاح التجربة حتى يبقى الملف قابلاً للتثبيت
+def ks = System.getenv("RAWAYIE_KEYSTORE")
+def hasKey = ks != null && new File(ks).exists()
+
+android {
+    namespace 'sa.rawayie.azan'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'sa.rawayie.azan'
+        minSdk 21
+        targetSdk 35
+        versionCode 239
+        versionName '2.3.9'
+    }
+
+    signingConfigs {
+        release {
+            if (hasKey) {
+                storeFile file(ks)
+                storePassword System.getenv("RAWAYIE_KS_PASS")
+                keyAlias System.getenv("RAWAYIE_KEY_ALIAS")
+                keyPassword System.getenv("RAWAYIE_KEY_PASS")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig hasKey ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // الأصوات والصور مضغوطة أصلاً
+    androidResources {
+        noCompress += ['mp3', 'jpg', 'png', 'webp', 'ttf']
+    }
+
+    applicationVariants.all { v ->
+        v.outputs.all { o -> outputFileName = "rawayie-azan-${v.versionName}-${v.buildType.name}.apk" }
+    }
+}
