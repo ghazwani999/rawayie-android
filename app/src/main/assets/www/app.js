@@ -32,7 +32,7 @@ var DEF = {
   fixedOn:true, fixedZekr:"اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي",
   slides:{on:false, random:false, sec:15, every:60, items:[]},
   boards:{on:false, rot:20, items:[]},
-  look:{orient:"auto", rot:0, bgP:"p02.jpg", bgL:"l00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
+  look:{orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
@@ -70,6 +70,11 @@ if (S.lookV < 8) { // الإخفاء صار بمفتاح تفعيل مستقل �
 if (S.lookV < 9) { // خلفية شاشة السكون صارت مستقلة: من كان يختار «مثل شاشة الإخفاء» تبقى خلفيته كما هي
   if (S.sleepLook === "same") { S.sleepBg.isha.style = "prayer"; S.sleepBg.sunrise.style = "prayer"; }
   S.lookV = 9; }
+if (S.lookV < 10) { // استُبدلت خلفيات الصور بنسخة أعلى جودة بأسماء جديدة
+  if (/^p\d\d\.jpg$/.test(S.look.bgP)) S.look.bgP = DEF.look.bgP;
+  if (/^l\d\d\.jpg$/.test(S.look.bgL)) S.look.bgL = DEF.look.bgL;
+  S.look.bgHidden = (S.look.bgHidden || []).filter(function(f){ return !/^[pl]\d\d\.jpg$/.test(f); });
+  S.lookV = 10; }
 function save(){ if (window.RAWAYIE_PREVIEW) return; try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ===== التخزين المحلي للصور والأصوات ===== */
@@ -334,7 +339,8 @@ function bgList(o){
 function bgInfo(){
   var o = orient(), list = o === "P" ? window.BG_P : window.BG_L, f = o === "P" ? S.look.bgP : S.look.bgL, it = null;
   for (var i = 0; i < list.length; i++) if (list[i][0] === f) it = list[i];
-  if (!it) it = list[o === "P" ? 23 : 0];
+  if (!it) { var df = o === "P" ? DEF.look.bgP : DEF.look.bgL; for (var j = 0; j < list.length; j++) if (list[j][0] === df) it = list[j]; } // خلفية قديمة لم تعد موجودة
+  if (!it) it = list[0];
   return {file:it[0], lum:it[1], arch:!!it[2]};
 }
 function hex2hsl(hex){ var n = parseInt(hex.slice(1), 16), r = (n >> 16)/255, g = (n >> 8 & 255)/255, b = (n & 255)/255;
