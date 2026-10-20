@@ -324,8 +324,18 @@ function rotCSS(){
   var want = S.look.nativeRot === false ? -1 : r;
   if (natKey !== String(want)) { natKey = String(want); try { AN.setRotation(want); } catch(e){} }
   var n = 0; try { n = +AN.nativeRot() || 0; } catch(e){}
-  return (((r - n) % 360) + 360) % 360;
+  var res = (((r - n) % 360) + 360) % 360;
+  // الدوران المتبقي بالرسم: يخبر التطبيق ليحرك مؤشر فأرة خاص بالاتجاه الصحيح
+  if (AN.setCssRot && rotCSS.last !== res) { rotCSS.last = res; try { AN.setCssRot(res); } catch(e){} }
+  return res;
 }
+// عجلة الفأرة مع المؤشر الخاص: تمرير أقرب قائمة تحت المؤشر
+window.__vwheel = function(fx, fy, d){
+  var el = document.elementFromPoint(fx * innerWidth, fy * innerHeight);
+  while (el && el !== document.body) { var cs = getComputedStyle(el);
+    if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2) { el.scrollTop += d * 90; return; }
+    el = el.parentElement; }
+};
 function orient(){
   var r = rotCSS(), w = innerWidth, h = innerHeight;
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }

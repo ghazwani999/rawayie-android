@@ -15,7 +15,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.os.SystemClock;
 import android.view.Display;
+import android.view.InputDevice;
+import android.view.MotionEvent;
+import android.widget.FrameLayout;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -67,7 +75,14 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
         web.setKeepScreenOn(true);
-        setContentView(web);
+        FrameLayout root = new FrameLayout(this);
+        root.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        cursor = new CursorView(this);
+        cursor.setVisibility(View.GONE);
+        int cs = Math.round(26 * getResources().getDisplayMetrics().density);
+        root.addView(cursor, new FrameLayout.LayoutParams(cs, cs));
+        setContentView(root);
+        if (Build.VERSION.SDK_INT >= 26) web.setOnCapturedPointerListener((v, ev) -> onVMouse(ev));
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -341,7 +356,8 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("deprecation")
     private int nativeRotDeg() {
-        try { return getWindowManager().getDefaultDisplay().getRotation() * 90; } catch (Exception e) { return 0; }
+        // زاوية دوران الرسم على الشاشة باتجاه عقارب الساعة (عكس قيمة النظام)
+        try { return (360 - getWindowManager().getDefaultDisplay().getRotation() * 90) % 360; } catch (Exception e) { return 0; }
     }
 
     @SuppressWarnings("deprecation")
@@ -386,7 +402,110 @@ public class MainActivity extends Activity {
     }
 
     private void notifyRotation() {
-        ui.postDelayed(() -> { if (web != null) web.evaluateJavascript("try{dispatchEvent(new Event('resize'))}catch(e){}", null); }, 250);
+        Runnable r = () -> { if (web != null) web.evaluateJavascript("try{dispatchEvent(new Event('resize'))}catch(e){}", null); };
+        ui.postDelayed(r, 250); ui.postDelayed(r, 1500); ui.postDelayed(r, 3000);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration c) {
+        super.onConfigurationChanged(c);
+        notifyRotation();
+    }
+
+    /* ===== فأرة افتراضية للشاشة المرسومة مدوّرة =====
+       إذا لم يسمح الجهاز بتدوير الشاشة من النظام، تُرسم الصفحة مدوّرة ويبقى مؤشر النظام بالاتجاه الأصلي.
+       هنا يمسك التطبيق حركة الفأرة نفسها ويحرك مؤشراً خاصاً بالاتجاه الذي يراه المستخدم، والضغط يصبح لمسة في مكانه */
+    private CursorView cursor;
+    private int cssRot = 0;
+    private float vx = -1, vy = -1;
+    private boolean vDown = false;
+    private long vDownT = 0;
+
+    private void setCssRot(int r) {
+        cssRot = ((r % 360) + 360) % 360;
+        if (cursor != null) cursor.setRotation(cssRot);
+        if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && web.hasPointerCapture()) web.releasePointerCapture();
+        if (cssRot == 0 && cursor != null) cursor.setVisibility(View.GONE);
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+        if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
+            if (vx < 0) { vx = ev.getX(); vy = ev.getY(); }
+            web.requestFocus(); web.requestPointerCapture();
+            showCursor();
+            return true;
+        }
+        return super.dispatchGenericMotionEvent(ev);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        // ضغطة الفأرة الأولى قبل الإمساك بها: تمسك الفأرة بدل الضغط في المكان الخطأ
+        if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
+            if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) { if (vx < 0) { vx = ev.getX(); vy = ev.getY(); } web.requestFocus(); web.requestPointerCapture(); showCursor(); }
+            return true;
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void showCursor() {
+        if (cursor == null || web == null) return;
+        if (vx < 0) { vx = web.getWidth() / 2f; vy = web.getHeight() / 2f; }
+        cursor.setVisibility(View.VISIBLE); cursor.setX(vx); cursor.setY(vy); cursor.bringToFront();
+    }
+
+    private boolean onVMouse(MotionEvent ev) {
+        if (web == null) return false;
+        int a = ev.getActionMasked();
+        if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE || a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_UP) {
+            float dx = ev.getX(), dy = ev.getY();
+            if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE) {
+                double t = Math.toRadians(cssRot);
+                float k = 1.4f;
+                vx += (float) (dx * Math.cos(t) - dy * Math.sin(t)) * k;
+                vy += (float) (dx * Math.sin(t) + dy * Math.cos(t)) * k;
+                vx = Math.max(0, Math.min(web.getWidth() - 1, vx));
+                vy = Math.max(0, Math.min(web.getHeight() - 1, vy));
+                showCursor();
+                if (vDown) touch(MotionEvent.ACTION_MOVE);
+            }
+            if (a == MotionEvent.ACTION_DOWN && !vDown) { vDown = true; vDownT = SystemClock.uptimeMillis(); touch(MotionEvent.ACTION_DOWN); }
+            if (a == MotionEvent.ACTION_UP && vDown) { touch(MotionEvent.ACTION_UP); vDown = false; }
+            return true;
+        }
+        if (a == MotionEvent.ACTION_BUTTON_PRESS && !vDown) { vDown = true; vDownT = SystemClock.uptimeMillis(); touch(MotionEvent.ACTION_DOWN); return true; }
+        if (a == MotionEvent.ACTION_BUTTON_RELEASE && vDown) { touch(MotionEvent.ACTION_UP); vDown = false; return true; }
+        if (a == MotionEvent.ACTION_SCROLL) {
+            float s = ev.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            web.evaluateJavascript("window.__vwheel&&__vwheel(" + (vx / web.getWidth()) + "," + (vy / web.getHeight()) + "," + (-s) + ")", null);
+            return true;
+        }
+        return true;
+    }
+
+    private void touch(int action) {
+        long now = SystemClock.uptimeMillis();
+        MotionEvent t = MotionEvent.obtain(vDownT, now, action, vx, vy, 0);
+        t.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+        web.dispatchTouchEvent(t);
+        t.recycle();
+    }
+
+    /* مؤشر سهم أبيض بحد أسود، رأسه في أعلى اليسار ويدور مع الشاشة */
+    static class CursorView extends View {
+        private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), line = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Path p = new Path();
+        CursorView(android.content.Context c) {
+            super(c); fill.setColor(Color.WHITE); line.setColor(Color.BLACK); line.setStyle(Paint.Style.STROKE); line.setStrokeWidth(2.5f);
+            setPivotX(0); setPivotY(0); setElevation(1000f);
+        }
+        @Override protected void onDraw(Canvas c) {
+            float w = getWidth(), h = getHeight();
+            p.reset(); p.moveTo(1, 1); p.lineTo(1, h * .82f); p.lineTo(w * .28f, h * .62f); p.lineTo(w * .45f, h * .98f);
+            p.lineTo(w * .6f, h * .9f); p.lineTo(w * .43f, h * .56f); p.lineTo(w * .78f, h * .56f); p.close();
+            c.drawPath(p, fill); c.drawPath(p, line);
+        }
     }
 
     /* ===== واجهة يستخدمها التطبيق من داخل الصفحة ===== */
@@ -402,6 +521,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
         @JavascriptInterface public int nativeRot() { return nativeRotDeg(); }
+        @JavascriptInterface public void setCssRot(int r) { runOnUiThread(() -> MainActivity.this.setCssRot(r)); }
         @JavascriptInterface public void setPrefer4k(boolean on) {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();
             runOnUiThread(MainActivity.this::applyDisplayMode);
