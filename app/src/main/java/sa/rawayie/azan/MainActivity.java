@@ -352,7 +352,7 @@ public class MainActivity extends Activity {
        بدل رسم الصفحة مدوّرة (فتتحرك الفأرة وأزرار الريموت بعكس الاتجاه)، يطلب التطبيق من أندرويد تدوير الشاشة نفسها.
        deg: زاوية التدوير المطلوبة باتجاه عقارب الساعة (0، 90، 180، 270)، أو -1 لإيقاف التدوير من النظام */
     private final Handler ui = new Handler(Looper.getMainLooper());
-    private int rotWant = -2, rotTry = 0;
+    private int rotWant = -2, rotTry = 0, rotFailed = -1;
 
     @SuppressWarnings("deprecation")
     private int nativeRotDeg() {
@@ -369,6 +369,24 @@ public class MainActivity extends Activity {
         } catch (Exception e) { return true; }
     }
 
+    /* هل نافذة التطبيق تملأ الشاشة؟ بعض أجهزة التلفاز (أندرويد 12 فما فوق) لا تدوّر الشاشة لتطبيق رأسي،
+       بل تعرضه في صندوق ضيق وسط الشاشة بأشرطة سوداء. نقارن شكل النافذة بشكل مخرج الشاشة الحقيقي */
+    @SuppressWarnings("deprecation")
+    private boolean fillsScreen() {
+        try {
+            View dv = getWindow().getDecorView(); int w = dv.getWidth(), h = dv.getHeight();
+            if (w <= 0 || h <= 0) return true;
+            Display d = getWindowManager().getDefaultDisplay(); int pw, ph;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { Display.Mode m = d.getMode(); pw = m.getPhysicalWidth(); ph = m.getPhysicalHeight(); }
+            else { DisplayMetrics dm = new DisplayMetrics(); d.getRealMetrics(dm); pw = dm.widthPixels; ph = dm.heightPixels; }
+            if (d.getRotation() % 2 == 1) { int t = pw; pw = ph; ph = t; }
+            double a1 = (double) w / h, a2 = (double) pw / ph;
+            return Math.abs(a1 - a2) / a2 < 0.12;
+        } catch (Exception e) { return true; }
+    }
+
+    private boolean rotOk(int deg) { return nativeRotDeg() == deg && fillsScreen(); }
+
     private void applyRotation(int deg) {
         if (deg == rotWant) return;
         rotWant = deg; rotTry++;
@@ -384,16 +402,17 @@ public class MainActivity extends Activity {
             else { c[0] = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; c[1] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT; }
             if (deg == 180) { int t = c[0]; c[0] = c[1]; c[1] = t; }
         }
-        if (nativeRotDeg() == deg) { setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED); notifyRotation(); return; }
+        if (nativeRotDeg() == deg && fillsScreen()) { setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED); notifyRotation(); return; }
         setRequestedOrientation(c[0]);
         ui.postDelayed(() -> {
             if (token != rotTry) return;
-            if (nativeRotDeg() != deg) {
+            if (!rotOk(deg)) {
                 setRequestedOrientation(c[1]);
                 ui.postDelayed(() -> {
                     if (token != rotTry) return;
                     // الجهاز لا يدعم هذا الاتجاه: يرجع لوضعه الطبيعي ويكمل التطبيق التدوير برسم الصفحة
-                    if (nativeRotDeg() != deg && nativeRotDeg() != 0) setRequestedOrientation(nat ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    // الجهاز لا يدعم هذا الاتجاه أو يعرضه في صندوق صغير: يرجع لوضعه الطبيعي ويكمل التطبيق التدوير برسم الصفحة
+                    if (!rotOk(deg)) { setRequestedOrientation(nat ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); rotFailed = deg; }
                     notifyRotation();
                 }, 1200);
             } else notifyRotation();
@@ -402,13 +421,14 @@ public class MainActivity extends Activity {
     }
 
     private void notifyRotation() {
-        Runnable r = () -> { if (web != null) web.evaluateJavascript("try{dispatchEvent(new Event('resize'))}catch(e){}", null); };
+        Runnable r = () -> { hideBars(); if (web != null) web.evaluateJavascript("try{dispatchEvent(new Event('resize'))}catch(e){}", null); };
         ui.postDelayed(r, 250); ui.postDelayed(r, 1500); ui.postDelayed(r, 3000);
     }
 
     @Override
     public void onConfigurationChanged(Configuration c) {
         super.onConfigurationChanged(c);
+        hideBars();
         notifyRotation();
     }
 
@@ -520,7 +540,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
-        @JavascriptInterface public int nativeRot() { return nativeRotDeg(); }
+        @JavascriptInterface public int nativeRot() { return fillsScreen() ? nativeRotDeg() : 0; }
+        @JavascriptInterface public String rotInfo() {
+            View dv = getWindow().getDecorView();
+            return "{\"win\":\"" + dv.getWidth() + "x" + dv.getHeight() + "\",\"rot\":" + nativeRotDeg() + ",\"fill\":" + fillsScreen() + ",\"failed\":" + rotFailed + "}";
+        }
         @JavascriptInterface public void setCssRot(int r) { runOnUiThread(() -> MainActivity.this.setCssRot(r)); }
         @JavascriptInterface public void setPrefer4k(boolean on) {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();
