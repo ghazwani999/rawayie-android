@@ -5,6 +5,7 @@ name: Build APK
 on:
   push:
     branches: [ main, master ]
+    paths-ignore: [ 'dist/**' ]
   workflow_dispatch:
 
 permissions:
