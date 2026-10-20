@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, nativeRot:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -56,7 +56,7 @@ var S;
 try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catch(e){ S = clone(DEF); }
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
-try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 11; } catch(e){}
+try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 12; } catch(e){}
 S.slides.items = S.slides.items.map(function(x){ return typeof x === "string" ? {id:"s" + x, img:x, imgMode:"contain", active:true} : x; });
 if ((S.lookV || 0) < 3) { // تصميم التطبيق الجديد: يعيد المظهر والذكر الثابت للافتراضي مرة واحدة
   S.look = clone(DEF.look); S.fixedZekr = DEF.fixedZekr; S.marquee = DEF.marquee; S.lookV = 3;
@@ -81,6 +81,8 @@ if (S.lookV < 10) { // استُبدلت خلفيات الصور بنسخة أع�
 if (S.lookV < 11) { // الشعار الفضي الشفاف صار الشكل الافتراضي (يبقى الذهبي أو اللون المخصص إن اختاره المستخدم)
   if (!S.look.logoColor || S.look.logoColor === "auto") S.look.logoColor = "silver";
   S.lookV = 11; }
+if (S.lookV < 12) { // التدوير بالرسم هو الافتراضي (يعمل على كل الأجهزة ويملأ الشاشة)، مع مؤشر فأرة بالاتجاه الصحيح
+  S.look.sysRot = false; S.lookV = 12; }
 function save(){ if (window.RAWAYIE_PREVIEW) return; try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ===== التخزين المحلي للصور والأصوات ===== */
@@ -321,9 +323,10 @@ var natKey = "";
 function rotCSS(){
   var r = (((+S.look.rot || 0) % 360) + 360) % 360, AN = window.RawayieAndroid;
   if (!AN || !AN.setRotation || window.RAWAYIE_PREVIEW) return r;
-  var want = S.look.nativeRot === false ? -1 : r;
+  var want = S.look.sysRot === true ? r : -1;
   if (natKey !== String(want)) { natKey = String(want); try { AN.setRotation(want); } catch(e){} }
-  var n = 0; try { n = +AN.nativeRot() || 0; } catch(e){}
+  // بدون تدوير النظام: الجهاز يتصرف كعادته (الجوال يدور مع الحساس) والتدوير المختار يُرسم فوقه
+  var n = 0; if (want >= 0) try { n = +AN.nativeRot() || 0; } catch(e){}
   var res = (((r - n) % 360) + 360) % 360;
   // الدوران المتبقي بالرسم: يخبر التطبيق ليحرك مؤشر فأرة خاص بالاتجاه الصحيح
   if (AN.setCssRot && rotCSS.last !== res) { rotCSS.last = res; try { AN.setCssRot(res); } catch(e){} }
@@ -1112,4 +1115,76 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
   clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, VERSION:VERSION, METHODS:METHODS};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
+
+/* ===== مؤشر فأرة خاص للشاشة المرسومة مدوّرة (المتصفحات) =====
+   المتصفح لا يستطيع تدوير مؤشر النظام، فعند الضغط الأول يُمسك المؤشر (Pointer Lock) ويظهر سهم خاص
+   يتحرك بالاتجاه الذي يراه المستخدم، والضغط يعمل في مكانه. زر Esc يعيد مؤشر النظام.
+   في تطبيق أندرويد يقوم التطبيق نفسه بهذا العمل. */
+(function(){
+  "use strict";
+  var D = document, root = D.documentElement;
+  if (window.RawayieAndroid || !root.requestPointerLock && !(D.body && D.body.requestPointerLock)) return;
+  var cur = null, x = -1, y = -1, locked = false;
+  function rot(){ return +root.getAttribute("data-rot") || 0; }
+  function lockEl(){ return D.body; }
+  function isLocked(){ return (D.pointerLockElement || D.mozPointerLockElement) === lockEl(); }
+  function show(){
+    if (!cur) { cur = D.createElement("div"); cur.className = "vcur"; cur.setAttribute("aria-hidden", "true");
+      cur.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M2 2v18l5-4.6 3.6 7.6 3.4-1.6-3.6-7.4H17z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+      cur.style.cssText = "position:fixed;left:0;top:0;width:26px;height:26px;z-index:2147483647;pointer-events:none;transform-origin:0 0;display:none";
+      D.body.appendChild(cur); }
+    cur.style.display = "block";
+    cur.style.transform = "translate(" + x + "px," + y + "px) rotate(" + rot() + "deg)";
+  }
+  function hide(){ if (cur) cur.style.display = "none"; }
+  function fire(type, el){
+    var o = {bubbles:true, cancelable:true, clientX:x, clientY:y, button:0, buttons:type === "mousedown" || type === "pointerdown" ? 1 : 0, view:window};
+    try { el.dispatchEvent(type.indexOf("pointer") === 0 && window.PointerEvent ? new PointerEvent(type, Object.assign ? Object.assign({pointerType:"mouse", isPrimary:true}, o) : o) : new MouseEvent(type, o)); } catch(e){}
+  }
+  function clickAt(){
+    var el = D.elementFromPoint(x, y); if (!el) return;
+    fire("pointerdown", el); fire("mousedown", el); fire("pointerup", el); fire("mouseup", el);
+    var tag = el.tagName.toLowerCase(), ty = (el.type || "").toLowerCase();
+    if (tag === "select") { el.focus(); try { if (el.showPicker) el.showPicker(); } catch(e){} return; }
+    if (tag === "textarea" || (tag === "input" && !/checkbox|radio|button|submit|range|color|file/.test(ty))) { el.focus(); return; }
+    if (tag === "input" && ty === "range") { // نقل المؤشر إلى مكان الضغط على امتداد الشريط حسب اتجاهه الظاهر
+      var r = el.getBoundingClientRect(), a = rot(), f;
+      f = a === 90 ? (y - r.top) / r.height : a === 270 ? (r.bottom - y) / r.height : a === 180 ? (r.right - x) / r.width : (x - r.left) / r.width;
+      if (getComputedStyle(el).direction === "rtl") f = 1 - f;
+      var mn = +el.min || 0, mx = +(el.max || 100), st = +el.step || 1, v = mn + Math.max(0, Math.min(1, f)) * (mx - mn); v = Math.round(v / st) * st;
+      el.value = v; el.dispatchEvent(new Event("input", {bubbles:true})); el.dispatchEvent(new Event("change", {bubbles:true})); return; }
+    if (el.click) el.click(); else fire("click", el);
+  }
+  var swallow = 0, off = false;
+  // إذا رفض المتصفح إمساك المؤشر (مثل الصفحات المضمّنة) يتوقف المؤشر الخاص وتعمل الفأرة عادياً
+  D.addEventListener("pointerlockerror", function(){ off = true; swallow = 0; });
+  // الضغطة الأولى بالفأرة تمسك المؤشر فقط، ولا تضغط في المكان الخطأ
+  D.addEventListener("pointerdown", function(e){
+    if (off || !rot() || locked || e.pointerType !== "mouse" || e.button !== 0 || e.isTrusted === false) return;
+    x = e.clientX; y = e.clientY;
+    try { var p = lockEl().requestPointerLock(); if (p && p.catch) p.catch(function(){ off = true; swallow = 0; }); } catch(err){ off = true; return; }
+    e.preventDefault(); e.stopPropagation(); swallow = Date.now() + 900;
+    setTimeout(function(){ if (!locked) { off = true; swallow = 0; } }, 1200);
+  }, true);
+  ["click", "mouseup", "pointerup", "mousedown", "pointerdown"].forEach(function(t){
+    D.addEventListener(t, function(e){
+      if (!e.isTrusted) return;
+      if (Date.now() < swallow || (locked && t !== "mousedown")) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+  });
+  D.addEventListener("pointerlockchange", function(){
+    locked = isLocked();
+    if (locked) show(); else hide();
+  });
+  D.addEventListener("mousemove", function(e){
+    if (!locked) return;
+    var a = rot() * Math.PI / 180, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)), dx = e.movementX || 0, dy = e.movementY || 0;
+    x = Math.max(0, Math.min(innerWidth - 1, x + dx*c - dy*s)); y = Math.max(0, Math.min(innerHeight - 1, y + dx*s + dy*c));
+    show();
+  }, true);
+  D.addEventListener("mousedown", function(e){ if (locked && e.isTrusted) { e.preventDefault(); e.stopPropagation(); if (e.button === 0) clickAt(); } }, true);
+  D.addEventListener("wheel", function(e){ if (!locked) return; e.preventDefault(); if (window.__vwheel) window.__vwheel(x / innerWidth, y / innerHeight, e.deltaY > 0 ? 1 : -1); }, {capture:true, passive:false});
+  // رجوع الشاشة للوضع الطبيعي: يترك المؤشر
+  setInterval(function(){ if (locked && !rot()) { try { D.exitPointerLock(); } catch(e){} } }, 1000);
 })();
