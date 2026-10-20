@@ -584,7 +584,8 @@ function slPreview(){ var f = $(".sprev .sframe", body); if (!f) return;
 function onSlInput(e){
   var el = e.target;
   if (el.dataset.p && el.type === "range") { var vv = parseFloat(el.value); put(el.dataset.p, vv); A.save(); A.rebuild();
-    var oo = el.parentNode.querySelector("output"); if (oo) oo.textContent = fmtR(vv, el.closest(".fld").querySelector("output").textContent.replace(/[0-9.\-]/g, "") || ""); shPreview(); return; }
+    var oo = el.parentNode.querySelector("output"); if (oo) oo.textContent = fmtR(vv, el.closest(".fld").querySelector("output").textContent.replace(/[0-9.\-]/g, "") || ""); shPreview(); if (/^look\.hi/.test(el.dataset.p)) updHiPrev(); return; }
+  if (el.dataset.p && el.type === "color" && /^look\.hi/.test(el.dataset.p)) { put(el.dataset.p, el.value); A.save(); A.rebuild(); updHiPrev(); return; }
   var k = el.dataset.sp; if (!k || !slDraft) return;
   var v = el.type === "checkbox" ? el.checked : (el.type === "range" ? parseFloat(el.value) : el.value);
   slDraft[k] = v;
@@ -654,10 +655,28 @@ R.look = function(){
   card("الألوان",
     tog("تلوين النصوص تلقائياً حسب الخلفية", "look.autoColor", "يختار ألوان النصوص والظل والتمييز من ألوان الخلفية. أوقفه لاستخدام اللون المخصص أدناه") +
     '<div class="sw">' + accents.map(function(c){ return '<button type="button" data-act="accent" data-x="' + c + '" style="background:' + c + '" class="' + (S.look.accent.toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>' +
-    colorIn("لون مخصص", "look.accent") +
-    tog("استخدام لون مخصص لتمييز الصلاة القادمة", "look.hiCustom", "عند إيقافه يُختار لون مناسب للخلفية تلقائياً") +
-    (S.look.hiCustom ? colorIn("لون التمييز", "look.hiColor") + numIn("الشفافية", "look.hiOpacity", 0.1, 1, 0.05) : ""));
+    colorIn("لون مخصص", "look.accent")) + hiCard();
 };
+/* تمييز الصلاة القادمة: لون الشريط وشفافيته ولون نصوصه، أو إطار فقط، مع معاينة */
+function hexRgba(h, a){ h = String(h || "#000000").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var n = parseInt(h, 16) || 0; return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")"; }
+function hiPrevHTML(){
+  var L = S.look, bg = L.hiCustom ? hexRgba(L.hiColor, +L.hiOpacity) : "rgba(255,255,255,.16)", fc = L.hiTextOn ? L.hiTextColor : "#ffffff";
+  return '<div class="hiprev" style="background:linear-gradient(' + (L.hiFrame ? "rgba(0,0,0,.3),rgba(0,0,0,.3)" : bg + "," + bg) + '),#1d2733;color:' + esc(fc) + ';box-shadow:' + (L.hiFrame ? "inset 0 0 0 3px " + esc(L.hiCustom ? L.hiColor : L.accent) : "none") + '"><span>العصر</span><i>3:25</i><i>3:45</i></div>';
+}
+function updHiPrev(){ var o = document.querySelector(".hiprev"); if (o) o.outerHTML = hiPrevHTML(); }
+function hiCard(){
+  var L = S.look, hs = ["#1F5A8A","#0E6B5C","#7A1E2C","#B8862B","#5B3A8C","#C0392B","#2E7D32","#FFFFFF","#000000"];
+  var tx = ["#ffffff","#111111","#F4D58D","#E7B65B","#9CC7FF"];
+  var sw = function(list, act, cur, on){ return '<div class="sw">' + list.map(function(c){ return '<button type="button" data-act="' + act + '" data-x="' + c + '" style="background:' + c + '" class="' + (on && String(cur).toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>'; };
+  var pv = hiPrevHTML();
+  return card("تمييز الصلاة القادمة",
+    pv +
+    tog("لون مخصص لتمييز الصلاة القادمة", "look.hiCustom", "عند إيقافه يُختار لون مناسب للخلفية تلقائياً") +
+    (L.hiCustom ? sw(hs, "hiSw", L.hiColor, true) + colorIn("لون التمييز", "look.hiColor") + rangeIn("درجة وضوح اللون", "look.hiOpacity", 0.1, 1, 0.05, "%", "كلما قلّت ظهرت الخلفية من خلفه") : "") +
+    tog("لون مخصص لنصوص الصلاة القادمة", "look.hiTextOn", "اسم الصلاة ووقت الأذان والإقامة في السطر المميز") +
+    (L.hiTextOn ? sw(tx, "hiTx", L.hiTextColor, true) + colorIn("لون النصوص", "look.hiTextColor") : "") +
+    tog("إطار فقط بدل تعبئة الشريط", "look.hiFrame", "يظهر حول الصلاة القادمة إطار بلون التمييز بدل خلفية ملوّنة"), "السطر المميز في جدول المواقيت هو الصلاة القادمة، أو الصلاة الحالية أثناء انتظار الإقامة");
+}
 R.fonts = function(){
   return card("ضبط خطوط التطبيق",
     sel("خط النصوص", "look.fontText", window.FONTS) + sel("خط الأرقام والساعة", "look.fontNum", window.FONTS) + sel("خط الأذكار", "look.fontZekr", window.FONTS) +
@@ -1030,10 +1049,10 @@ function onChange(e){
   var v = el.dataset.t === "bool" ? el.checked : el.dataset.t === "num" ? parseFloat(el.value) : el.value;
   if (el.dataset.t === "num" && isNaN(v)) return;
   if (el.type === "number") { var mn = parseFloat(el.min), mx = parseFloat(el.max); if (v < mn) v = mn; if (v > mx) v = mx; }
-  put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30);
+  put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
@@ -1224,6 +1243,8 @@ function onClick(e){
     case "bgRestore": S.look.bgHidden = (S.look.bgHidden || []).filter(function(q){ return q !== x; }); A.save(); var sp2 = b.parentNode; if (sp2 && sp2.parentNode) sp2.parentNode.removeChild(sp2); toast("أُعيدت الخلفية"); break;
     case "bgClear": A.IDB.del(S.look.customBg); S.look.customBg = ""; commit(); render(); break;
     case "accent": S.look.accent = x; commit(); render(); break;
+    case "hiSw": S.look.hiCustom = true; S.look.hiColor = x; commit(); render(); break;
+    case "hiTx": S.look.hiTextOn = true; S.look.hiTextColor = x; commit(); render(); break;
     case "pwSave": var np = $("#pw").value; if (np && np === S.sup.pass) { toast("كلمة سر المدير يجب أن تختلف عن كلمة سر المشرف"); return; }
       S.pass = np; role = "admin"; unlocked = true; A.save(); toast(S.pass ? "تم حفظ كلمة سر المدير" : "تم إلغاء كلمة السر"); render(); break;
     case "spwSave": var sp = $("#spw").value; if (sp && sp === S.pass) { toast("كلمة سر المشرف يجب أن تختلف عن كلمة سر المدير"); return; }
