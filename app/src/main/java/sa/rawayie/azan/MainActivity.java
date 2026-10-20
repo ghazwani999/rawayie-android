@@ -261,7 +261,7 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (web == null) { super.onBackPressed(); return; }
-        web.evaluateJavascript("(function(){var s=document.getElementById('set');if(s&&!s.hidden&&window.SETTINGS){SETTINGS.close();return 1}return 0})()",
+        web.evaluateJavascript("(function(){if(window.SETTINGS&&SETTINGS.back&&SETTINGS.back())return 1;var s=document.getElementById('set');if(s&&!s.hidden&&window.SETTINGS){SETTINGS.close();return 1}return 0})()",
                 new ValueCallback<String>() {
                     @Override
                     public void onReceiveValue(String v) {

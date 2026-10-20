@@ -495,6 +495,7 @@ function edOpen(el){
     '<div class="edpv"><small>معاينة على الشاشة</small><div id="edp" style="font-family:\'' + esc(font) + '\',Amiri,serif"></div></div>' +
     '<div class="edf"><small>' + (multi ? "Enter لسطر جديد · Ctrl+Enter للحفظ" : "سطر واحد · Enter للحفظ") + '</small><button type="button" class="btn ghost" data-ed="x">إلغاء</button><button type="button" class="btn" data-ed="ok">حفظ</button></div></div>';
   var t = $("#edt"); t.value = el.value; ed.hidden = false; ed.dataset.multi = multi ? "1" : "";
+  if (vkOn()) { t.setAttribute("inputmode", "none"); vkOpen(t, $(".edbox", ed), false); }
   var upd = function(){ $("#edp").textContent = t.value || " "; var w = t.value.trim() ? t.value.trim().split(/\s+/).length : 0; $("#edc").textContent = t.value.length + " حرف · " + w + " كلمة"; };
   t.addEventListener("input", upd); upd(); setTimeout(function(){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); }, 30);
   t.addEventListener("keydown", function(e){
@@ -513,10 +514,86 @@ function edOpen(el){
     if (b.dataset.ed === "x") edClose(false);
     if (b.dataset.ed === "ok") edClose(true); };
 }
+/* ===== لوحة المفاتيح الخاصة بالتطبيق =====
+   بديل لوحة مفاتيح النظام (التي تظهر غير مدوّرة وتغطي نصف الشاشة على التلفاز): عربي، إنجليزي، أرقام ورموز.
+   تدور مع الشاشة، وتعمل بالريموت والفأرة واللمس، وتكتب في أي حقل نصي في الإعدادات وفي المحرر الخاص */
+var VK = {el:null, t:null, lang:"ar", mode:"", shift:false, docked:false};
+var VK_L = {
+  ar:[["ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د"],["ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","ذ"],["ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ","أ","إ","آ"]],
+  en:[["q","w","e","r","t","y","u","i","o","p"],["a","s","d","f","g","h","j","k","l"],["z","x","c","v","b","n","m",",",".","-"]],
+  sym:[["!","@","#","%","&","*","(",")","-","_"],[":","؛","،","؟","?","/","\"","'","+","="],["ﷺ","﷽","﴿","﴾","«","»","۞","ـ",".",","]]
+};
+function vkOn(){
+  var m = S.vkb || "auto"; if (m === "on") return true; if (m === "off") return false;
+  var AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
+  if (rot) return true; // الشاشة مدوّرة: لوحة النظام تظهر بالعرض فتغطيها
+  try { if (AN && !(AN.isPhone && AN.isPhone())) return true; } catch(e){} // تلفاز أو صندوق أندرويد
+  return false;
+}
+function vkTyping(el){
+  if (!el || el.disabled || el.readOnly) return false;
+  if (el.tagName === "TEXTAREA") return true;
+  return el.tagName === "INPUT" && /^(text|search|url|email|number|password|tel|)$/.test(el.type || "") && el.id !== "actcode" && el.id !== "liccode";
+}
+function vkHTML(){
+  var L = VK.mode === "sym" ? VK_L.sym : VK_L[VK.lang], k = function(c, cls, lab, w){ return '<button type="button" class="vk' + (cls ? " " + cls : "") + '" data-vk="' + esc(c) + '"' + (w ? ' style="flex:' + w + '"' : "") + '>' + (lab || esc(c)) + '</button>'; };
+  var up = VK.lang === "en" && VK.shift && VK.mode !== "sym";
+  var rows = [["1","2","3","4","5","6","7","8","9","0"]].concat(L);
+  return '<div class="vkb' + (VK.lang === "en" || VK.mode === "sym" ? " ltr" : "") + '" role="group" aria-label="لوحة المفاتيح">' +
+    rows.map(function(r, i){ return '<div class="vkr">' + (i === 3 && VK.lang === "en" && VK.mode !== "sym" ? k("{shift}", "fn" + (VK.shift ? " on" : ""), "⇧", 1.4) : "") +
+      r.map(function(c){ var v = up ? c.toUpperCase() : c; return k(v); }).join("") + (i === 0 ? k("{bs}", "fn", "⌫", 1.4) : "") + '</div>'; }).join("") +
+    '<div class="vkr">' + k("{mode}", "fn", VK.mode === "sym" ? (VK.lang === "ar" ? "أ ب ت" : "ABC") : "#+=", 1.3) + k("{lang}", "fn", VK.lang === "ar" ? "EN" : "ع", 1) +
+      k("{left}", "fn", "→", 1) + k(" ", "sp", "مسافة", 4) + k("{right}", "fn", "←", 1) + k("{nl}", "fn", "سطر ↵", 1.3) + k("{clear}", "fn", "مسح الكل", 1.4) + k("{done}", "ok", "تم ✓", 1.6) + '</div></div>';
+}
+function vkRender(){ if (VK.el) { var f = document.activeElement, fk = f && f.dataset ? f.dataset.vk : null; VK.el.innerHTML = vkHTML(); if (fk != null) { var nb = VK.el.querySelector('[data-vk="' + (VK.shift && fk.length === 1 ? fk : fk).replace(/"/g, '\\"') + '"]'); if (nb) nb.focus(); } } }
+function vkOpen(t, host, docked){
+  if (!vkOn() || !t) return false;
+  if (VK.t && VK.t !== t && VK.docked) vkCommit();
+  VK.t = t; VK.docked = !!docked;
+  try { t.setAttribute("inputmode", "none"); } catch(e){}
+  VK.lang = t.getAttribute("dir") === "ltr" || /url|email|number|password|tel/.test(t.type) ? "en" : "ar";
+  VK.mode = t.type === "number" || t.type === "tel" ? "sym" : ""; VK.shift = false;
+  if (!VK.el) { VK.el = document.createElement("div"); VK.el.className = "vkwrap";
+    VK.el.addEventListener("mousedown", function(e){ if (e.target.closest("[data-vk]")) e.preventDefault(); }); // الضغط بالفأرة لا يُخرج المؤشر من الحقل
+    VK.el.addEventListener("click", vkClick); }
+  var bef = host.querySelector(".edf"); if (bef) host.insertBefore(VK.el, bef); else if (VK.el.parentNode !== host) host.appendChild(VK.el);
+  VK.el.classList.toggle("dock", !!docked); VK.el.hidden = false; vkRender();
+  if (docked) { var sb = $(".sbody", panel); if (sb) { sb.style.paddingBottom = (VK.el.offsetHeight + 30) + "px"; } try { t.scrollIntoView({block:"center"}); } catch(e){} }
+  return true;
+}
+function vkClose(){ if (!VK.el) return; if (VK.docked) vkCommit(); VK.el.hidden = true; var sb = $(".sbody", panel); if (sb) sb.style.paddingBottom = ""; VK.t = null; }
+function vkCommit(){ var t = VK.t; if (t && document.body.contains(t)) t.dispatchEvent(new Event("change", {bubbles:true})); }
+function vkIns(txt){
+  var t = VK.t; if (!t) return;
+  var a = t.selectionStart, b = t.selectionEnd; if (a == null || t.type === "number" || t.type === "email") { t.value = t.value + txt; }
+  else { t.value = t.value.slice(0, a) + txt + t.value.slice(b); try { t.setSelectionRange(a + txt.length, a + txt.length); } catch(e){} }
+  t.dispatchEvent(new Event("input", {bubbles:true}));
+}
+function vkClick(e){
+  var b = e.target.closest("[data-vk]"); if (!b || !VK.t) return; e.stopPropagation();
+  var c = b.dataset.vk, t = VK.t;
+  if (c === "{bs}") { var a = t.selectionStart, z = t.selectionEnd;
+    if (a == null || t.type === "number" || t.type === "email") t.value = t.value.slice(0, -1);
+    else if (a !== z) { t.value = t.value.slice(0, a) + t.value.slice(z); t.setSelectionRange(a, a); }
+    else if (a > 0) { t.value = t.value.slice(0, a - 1) + t.value.slice(a); t.setSelectionRange(a - 1, a - 1); }
+    t.dispatchEvent(new Event("input", {bubbles:true})); return; }
+  if (c === "{shift}") { VK.shift = !VK.shift; vkRender(); return; }
+  if (c === "{lang}") { VK.lang = VK.lang === "ar" ? "en" : "ar"; VK.mode = ""; VK.shift = false; vkRender(); return; }
+  if (c === "{mode}") { VK.mode = VK.mode === "sym" ? "" : "sym"; vkRender(); return; }
+  if (c === "{left}" || c === "{right}") { // السهم حسب اتجاه الكتابة الظاهر
+    var p = t.selectionStart; if (p == null) return; var rtl = VK.lang === "ar" && VK.mode !== "sym", d = c === "{left}" ? (rtl ? 1 : -1) : (rtl ? -1 : 1);
+    p = Math.max(0, Math.min(t.value.length, p + d)); try { t.setSelectionRange(p, p); } catch(x){} return; }
+  if (c === "{clear}") { t.value = ""; t.dispatchEvent(new Event("input", {bubbles:true})); return; }
+  if (c === "{nl}") { if (t.tagName === "TEXTAREA") vkIns("\n"); return; }
+  if (c === "{done}") { if (ED.el && $("#ed") && !$("#ed").hidden && t.id === "edt") { edClose(true); return; } var tt = t; vkClose(); try { tt.focus({preventScroll:true}); } catch(x){} return; }
+  vkIns(c); if (VK.shift) { VK.shift = false; vkRender(); }
+}
+
 function edClose(save){
   var ed = $("#ed"), el = ED.el; if (!ed || !el) return;
   if (save) { var v = $("#edt").value; if (ed.dataset.multi !== "1") v = v.replace(/\s*\n+\s*/g, " ");
     el.value = v; el.dispatchEvent(new Event("input", {bubbles:true})); el.dispatchEvent(new Event("change", {bubbles:true})); }
+  if (VK.t && VK.t.id === "edt") { VK.el.hidden = true; VK.t = null; }
   ed.hidden = true; ED.el = null; try { el.focus({preventScroll:true}); } catch(e){}
 }
 
@@ -962,7 +1039,8 @@ R.general = function(){
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
       numIn("مدة الظهور", "splash.sec", 2, 60, 1, "ثانية") : "") +
-    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("المحرر", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي")) +
+    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
+    sel("لوحة المفاتيح", "vkb", [["auto","تلقائي: لوحة التطبيق في التلفاز والشاشة المدوّرة"],["on","لوحة التطبيق دائماً"],["off","لوحة مفاتيح الجهاز"]], "لوحة التطبيق عربي وإنجليزي وأرقام ورموز، تدور مع الشاشة وتعمل بالريموت والفأرة")) +
     card("العمل بدون إنترنت",
     '<div class="fld"><span><b>الحالة</b><small id="offst">' + esc(offState()) + '</small></span>' + btn("تجهيز الآن", "offPrep", "sm") + '</div>' + offBrowser() +
     tog("تنزيل كل الخلفيات", "offlineAllBg", "حتى يمكن تغيير الخلفية بدون إنترنت (حوالي 15 ميغابايت). تُنزَّل تلقائياً عند اختيار تغيير الخلفية التلقائي"),
@@ -1339,6 +1417,17 @@ function build(){
   panel.addEventListener("keydown", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el) && (e.key.length === 1 || e.key === "Enter") && !e.ctrlKey && !e.metaKey) { e.preventDefault(); edOpen(el); if (e.key.length === 1) { var t = $("#edt"); t.value += e.key; t.dispatchEvent(new Event("input")); } } });
   panel.addEventListener("touchend", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el)) { e.preventDefault(); edOpen(el); } });
   panel.addEventListener("click", onClick); panel.addEventListener("change", onChange); panel.addEventListener("input", onSlInput);
+  // لوحة المفاتيح الخاصة: تمنع لوحة النظام قبل أن تظهر، وتفتح تحت الحقل
+  var vkPre = function(e){ var el = e.target; if (vkOn() && vkTyping(el) && !el.closest(".vkwrap")) el.setAttribute("inputmode", "none"); };
+  panel.addEventListener("pointerdown", vkPre, true); panel.addEventListener("touchstart", vkPre, {capture:true, passive:true});
+  panel.addEventListener("focusin", function(e){
+    var el = e.target;
+    if (VK.el && !VK.el.hidden && VK.docked && el !== VK.t && !VK.el.contains(el)) vkClose();
+    if (!vkOn() || !vkTyping(el) || el.closest("#ed") || el.closest(".vkwrap")) return;
+    if (S.textEditor !== false && edEligible(el)) return; // يفتح المحرر الخاص ومعه لوحة المفاتيح
+    vkOpen(el, panel, true);
+  });
+  panel.addEventListener("keydown", function(e){ if (e.key === "Escape" && VK.el && !VK.el.hidden && VK.docked) { e.stopPropagation(); var tt = VK.t; vkClose(); if (tt) tt.focus(); } }, true);
   $("#lock").addEventListener("submit", function(e){ e.preventDefault();
     var v = $("#lockpw").value;
     if (v === S.pass) { unlocked = true; role = "admin"; }
@@ -1423,12 +1512,14 @@ function spatialNav(){
   var SEL = 'button:not([disabled]),a[href],input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea,[tabindex]:not([tabindex="-1"])';
   addEventListener("keydown", function(e){
     var d0 = dirs[e.key]; if (!d0 || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (VK.el && !VK.el.hidden && e.target === VK.t && e.key === "ArrowDown") { var k1 = VK.el.querySelector(".vkr:nth-child(2) .vk"); if (k1) { e.preventDefault(); k1.focus(); return; } }
     // الشاشة المرسومة مدوّرة: «أسفل» عند المستخدم هو اتجاه آخر على الجهاز، فيُدار السهم بنفس زاوية الرسم
     var th = (+document.documentElement.getAttribute("data-rot") || 0) * Math.PI / 180, cs0 = Math.round(Math.cos(th)), sn0 = Math.round(Math.sin(th));
     var d = [d0[0]*cs0 - d0[1]*sn0, d0[0]*sn0 + d0[1]*cs0];
     var root = null, sp = $("#set"), ae = document.activeElement;
     if (actEl && !actEl.hidden) return; // لوحة أرقام التفعيل لها تنقل خاص
     if (sp && !sp.hidden) root = sp; else return;
+    var edv = $("#ed"); if (edv && !edv.hidden) root = edv; // داخل المحرر: التنقل بين أزراره ولوحة المفاتيح فقط
     var t = e.target, tag = (t.tagName || "").toLowerCase(), ty = (t.type || "").toLowerCase();
     // داخل حقل نص: السهمان الأفقيان يحركان المؤشر، وشريط التمرير يتغير بالأسهم الأفقية
     if (tag === "textarea") return;
@@ -1457,5 +1548,11 @@ function spatialNav(){
 }
 function init(){ shortcuts(); spatialNav(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
-window.SETTINGS = {open:open, close:close};
+// زر الرجوع في الريموت: يغلق لوحة المفاتيح ثم المحرر ثم الإعدادات بالترتيب
+function back(){
+  if (VK.el && !VK.el.hidden) { if (VK.t && VK.t.id === "edt") edClose(false); else vkClose(); return true; }
+  var ed = $("#ed"); if (ed && !ed.hidden) { edClose(false); return true; }
+  return false;
+}
+window.SETTINGS = {open:open, close:close, back:back};
 })();
