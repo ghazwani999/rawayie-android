@@ -56,13 +56,13 @@ function exportCfg(){
   LOCAL_ONLY.forEach(function(k){ delete c[k]; });
   if (c.sup) delete c.sup.pass;
   var url = function(v){ return /^(https?:)?\/\//.test(String(v || "")); };
-  if (c.look) { if (!url(c.look.customBg)) delete c.look.customBg; if (!url(c.look.logoId)) delete c.look.logoId; delete c.look.bgKey; }
+  if (c.look) { if (!url(c.look.customBg)) delete c.look.customBg; if (!url(c.look.logoId)) delete c.look.logoId; if (!url(c.look.wmImg)) delete c.look.wmImg; delete c.look.bgKey; }
   if (c.snd) { if (!url(c.snd.azanId)) delete c.snd.azanId; if (!url(c.snd.iqamaId)) delete c.snd.iqamaId; }
   return c;
 }
 function applyCfg(cfg){
   var keep = {pass:S.pass, remote:S.remote, lookV:S.lookV, supPass:(S.sup || {}).pass,
-    customBg:S.look.customBg, logoId:S.look.logoId, azanId:S.snd.azanId, iqamaId:S.snd.iqamaId};
+    customBg:S.look.customBg, logoId:S.look.logoId, wmImg:S.look.wmImg, azanId:S.snd.azanId, iqamaId:S.snd.iqamaId};
   var c = JSON.parse(JSON.stringify(cfg)); delete c.rev; delete c.by;
   state.applying = true;
   A.setAll(c);
@@ -70,7 +70,7 @@ function applyCfg(cfg){
   // الوسائط القادمة من الخادم (روابط) لها الأولوية، وإلا تبقى الوسائط المحلية
   var L = cfg.look || {}, N = cfg.snd || {};
   var loc = function(v){ return v && !/^(https?:)?\/\//.test(String(v)) ? v : ""; };
-  S.look.customBg = L.customBg || loc(keep.customBg); S.look.logoId = L.logoId || loc(keep.logoId);
+  S.look.customBg = L.customBg || loc(keep.customBg); S.look.logoId = L.logoId || loc(keep.logoId); S.look.wmImg = L.wmImg || loc(keep.wmImg);
   S.snd.azanId = N.azanId || loc(keep.azanId); S.snd.iqamaId = N.iqamaId || loc(keep.iqamaId);
   S.remote.rev = cfg.rev || Date.now();
   A.save(); A.rebuild();

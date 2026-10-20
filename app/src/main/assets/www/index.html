@@ -61,7 +61,7 @@ body{font-family:"Cairo",Tahoma,sans-serif;color:#fff}
 .emb{border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
   background:radial-gradient(circle,rgba(255,255,255,.16) 0,rgba(255,255,255,.06) 58%,rgba(255,255,255,0) 71%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)}
 .elogo{height:76%;object-fit:contain;opacity:var(--logoop,1);filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
-.elogo[src$="logo-silver.png"],.elogo[src$="img/logo.png"]{height:100%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+.elogo[src$="img/mark.png"]{height:auto;width:88%}
 .center{position:relative;display:flex;align-items:center;justify-content:center;flex:none}
 .cpan{display:flex;flex-direction:column;align-items:center}
 .clk{display:flex;direction:ltr;align-items:center;gap:26px}
@@ -121,7 +121,7 @@ body{font-family:"Cairo",Tahoma,sans-serif;color:#fff}
 .hiprev{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 4px;padding:14px 18px;border-radius:14px;background-size:cover;background-position:center;font-weight:700;font-size:18px}
 .hiprev i{font-style:normal;direction:ltr}
 .wmon .rows{position:relative;isolation:isolate}
-.wmon .rows::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:url(img/watermark.png) center/auto var(--wmh,85%) no-repeat;opacity:var(--wmop,.12)}
+.wmon .rows::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--wmimg,url(img/mark.png)) center/auto var(--wmh,85%) no-repeat;opacity:var(--wmop,.12)}
 .lightbg.wmon .rows::before{filter:brightness(.35)}
 .row.past,.card.past{opacity:.45}
 .row.eid .c1{color:var(--fg)}
@@ -134,7 +134,7 @@ body{font-family:"Cairo",Tahoma,sans-serif;color:#fff}
 .hdr{display:flex;align-items:center;justify-content:center;gap:24px}
 .hdr .logo{height:110px;object-fit:contain;opacity:var(--logoop,1)}
 .lgw.sq{aspect-ratio:1/1}
-.lgw{aspect-ratio:262/420;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
+.lgw{aspect-ratio:1024/916;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
 .hdr .logo.lgw{width:auto}
 .lgw.silver .lgm{opacity:.8}
 .lgm{width:100%;height:100%;background:var(--logog);-webkit-mask:var(--logom) center/contain no-repeat;mask:var(--logom) center/contain no-repeat}
@@ -684,12 +684,12 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610201621"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610201621"></script>
-<script charset="utf-8" src="data.js?v=2610201621"></script>
-<script charset="utf-8" src="i18n.js?v=2610201621"></script>
-<script charset="utf-8" src="app.js?v=2610201621"></script>
-<script charset="utf-8" src="license.js?v=2610201621"></script>
-<script charset="utf-8" src="remote.js?v=2610201621"></script>
-<script charset="utf-8" src="offline.js?v=2610201621"></script>
-<script charset="utf-8" src="settings.js?v=2610201621"></script>
+<script charset="utf-8" src="compat.js?v=2610201634"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610201634"></script>
+<script charset="utf-8" src="data.js?v=2610201634"></script>
+<script charset="utf-8" src="i18n.js?v=2610201634"></script>
+<script charset="utf-8" src="app.js?v=2610201634"></script>
+<script charset="utf-8" src="license.js?v=2610201634"></script>
+<script charset="utf-8" src="remote.js?v=2610201634"></script>
+<script charset="utf-8" src="offline.js?v=2610201634"></script>
+<script charset="utf-8" src="settings.js?v=2610201634"></script>

@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, wm:true, wmOp:0.12, wmSize:0.85, flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -388,6 +388,7 @@ function applyLook(){
   stage.classList.toggle("hitxt", !!hiTx); stage.classList.toggle("hiframe", !!L.hiFrame);
   // علامة مائية شفافة خلف جدول المواقيت (الهلال والمسجد)
   stage.classList.toggle("wmon", L.wm !== false); st.setProperty("--wmop", +L.wmOp || .12); st.setProperty("--wmh", Math.round((+L.wmSize || .85) * 100) + "%");
+  if (L.wmImg) { var wid = L.wmImg; mediaURL(wid).then(function(u){ if (S.look.wmImg === wid && u) stage.style.setProperty("--wmimg", 'url("' + u + '")'); }); } else st.removeProperty("--wmimg");
   if (!(auto && L.rowAuto)) row = hexA(L.rowColor || "#000000", +L.rowOpacity);
   st.setProperty("--rowbg", row);
   // ظل شريط الإعلانات أسفل الشاشة: تلقائي مثل جدول المواقيت، أو بدرجة مخصصة، أو بدون ظل
@@ -440,8 +441,7 @@ function logoHTML(cls){
   if (S.look.logo === false || S.look.logo === "none") return "";
   var c = cls || "logo";
   if (S.look.logoId && !customLogo) return "";
-  if (S.look.logoColor === "silver" && !S.look.logoId) return '<img class="' + c + '" src="img/logo-silver.png" alt="">'; // الشعار الفضي المعتمد
-  if ((S.look.logoColor || "auto") === "gold") return '<img class="' + c + '" src="' + (S.look.logoId ? customLogo : "img/logo.png") + '" alt="">';
+  if ((S.look.logoColor || "auto") === "gold") return '<img class="' + c + '" src="' + (S.look.logoId ? customLogo : "img/mark.png") + '" alt="">';
   return '<div class="' + c + ' lgw' + (S.look.logoId ? " sq" : "") + (S.look.logoColor === "silver" ? " silver" : "") + '"><div class="lgm"></div></div>';
 }
 function build(){
@@ -1064,7 +1064,7 @@ function splash(preview){
   stage.appendChild(el);
   var fillLogo = function(n){ var lg = el.querySelector(".sp-lg"); if (!lg) return; var h = logoHTML("splogo");
     if (!h && S.look.logoId && n < 8) { setTimeout(function(){ fillLogo(n + 1); }, 300); return; }
-    lg.innerHTML = h || '<img class="splogo" src="img/logo.png" alt="">'; };
+    lg.innerHTML = h || '<img class="splogo" src="img/mark.png" alt="">'; };
   fillLogo(0);
   el.addEventListener("click", function(){ hide(); });
   var gone = false, hide = function(){ if (gone) return; gone = true; el.classList.add("out"); setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 1100); };

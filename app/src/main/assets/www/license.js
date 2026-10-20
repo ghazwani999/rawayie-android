@@ -109,7 +109,7 @@ function render(){
   if (s.expired) {
     if (!ov) {
       ov = document.createElement("div"); ov.className = "licov";
-      ov.innerHTML = '<div class="licbox"><img class="liclogo" src="img/logo-silver.png" alt="">' +
+      ov.innerHTML = '<div class="licbox"><img class="liclogo" src="img/mark.png" alt="">' +
         '<div class="lict">انتهت الفترة التجريبية لمدة ' + TRIAL_DAYS + ' أيام</div>' +
         '<div class="licm">يرجى التواصل لتفعيل تطبيق روائع الأذان</div>' +
         '<a class="licwa" href="' + s.waLink + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +

@@ -120,8 +120,8 @@ R.mosque = function(){
       .map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === S.city ? " selected" : "") + '>' + esc(c[1]) + '</option>'; }).join("") + '</optgroup>'; }).join("");
   return card("المسجد", txt("اسم المسجد", "mosque") + tog("إظهار اسم المسجد على الشاشة", "look.showName") +
       sel("اللغة", "lang", [["ar","العربية"],["en","English"],["bn","বাংলা"]]) +
-      tog("إظهار الشعار", "look.logo", "شعار روائع الأذان في وسط الشاشة") +
-      '<div class="fld"><span><b>صورة الشعار</b><small>' + (S.look.logoId ? "شعار مخصص من الجهاز" : "شعار روائع الأذان") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الشعار<input type="file" accept="image/*" data-up="logo" hidden></label>' + (S.look.logoId ? btn("الشعار الافتراضي", "logoReset", "sm ghost") : "") + '</span></div>' +
+      tog("إظهار الشعار", "look.logo", "الشعار في وسط الشاشة") +
+      '<div class="fld"><span><b>صورة الشعار</b><small>' + (S.look.logoId ? "شعار مخصص من الجهاز" : "الهلال والمسجد") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الشعار<input type="file" accept="image/*" data-up="logo" hidden></label>' + (S.look.logoId ? btn("الشعار الافتراضي", "logoReset", "sm ghost") : "") + '</span></div>' +
       (S.look.logo !== false && S.look.logo !== "none" ? numIn("شفافية الشعار", "look.logoOp", 0.05, 1, 0.05, "", "1 = ظاهر بالكامل") + numIn("حجم دائرة الشعار", "look.embSize", 0.4, 1.2, 0.05, "", "أصغر = مساحة أكبر للمتبقي للصلاة والتاريخ الميلادي بجانبه. الافتراضي 0.7") +
         sel("لون الشعار", "look.logoColor", [["auto","يتكيف مع لون الخلفية (يستخدم شكل الشعار فقط)"],["gold","ألوان الصورة الأصلية"],["silver","فضي شفاف"],["custom","لون مخصص"]]) +
         (S.look.logoColor === "custom" ? colorIn("اختر لون الشعار", "look.logoCustom") : "") : "")) +
@@ -657,8 +657,8 @@ R.look = function(){
     '<div class="sw">' + accents.map(function(c){ return '<button type="button" data-act="accent" data-x="' + c + '" style="background:' + c + '" class="' + (S.look.accent.toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>' +
     colorIn("لون مخصص", "look.accent")) + hiCard() +
   card("العلامة المائية",
-    tog("إظهار العلامة المائية خلف جدول المواقيت", "look.wm", "صورة الهلال والمسجد شفافة خلف أوقات الصلوات") +
-    (S.look.wm !== false ? rangeIn("درجة الظهور", "look.wmOp", 0.03, 0.5, 0.01, "%", "كلما قلّت صارت أخف") + rangeIn("الحجم", "look.wmSize", 0.4, 1.2, 0.05, "%", "نسبةً إلى ارتفاع الجدول") : ""));
+    tog("إظهار العلامة المائية خلف جدول المواقيت", "look.wm", "صورة شفافة خلف أوقات الصلوات") +
+    (S.look.wm !== false ? '<div class="fld"><span><b>صورة العلامة المائية</b><small>' + (S.look.wmImg ? "صورة مخصصة" : "الهلال والمسجد (الافتراضية)") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الصورة<input type="file" accept="image/*" data-up="wm" hidden></label>' + (S.look.wmImg ? btn("الصورة الافتراضية", "wmReset", "sm ghost") : "") + '</span></div>' + rangeIn("درجة الظهور", "look.wmOp", 0.03, 0.5, 0.01, "%", "كلما قلّت صارت أخف") + rangeIn("الحجم", "look.wmSize", 0.4, 1.2, 0.05, "%", "نسبةً إلى ارتفاع الجدول") : ""));
 };
 /* تمييز الصلاة القادمة: لون الشريط وشفافيته ولون نصوصه، أو إطار فقط، مع معاينة */
 function hexRgba(h, a){ h = String(h || "#000000").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var n = parseInt(h, 16) || 0; return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")"; }
@@ -759,7 +759,7 @@ function actOpen(){
   var known = R0.wpSite(), site0 = known || (S.remote && S.remote.site) || "";
   if (!actEl) { actEl = document.createElement("div"); actEl.id = "act"; actEl.className = "actov"; $("#ui").appendChild(actEl); }
   var keys = ["1","2","3","4","5","6","7","8","9","del","0","ok"];
-  actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/logo.png" alt=""><h2 id="acth">ربط الشاشة وتفعيلها</h2>' +
+  actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/mark.png" alt=""><h2 id="acth">ربط الشاشة وتفعيلها</h2>' +
     '<p>اكتب <b>كود التفعيل (8 أرقام)</b> الخاص برقم هذا الجهاز، أو <b>كود الربط (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
     (window.LICENSE ? '<p class="actdev">رقم الجهاز: <b dir="ltr">' + esc(window.LICENSE.status().idText) + '</b></p>' : "") +
     (known ? '<p class="actsite" dir="ltr">' + esc(known.replace(/^https?:\/\//, "")) + '</p>' :
@@ -957,7 +957,7 @@ R.general = function(){
       '<div class="fld"><span><b>ملف الإعدادات</b><small>ملف واحد فيه كل الإعدادات مع الشعار والخلفيات والأصوات والشرائح المرفوعة. انقله لشاشة أخرى أو احتفظ به نسخة احتياطية</small></span><span class="nb">' + btn("حفظ في ملف", "bkFile", "sm") + '<label class="btn sm ghost">فتح ملف<input type="file" accept=".json,application/json" data-up="bkfile" hidden></label></span></div>') +
     card("إعادة ضبط", '<p class="note">تمسح جميع الإعدادات وتعيد الشاشة لحالتها الأولى.</p><div class="row-end" id="rstw">' + btn("إعادة ضبط", "reset", "danger") + btn("إعادة تحميل", "reload", "ghost") + '</div>') +
     card("معلومات عن البرنامج",
-      '<div class="about"><img src="img/logo.png" alt=""><div><b>روائع الأذان · نسخة الويب ' + A.VERSION + '</b><p>هذا التطبيق وقف لبيوت الله ولا يجوز بيعه</p>' +
+      '<div class="about"><img src="img/mark.png" alt=""><div><b>روائع الأذان · نسخة الويب ' + A.VERSION + '</b><p>هذا التطبيق وقف لبيوت الله ولا يجوز بيعه</p>' +
       '<p>المملكة العربية السعودية · مؤسسة روائع لتقنية المعلومات</p><p>الموقع الإلكتروني: <span dir="ltr">rawayie.sa</span></p></div><img class="qr" src="img/qr.png" alt="رمز موقع روائع"></div>');
 };
 
@@ -1127,8 +1127,9 @@ function upload(el){
   if (kind === "slide") { Promise.all(files.map(function(f){ return one(f, 1920); })).then(function(ids){ S.slides.items = S.slides.items.concat(ids.map(function(m){ return {id:A.uid(), img:m, imgMode:"contain", active:true}; })); commit(); render(); toast("تمت إضافة " + ids.length + " شريحة"); }).catch(fail); return; }
   var f = files[0];
   if (kind.indexOf("sp:") === 0) { var pth = kind.slice(3); one(f, 2200).then(function(id){ var old = get(pth); if (old && old.indexOf("file:") < 0 && !/^(https?:)?\/\//.test(old)) A.IDB.del(old); put(pth, id); commit(); render(); toast("تم الحفظ بنجاح"); }).catch(fail); return; }
-  one(f, kind === "logo" ? 600 : 2200).then(function(id){
+  one(f, kind === "logo" ? 600 : kind === "wm" ? 1200 : 2200).then(function(id){
     if (kind === "logo") { if (S.look.logoId) A.IDB.del(S.look.logoId); S.look.logoId = id; S.look.logoColor = "gold"; S.look.logo = true; }
+    if (kind === "wm") { if (S.look.wmImg && !/^(https?:)?\/\//.test(S.look.wmImg)) A.IDB.del(S.look.wmImg); S.look.wmImg = id; S.look.wm = true; }
     if (kind === "bg") { if (S.look.customBg) A.IDB.del(S.look.customBg); S.look.customBg = id; }
     if (kind === "azan") { if (S.snd.azanId) A.IDB.del(S.snd.azanId); S.snd.azanId = id; }
     if (kind === "iqama") { if (S.snd.iqamaId) A.IDB.del(S.snd.iqamaId); S.snd.iqamaId = id; }
@@ -1188,6 +1189,7 @@ function onClick(e){
     case "tDef": var d2 = txDefs()[txTarget]; $("#tarea").value = d2.multi ? txJoin(d2.def) : d2.def; txCount(); toast("اضغط حفظ النص لاعتماد النص الافتراضي"); break;
     case "blkPrev": close(); A.previewBlack(10000); break;
     case "fsReset": S.look.fs = JSON.parse(JSON.stringify(A.DEF.look.fs)); commit(); render(); toast("تمت إعادة الأحجام"); break;
+    case "wmReset": if (S.look.wmImg && !/^(https?:)?\/\//.test(S.look.wmImg)) A.IDB.del(S.look.wmImg); S.look.wmImg = ""; commit(); render(); toast("تمت استعادة العلامة الافتراضية"); break;
     case "logoReset": if (S.look.logoId) A.IDB.del(S.look.logoId); S.look.logoId = ""; commit(); render(); toast("تمت استعادة الشعار الافتراضي"); break;
     case "rSync": if (window.REMOTE) { window.REMOTE.start(); setTimeout(render, 2500); toast("جارٍ المزامنة"); } break;
     case "rPush": if (window.REMOTE) window.REMOTE.push().then(function(){ render(); toast("تم رفع الإعدادات"); }); break;
@@ -1299,7 +1301,7 @@ function open(){
 function close(){ if (S.pass) { unlocked = false; } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
-  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/logo.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
     '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
