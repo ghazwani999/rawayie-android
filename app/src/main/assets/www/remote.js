@@ -89,7 +89,9 @@ function push(){
   }).catch(fail);
 }
 function schedulePush(){ if (!S.remote.on || state.applying || !S.remote.allowLocal) return; clearTimeout(state.pushT); state.pushT = setTimeout(push, 1500); }
-function ok(){ state.status = "ok"; state.at = Date.now(); state.err = ""; }
+function ok(){ state.status = "ok"; state.at = Date.now(); state.err = "";
+  // ربط ناجح: تُحفظ نسخة احتياطية منه حتى لا تطلب الشاشة كود التفعيل مرة أخرى بعد إعادة التشغيل
+  try { if (window.LICENSE && S.remote.on && base()) window.LICENSE.setLink({server:S.remote.server, code:S.remote.code, key:S.remote.key, site:S.remote.site}); } catch(e){} }
 function fail(e){ state.status = "fail"; state.err = String(e && e.message || e); }
 
 function sendStatus(){
@@ -142,7 +144,7 @@ function start(){
 }
 // كل حفظ من الإعدادات على الشاشة يُرسل للخادم
 var origSave = A.save;
-A.save = function(){ origSave(); schedulePush(); };
+A.save = function(){ origSave(); schedulePush(); try { if (window.LICENSE && !S.remote.on) window.LICENSE.setLink(null); } catch(e){} }; // إيقاف الإدارة عن بعد يدوياً يلغي النسخة الاحتياطية
 
 /* ===== التفعيل بكود من لوحة المدير =====
    شاشة المسجد ترسل كود 6 أرقام إلى موقع ووردبريس، فتحصل على بيانات ربطها (الخادم ورمز الشاشة ومفتاحها) */

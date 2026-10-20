@@ -33,11 +33,12 @@ function readAll(){
   return list.filter(function(x){ return x && typeof x === "object"; });
 }
 function merge(list){
-  var r = {id:"", start:0, last:0, code:""};
+  var r = {id:"", start:0, last:0, code:"", link:null};
   list.forEach(function(x){
     if (!r.id && normId(x.id).length === 8) r.id = normId(x.id);
     if (+x.start > 0 && (!r.start || +x.start < r.start)) r.start = +x.start;
     if (+x.last > r.last) r.last = +x.last;
+    if (!r.link && x.link && x.link.server && x.link.code) r.link = x.link; // نسخة احتياطية من ربط الشاشة بلوحة المدير
   });
   list.forEach(function(x){ if (!r.code && x.code && r.id && normCode(x.code) === codeFor(r.id)) r.code = normCode(x.code); });
   return r;
@@ -53,8 +54,23 @@ function save(){
 if (!st.id) st.id = newId();
 if (!st.start) st.start = Date.now();
 // نسخة احتياطية في قاعدة بيانات المتصفح: تُكمل البيانات إذا مُسح التخزين المحلي فقط
-try { A.IDB.get("__lic").then(function(v){ if (!v) return; var r = merge([st, JSON.parse(v)]); if (r.start !== st.start || r.id !== st.id || r.code !== st.code) { st = r; save(); refresh(); } }).catch(function(){}); } catch(e){}
+try { A.IDB.get("__lic").then(function(v){ if (!v) return; var r = merge([st, JSON.parse(v)]); if (r.start !== st.start || r.id !== st.id || r.code !== st.code || (!st.link && r.link)) { st = r; save(); if (restoreLink() && window.REMOTE && window.REMOTE.start) window.REMOTE.start(); refresh(); } }).catch(function(){}); } catch(e){}
 save();
+/* الشاشة المرتبطة سابقاً بلوحة المدير لا تطلب كود الربط مرة أخرى: إذا ضاعت إعداداتها (مسح بيانات المتصفح جزئياً
+   أو تحديث) يُعاد ربطها تلقائياً من النسخة الاحتياطية */
+function restoreLink(){
+  var l = st.link, R = S.remote || {};
+  if (window.RAWAYIE_PREVIEW || !l || !l.server || !l.code || (R.on && R.server)) return false;
+  S.remote = R; R.on = true; R.server = l.server; R.code = l.code; R.key = l.key || ""; if (l.site) R.site = l.site;
+  try { A.save(); } catch(e){}
+  return true;
+}
+restoreLink();
+function setLink(l){
+  var n = l && l.server && l.code ? {server:l.server, code:l.code, key:l.key || "", site:l.site || ""} : null;
+  if (JSON.stringify(n) === JSON.stringify(st.link || null)) return;
+  st.link = n; save();
+}
 
 function status(){
   var now = Date.now();
@@ -108,7 +124,7 @@ function render(){
   } else if (ov) { ov.parentNode.removeChild(ov); ov = null; }
 }
 function refresh(){ try { render(); } catch(e){} }
-window.LICENSE = {status:status, activate:activate, codeFor:null, refresh:refresh, info:function(){ var s = status(); return {id:s.id, state:s.active ? "active" : s.trial ? "trial" : "expired", left:s.leftDays, start:s.start}; }};
+window.LICENSE = {status:status, activate:activate, setLink:setLink, codeFor:null, refresh:refresh, info:function(){ var s = status(); return {id:s.id, state:s.active ? "active" : s.trial ? "trial" : "expired", left:s.leftDays, start:s.start}; }};
 if (window.RAWAYIE_PREVIEW) { window.LICENSE.status = function(){ var s = status(); s.expired = false; s.trial = false; return s; }; return; } // معاينة المدير: بدون رسائل
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ setTimeout(refresh, 300); }); else setTimeout(refresh, 300);
 setInterval(refresh, 20000);
