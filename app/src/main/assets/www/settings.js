@@ -518,11 +518,14 @@ function edOpen(el){
    بديل لوحة مفاتيح النظام (التي تظهر غير مدوّرة وتغطي نصف الشاشة على التلفاز): عربي، إنجليزي، أرقام ورموز.
    تدور مع الشاشة، وتعمل بالريموت والفأرة واللمس، وتكتب في أي حقل نصي في الإعدادات وفي المحرر الخاص */
 var VK = {el:null, t:null, lang:"ar", mode:"", shift:false, docked:false};
+// نفس ترتيب لوحة Gboard العربية والإنجليزية (من اليسار إلى اليمين كما تظهر على الشاشة)
 var VK_L = {
-  ar:[["ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د"],["ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","ذ"],["ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ","أ","إ","آ"]],
-  en:[["q","w","e","r","t","y","u","i","o","p"],["a","s","d","f","g","h","j","k","l"],["z","x","c","v","b","n","m",",",".","-"]],
-  sym:[["!","@","#","%","&","*","(",")","-","_"],[":","؛","،","؟","?","/","\"","'","+","="],["ﷺ","﷽","﴿","﴾","«","»","۞","ـ",".",","]]
+  ar:[["١","٢","٣","٤","٥","٦","٧","٨","٩","٠"],["ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج"],["ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط"],["ذ","ء","ؤ","ر","ى","ة","و","ز","ظ","د"]],
+  en:[["1","2","3","4","5","6","7","8","9","0"],["q","w","e","r","t","y","u","i","o","p"],["a","s","d","f","g","h","j","k","l"],["z","x","c","v","b","n","m"]],
+  sym:[["1","2","3","4","5","6","7","8","9","0"],["@","#","$","_","&","-","+","(",")","/"],["*","\"","'",":","؛","!","؟","?","=","%"]]
 };
+// الضغط المطوّل (أو تكرار زر OK في الريموت) يعرض الحروف البديلة
+var VK_ALT = {"ا":["أ","إ","آ","ٱ"],"ى":["ئ"],"ي":["ئ"],"و":["ؤ"],"ه":["ة"],".":["َ","ُ","ِ","ّ","ْ","ً","ٌ","ٍ"],"،":["؛","؟","!",":"],",":[";","?","!",":"],"e":["é","è"],"a":["à","á"]};
 function vkOn(){
   var m = S.vkb || "auto"; if (m === "on") return true; if (m === "off") return false;
   var AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
@@ -536,16 +539,22 @@ function vkTyping(el){
   return el.tagName === "INPUT" && /^(text|search|url|email|number|password|tel|)$/.test(el.type || "") && el.id !== "actcode" && el.id !== "liccode";
 }
 function vkHTML(){
-  var L = VK.mode === "sym" ? VK_L.sym : VK_L[VK.lang], k = function(c, cls, lab, w){ return '<button type="button" class="vk' + (cls ? " " + cls : "") + '" data-vk="' + esc(c) + '"' + (w ? ' style="flex:' + w + '"' : "") + '>' + (lab || esc(c)) + '</button>'; };
-  var up = VK.lang === "en" && VK.shift && VK.mode !== "sym";
-  var rows = [["1","2","3","4","5","6","7","8","9","0"]].concat(L);
-  return '<div class="vkb' + (VK.lang === "en" || VK.mode === "sym" ? " ltr" : "") + '" role="group" aria-label="لوحة المفاتيح">' +
-    rows.map(function(r, i){ return '<div class="vkr">' + (i === 3 && VK.lang === "en" && VK.mode !== "sym" ? k("{shift}", "fn" + (VK.shift ? " on" : ""), "⇧", 1.4) : "") +
-      r.map(function(c){ var v = up ? c.toUpperCase() : c; return k(v); }).join("") + (i === 0 ? k("{bs}", "fn", "⌫", 1.4) : "") + '</div>'; }).join("") +
-    '<div class="vkr">' + k("{mode}", "fn", VK.mode === "sym" ? (VK.lang === "ar" ? "أ ب ت" : "ABC") : "#+=", 1.3) + k("{lang}", "fn", VK.lang === "ar" ? "EN" : "ع", 1) +
-      k("{left}", "fn", "→", 1) + k(" ", "sp", "مسافة", 4) + k("{right}", "fn", "←", 1) + k("{nl}", "fn", "سطر ↵", 1.3) + k("{clear}", "fn", "مسح الكل", 1.4) + k("{done}", "ok", "تم ✓", 1.6) + '</div></div>';
+  var sym = VK.mode === "sym", ar = VK.lang === "ar" && !sym, L = sym ? VK_L.sym : VK_L[VK.lang], up = VK.lang === "en" && VK.shift && !sym;
+  var k = function(c, cls, lab, w){ var alt = VK_ALT[c] && /^[اى.]$/.test(c) ? '<sup>' + esc(VK_ALT[c][0]) + '</sup>' : "";
+    return '<button type="button" class="vk' + (cls ? " " + cls : "") + '" data-vk="' + esc(c) + '"' + (w ? ' style="flex:' + w + '"' : "") + '>' + (lab || esc(c)) + (lab ? "" : alt) + '</button>'; };
+  var rows = L.map(function(r, i){
+    var last = i === L.length - 1, keys = r.map(function(c){ return k(up ? c.toUpperCase() : c); }).join("");
+    if (last && !ar && !sym) keys = k("{shift}", "fn" + (VK.shift ? " on" : ""), "⇧", 1.5) + keys + k("{bs}", "fn", "⌫", 1.5);
+    else if (last) keys += k("{bs}", "fn", "⌫", 1.5);
+    return '<div class="vkr' + (i === 0 ? " num" : "") + '">' + keys + '</div>'; }).join("");
+  // الصف السفلي مثل Gboard: رموز، تبديل اللغة، فاصلة، مسافة باسم اللغة، نقطة، إدخال
+  var enter = VK.t && VK.t.tagName === "TEXTAREA" ? "{nl}" : "{done}";
+  return '<div class="vkb" role="group" aria-label="لوحة المفاتيح">' + rows +
+    '<div class="vkr">' + k("{mode}", "fn", sym ? (VK.lang === "ar" ? "أ ب ت" : "ABC") : (ar ? "!#١" : "?123"), 1.5) + k("{lang}", "fn", "🌐", 1.1) + k(ar ? "،" : ",") +
+      k(" ", "sp", ar ? "العربية" : "English", 4.6) + k(".") + k(enter, "fn ent", "↵", 1.5) + '</div>' +
+    '<div class="vkr vkbar"><button type="button" class="vk fn hide" data-vk="{done}" aria-label="تم">⌨ تم</button><span class="vkhint">اضغط مطولاً للحروف البديلة (أ إ آ ئ والتشكيل)</span></div></div>';
 }
-function vkRender(){ if (VK.el) { var f = document.activeElement, fk = f && f.dataset ? f.dataset.vk : null; VK.el.innerHTML = vkHTML(); if (fk != null) { var nb = VK.el.querySelector('[data-vk="' + (VK.shift && fk.length === 1 ? fk : fk).replace(/"/g, '\\"') + '"]'); if (nb) nb.focus(); } } }
+function vkRender(){ vkAltClose(); if (VK.el) { var f = document.activeElement, fk = f && f.dataset ? f.dataset.vk : null; VK.el.innerHTML = vkHTML(); if (fk != null) { var nb = VK.el.querySelector('[data-vk="' + (VK.shift && fk.length === 1 ? fk : fk).replace(/"/g, '\\"') + '"]'); if (nb) nb.focus(); } } }
 function vkOpen(t, host, docked){
   if (!vkOn() || !t) return false;
   if (VK.t && VK.t !== t && VK.docked) vkCommit();
@@ -555,7 +564,7 @@ function vkOpen(t, host, docked){
   VK.mode = t.type === "number" || t.type === "tel" ? "sym" : ""; VK.shift = false;
   if (!VK.el) { VK.el = document.createElement("div"); VK.el.className = "vkwrap";
     VK.el.addEventListener("mousedown", function(e){ if (e.target.closest("[data-vk]")) e.preventDefault(); }); // الضغط بالفأرة لا يُخرج المؤشر من الحقل
-    VK.el.addEventListener("click", vkClick); }
+    VK.el.addEventListener("click", vkClick); vkLpBind(VK.el); }
   var bef = host.querySelector(".edf"); if (bef) host.insertBefore(VK.el, bef); else if (VK.el.parentNode !== host) host.appendChild(VK.el);
   VK.el.classList.toggle("dock", !!docked); VK.el.hidden = false; vkRender();
   if (docked) { var sb = $(".sbody", panel); if (sb) { sb.style.paddingBottom = (VK.el.offsetHeight + 30) + "px"; } try { t.scrollIntoView({block:"center"}); } catch(e){} }
@@ -569,7 +578,35 @@ function vkIns(txt){
   else { t.value = t.value.slice(0, a) + txt + t.value.slice(b); try { t.setSelectionRange(a + txt.length, a + txt.length); } catch(e){} }
   t.dispatchEvent(new Event("input", {bubbles:true}));
 }
+/* الحروف البديلة: نافذة صغيرة فوق الزر */
+var vkLp = null, vkLpFired = false;
+function vkAltOpen(b){
+  var c = b.dataset.vk, alts = VK_ALT[c]; if (!alts || !VK.el) return false;
+  vkAltClose(); var box = document.createElement("div"); box.className = "vkalt";
+  box.innerHTML = [c].concat(alts).map(function(a){ return '<button type="button" class="vk" data-vk="' + esc(a) + '">' + esc(a) + '</button>'; }).join("");
+  VK.el.appendChild(box);
+  // موضع النافذة داخل لوحة المفاتيح (بإحداثياتها المحلية، فتبقى صحيحة مع الشاشة المدوّرة)
+  var off = 0, n = b; while (n && n !== VK.el) { off += n.offsetTop; n = n.offsetParent; }
+  var offl = 0; n = b; while (n && n !== VK.el) { offl += n.offsetLeft; n = n.offsetParent; }
+  box.style.top = Math.max(0, off - b.offsetHeight - 8) + "px"; box.style.left = Math.max(0, offl - 10) + "px";
+  var f = box.querySelectorAll("button")[1]; if (f) f.focus();
+  return true;
+}
+function vkAltClose(){ var a = VK.el && VK.el.querySelector(".vkalt"); if (a) a.parentNode.removeChild(a); }
+function vkLpBind(el){
+  el.addEventListener("pointerdown", function(e){ var b = e.target.closest("[data-vk]"); vkLpFired = false; clearTimeout(vkLp); if (!b || b.closest(".vkalt") || !VK_ALT[b.dataset.vk]) return;
+    vkLp = setTimeout(function(){ vkLpFired = vkAltOpen(b); }, 450); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(function(t){ el.addEventListener(t, function(){ clearTimeout(vkLp); }); });
+  // الريموت: الضغط المطوّل على OK يكرر الزر، فتفتح الحروف البديلة
+  el.addEventListener("keydown", function(e){ var b = e.target.closest ? e.target.closest("[data-vk]") : null; if (!b) return;
+    if ((e.key === "Enter" || e.key === " ") && e.repeat && VK_ALT[b.dataset.vk] && !b.closest(".vkalt")) { e.preventDefault();
+      if (!el.querySelector(".vkalt")) { var t = VK.t, p = t && t.selectionStart; // الحرف الذي كُتب بأول ضغطة يُستبدل بالبديل
+        if (t && p > 0 && t.value.charAt(p - 1) === b.dataset.vk) { t.value = t.value.slice(0, p - 1) + t.value.slice(p); try { t.setSelectionRange(p - 1, p - 1); } catch(x){} t.dispatchEvent(new Event("input", {bubbles:true})); }
+        vkAltOpen(b); } }
+    if (e.key === "Escape" && el.querySelector(".vkalt")) { e.preventDefault(); e.stopPropagation(); vkAltClose(); } });
+}
 function vkClick(e){
+  if (vkLpFired) { vkLpFired = false; e.stopPropagation(); return; } // انتهى الضغط المطوّل بفتح البدائل
   var b = e.target.closest("[data-vk]"); if (!b || !VK.t) return; e.stopPropagation();
   var c = b.dataset.vk, t = VK.t;
   if (c === "{bs}") { var a = t.selectionStart, z = t.selectionEnd;
@@ -586,6 +623,9 @@ function vkClick(e){
   if (c === "{clear}") { t.value = ""; t.dispatchEvent(new Event("input", {bubbles:true})); return; }
   if (c === "{nl}") { if (t.tagName === "TEXTAREA") vkIns("\n"); return; }
   if (c === "{done}") { if (ED.el && $("#ed") && !$("#ed").hidden && t.id === "edt") { edClose(true); return; } var tt = t; vkClose(); try { tt.focus({preventScroll:true}); } catch(x){} return; }
+  if (b.closest(".vkalt")) { vkAltClose(); }
+  // حقول الأرقام تحتاج أرقاماً إنجليزية
+  if (/^[٠-٩]$/.test(c) && (t.type === "number" || t.getAttribute("dir") === "ltr")) c = String("٠١٢٣٤٥٦٧٨٩".indexOf(c));
   vkIns(c); if (VK.shift) { VK.shift = false; vkRender(); }
 }
 
@@ -800,7 +840,7 @@ R.layout = function(){
     tog("وضع أسماء الصلوات في المنتصف في الوضع العمودي", "look.centerP") + tog("وضع أسماء الصلوات في المنتصف في العرض الأفقي", "look.centerL") +
     tog("تكبير الإقامة والأذان في وضع العرض الأفقي", "look.bigL") +
     tog("تكبير عداد المتبقي للصلاة القادمة", "look.bigCounter") + tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.0. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.1. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
 };
 
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
