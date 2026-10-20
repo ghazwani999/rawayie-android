@@ -120,6 +120,9 @@ body{font-family:"Cairo",Tahoma,sans-serif;color:#fff}
 .hiframe .row.hi{background:transparent;box-shadow:inset 0 0 0 5px var(--hiline)}.hiframe.shadow .row.hi{background:var(--rowbg);box-shadow:inset 0 0 0 5px var(--hiline),var(--rowsh)}
 .hiprev{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 4px;padding:14px 18px;border-radius:14px;background-size:cover;background-position:center;font-weight:700;font-size:18px}
 .hiprev i{font-style:normal;direction:ltr}
+.wmon .rows{position:relative;isolation:isolate}
+.wmon .rows::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:url(img/watermark.png) center/auto var(--wmh,85%) no-repeat;opacity:var(--wmop,.12)}
+.lightbg.wmon .rows::before{filter:brightness(.35)}
 .row.past,.card.past{opacity:.45}
 .row.eid .c1{color:var(--fg)}
 .fixed{text-align:center;color:var(--acc);font-family:var(--fz);font-weight:700;line-height:1.5;flex:none}
@@ -681,12 +684,12 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610201605"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610201605"></script>
-<script charset="utf-8" src="data.js?v=2610201605"></script>
-<script charset="utf-8" src="i18n.js?v=2610201605"></script>
-<script charset="utf-8" src="app.js?v=2610201605"></script>
-<script charset="utf-8" src="license.js?v=2610201605"></script>
-<script charset="utf-8" src="remote.js?v=2610201605"></script>
-<script charset="utf-8" src="offline.js?v=2610201605"></script>
-<script charset="utf-8" src="settings.js?v=2610201605"></script>
+<script charset="utf-8" src="compat.js?v=2610201621"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610201621"></script>
+<script charset="utf-8" src="data.js?v=2610201621"></script>
+<script charset="utf-8" src="i18n.js?v=2610201621"></script>
+<script charset="utf-8" src="app.js?v=2610201621"></script>
+<script charset="utf-8" src="license.js?v=2610201621"></script>
+<script charset="utf-8" src="remote.js?v=2610201621"></script>
+<script charset="utf-8" src="offline.js?v=2610201621"></script>
+<script charset="utf-8" src="settings.js?v=2610201621"></script>

@@ -655,7 +655,10 @@ R.look = function(){
   card("الألوان",
     tog("تلوين النصوص تلقائياً حسب الخلفية", "look.autoColor", "يختار ألوان النصوص والظل والتمييز من ألوان الخلفية. أوقفه لاستخدام اللون المخصص أدناه") +
     '<div class="sw">' + accents.map(function(c){ return '<button type="button" data-act="accent" data-x="' + c + '" style="background:' + c + '" class="' + (S.look.accent.toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>' +
-    colorIn("لون مخصص", "look.accent")) + hiCard();
+    colorIn("لون مخصص", "look.accent")) + hiCard() +
+  card("العلامة المائية",
+    tog("إظهار العلامة المائية خلف جدول المواقيت", "look.wm", "صورة الهلال والمسجد شفافة خلف أوقات الصلوات") +
+    (S.look.wm !== false ? rangeIn("درجة الظهور", "look.wmOp", 0.03, 0.5, 0.01, "%", "كلما قلّت صارت أخف") + rangeIn("الحجم", "look.wmSize", 0.4, 1.2, 0.05, "%", "نسبةً إلى ارتفاع الجدول") : ""));
 };
 /* تمييز الصلاة القادمة: لون الشريط وشفافيته ولون نصوصه، أو إطار فقط، مع معاينة */
 function hexRgba(h, a){ h = String(h || "#000000").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var n = parseInt(h, 16) || 0; return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")"; }
@@ -1063,7 +1066,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
