@@ -768,11 +768,14 @@ function actOpen(){
   };
   setTimeout(function(){ (known || site0 ? code : $("#actsite", actEl) || code).focus(); }, 50);
 }
-function actClose(later){ if (actEl) actEl.hidden = true; if (later) { try { sessionStorage.setItem("rawayie-act-later", "1"); } catch(e){} } }
+function actClose(later){ if (actEl) actEl.hidden = true; if (later) { try { localStorage.setItem("rawayie-act-later", "1"); } catch(e){} try { document.cookie = "rwactlater=1; max-age=315360000; path=/; SameSite=Lax"; } catch(e){} } }
 // تطبيق مفتوح من موقع ووردبريس وغير مرتبط بعد: تظهر نافذة التفعيل تلقائياً
 setTimeout(function(){
-  var R0 = window.REMOTE, later = false; try { later = sessionStorage.getItem("rawayie-act-later") === "1"; } catch(e){}
-  if (!window.RAWAYIE_PREVIEW && R0 && R0.wpSite && R0.wpSite() && !(S.remote && S.remote.on && S.remote.server) && !later) actOpen();
+  var R0 = window.REMOTE, later = false, L0 = window.LICENSE;
+  // «لاحقاً» تُحفظ دائماً: لا تظهر النافذة عند كل تشغيل، ويبقى الربط متاحاً من الإعدادات ← الإدارة عن بعد
+  try { later = localStorage.getItem("rawayie-act-later") === "1" || /(?:^|; )rwactlater=1/.test(document.cookie) || sessionStorage.getItem("rawayie-act-later") === "1"; } catch(e){}
+  var licensed = false; try { licensed = !!(L0 && L0.status().active); } catch(e){} // شاشة مفعّلة الترخيص تعمل مستقلة بدون طلب الربط
+  if (!window.RAWAYIE_PREVIEW && R0 && R0.wpSite && R0.wpSite() && !(S.remote && S.remote.on && S.remote.server) && !later && !licensed) actOpen();
 }, (S.splash && S.splash.on !== false ? (+S.splash.sec || 6) * 1000 + 600 : 800));
 
 R.remote = function(){
