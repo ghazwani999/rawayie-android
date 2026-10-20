@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -339,8 +339,24 @@ window.__vwheel = function(fx, fy, d){
     if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2) { el.scrollTop += d * 90; return; }
     el = el.parentElement; }
 };
+/* مساحة الكاميرا الأمامية (النوتش) وحواف الشاشة المنحنية: تُترك فارغة حتى لا يغطي الكاميرا أي نص */
+var insProbe = null;
+function safeIns(){
+  var o = {t:0, l:0, r:0, b:0}, AN = window.RawayieAndroid;
+  try { if (AN && AN.safeInsets) { var j = JSON.parse(AN.safeInsets()); o = {t:+j.top || 0, l:+j.left || 0, r:+j.right || 0, b:+j.bottom || 0}; } } catch(e){}
+  try {
+    if (!insProbe) { insProbe = document.createElement("div"); insProbe.style.cssText = "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)"; document.body.appendChild(insProbe); }
+    var cs = getComputedStyle(insProbe);
+    o.t = Math.max(o.t, parseFloat(cs.paddingTop) || 0); o.r = Math.max(o.r, parseFloat(cs.paddingRight) || 0);
+    o.b = Math.max(o.b, parseFloat(cs.paddingBottom) || 0); o.l = Math.max(o.l, parseFloat(cs.paddingLeft) || 0);
+  } catch(e){}
+  var mw = innerWidth * .2, mh = innerHeight * .2;
+  o.t = Math.min(o.t, mh); o.b = Math.min(o.b, mh); o.l = Math.min(o.l, mw); o.r = Math.min(o.r, mw);
+  if (S.look.safeArea === false) o = {t:0, l:0, r:0, b:0};
+  return o;
+}
 function orient(){
-  var r = rotCSS(), w = innerWidth, h = innerHeight;
+  var r = rotCSS(), si = safeIns(), w = innerWidth - si.l - si.r, h = innerHeight - si.t - si.b;
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }
   if (S.look.orient === "portrait") return "P";
   if (S.look.orient === "landscape") return "L";
@@ -348,7 +364,10 @@ function orient(){
 }
 function fit(){
   var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
-  var vw = innerWidth, vh = innerHeight; if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
+  var si = safeIns(), vw = innerWidth - si.l - si.r, vh = innerHeight - si.t - si.b;
+  stage.style.left = (si.l + vw/2) + "px"; stage.style.top = (si.t + vh/2) + "px";
+  var rs = document.documentElement.style; rs.setProperty("--sat", si.t + "px"); rs.setProperty("--sab", si.b + "px"); rs.setProperty("--sal", si.l + "px"); rs.setProperty("--sar", si.r + "px");
+  if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
   // ملء الشاشة بالكامل: يتمدد ارتفاع التصميم حسب نسبة الجهاز (جوال، تابلت، تلفاز 4:3 أو 21:9) فلا تظهر أشرطة سوداء
   if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = Math.round(o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)));
   var sc = Math.min(vw/W, vh/H);

@@ -540,6 +540,18 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
+        // مساحة الكاميرا الأمامية (النوتش) بوحدات الصفحة: حتى لا يغطيها اسم المسجد أو أي نص
+        @JavascriptInterface public String safeInsets() {
+            int t = 0, l = 0, r = 0, b = 0;
+            try {
+                if (Build.VERSION.SDK_INT >= 28) {
+                    android.view.WindowInsets wi = getWindow().getDecorView().getRootWindowInsets();
+                    if (wi != null && wi.getDisplayCutout() != null) { android.view.DisplayCutout c = wi.getDisplayCutout(); t = c.getSafeInsetTop(); l = c.getSafeInsetLeft(); r = c.getSafeInsetRight(); b = c.getSafeInsetBottom(); }
+                }
+            } catch (Exception ignored) { }
+            float d = getResources().getDisplayMetrics().density; if (d <= 0) d = 1;
+            return "{\"top\":" + Math.round(t / d) + ",\"left\":" + Math.round(l / d) + ",\"right\":" + Math.round(r / d) + ",\"bottom\":" + Math.round(b / d) + "}";
+        }
         @JavascriptInterface public int nativeRot() { return fillsScreen() ? nativeRotDeg() : 0; }
         @JavascriptInterface public String rotInfo() {
             View dv = getWindow().getDecorView();
