@@ -114,9 +114,12 @@ function render(){
         '<div class="licm">يرجى التواصل لتفعيل تطبيق روائع الأذان</div>' +
         '<a class="licwa" href="' + s.waLink + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +
         '<div class="licid">رقم الجهاز: <b dir="ltr">' + esc(s.idText) + '</b><small>أرسل رقم الجهاز مع طلب التفعيل</small></div>' +
-        '<form class="licf"><input inputmode="numeric" autocomplete="off" maxlength="12" placeholder="كود التفعيل" aria-label="كود التفعيل"><button type="submit">تفعيل</button></form>' +
+        '<form class="licf"><input inputmode="none" autocomplete="off" maxlength="12" placeholder="كود التفعيل" aria-label="كود التفعيل"><button type="submit">تفعيل</button></form>' +
+        '<div class="licnum">' + ["1","2","3","4","5","6","7","8","9","del","0"].map(function(k){ return '<button type="button" data-k="' + k + '">' + (k === "del" ? "⌫" : k) + '</button>'; }).join("") + '</div>' +
         '<div class="licerr" hidden>الكود غير صحيح لهذا الجهاز</div></div>';
       sg.appendChild(ov);
+      ov.querySelector(".licnum").addEventListener("click", function(e){ var b = e.target.closest ? e.target.closest("[data-k]") : null; if (!b) return; var inp = ov.querySelector("input"), d = inp.value.replace(/\D/g, "");
+        d = b.getAttribute("data-k") === "del" ? d.slice(0, -1) : (d + b.getAttribute("data-k")).slice(0, 8); inp.value = d; });
       ov.querySelector("form").addEventListener("submit", function(e){ e.preventDefault();
         var box = ov, inp = box.querySelector("input"), er = box.querySelector(".licerr"), ok = activate(inp.value);
         er.hidden = ok; if (!ok) inp.select(); });

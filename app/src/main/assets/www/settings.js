@@ -264,7 +264,10 @@ function licCard(){
   return card("تفعيل التطبيق",
     '<div class="fld"><span><b>الحالة</b><small>' + esc(stt) + '</small></span><span class="pill ' + (s.active ? "ok" : s.trial ? "" : "bad") + '">' + (s.active ? "مفعّل" : s.trial ? "تجريبي" : "منتهي") + '</span></div>' +
     '<div class="fld"><span><b>رقم الجهاز</b><small>أرسله مع طلب التفعيل</small></span><b dir="ltr" style="font-size:20px;letter-spacing:2px">' + esc(s.idText) + '</b></div>' +
-    (s.active ? "" : '<label class="fld" for="liccode"><span><b>كود التفعيل</b><small id="licmsg">8 أرقام تصلك بعد التواصل</small></span><span class="nb"><input type="text" id="liccode" inputmode="numeric" maxlength="12" dir="ltr" style="width:170px;text-align:center">' + btn("تفعيل", "licAct", "sm") + '</span></label>' +
+    // لوحة أرقام داخل التطبيق: لا تظهر لوحة مفاتيح النظام (تظهر غير مدوّرة وتغطي الشاشة على التلفاز)
+    (s.active ? "" : '<label class="fld" for="liccode"><span><b>كود التفعيل</b><small id="licmsg">8 أرقام تصلك بعد التواصل. اكتبها من لوحة الأرقام أو أزرار الريموت</small></span></label>' +
+      '<div class="licpad"><input type="text" id="liccode" inputmode="none" autocomplete="off" maxlength="9" dir="ltr" placeholder="•••• ••••" aria-label="كود التفعيل">' +
+      '<div class="actpad">' + ["1","2","3","4","5","6","7","8","9","del","0","ok"].map(function(k){ return '<button type="button" data-act="' + (k === "ok" ? "licAct" : "licKey") + '" data-x="' + k + '"' + (k === "ok" ? ' class="ok"' : "") + '>' + (k === "del" ? "⌫" : k === "ok" ? "تفعيل" : k) + '</button>'; }).join("") + '</div></div>' +
       '<div class="row-end"><a class="btn" href="' + s.waLink + '" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">تواصل عبر واتساب ' + esc(s.wa) + '</a></div>'),
     s.active ? "" : "فترة تجريبية لمدة 3 أيام. يرجى التواصل لتفعيل تطبيق روائع الأذان. واتساب: " + s.wa);
 }
@@ -777,7 +780,7 @@ function actOpen(){
     (window.LICENSE ? '<p class="actdev">رقم الجهاز: <b dir="ltr">' + esc(window.LICENSE.status().idText) + '</b></p>' : "") +
     (known ? '<p class="actsite" dir="ltr">' + esc(known.replace(/^https?:\/\//, "")) + '</p>' :
       '<label class="actf" for="actsite"><span>عنوان موقع الإدارة</span><input id="actsite" type="url" dir="ltr" placeholder="example.com" autocomplete="url" value="' + esc(site0.replace(/^https?:\/\//, "")) + '"></label>') +
-    '<input id="actcode" class="actcode" dir="ltr" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="•••• ••••" aria-label="كود التفعيل أو الربط">' +
+    '<input id="actcode" class="actcode" dir="ltr" inputmode="none" autocomplete="one-time-code" maxlength="9" placeholder="•••• ••••" aria-label="كود التفعيل أو الربط">' +
     '<div class="actpad">' + keys.map(function(k, i){ return '<button type="button" data-k="' + k + '" data-i="' + i + '"' + (k === "ok" ? ' class="ok"' : "") + '>' + (k === "del" ? "⌫" : k === "ok" ? "تفعيل" : k) + '</button>'; }).join("") + '</div>' +
     '<p class="acterr" id="acterr" role="alert"></p><button type="button" class="actlater" data-k="later">لاحقاً</button></div>';
   actEl.hidden = false;
@@ -1169,6 +1172,7 @@ function onClick(e){
     case "sbTab": R.hide.sb = x; render(); break;
     case "sleepPrevK": close(); A.previewBlack(10000, true, x); break;
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
+    case "licKey": var lk = $("#liccode"); if (lk) { var dg = lk.value.replace(/\D/g, ""); dg = x === "del" ? dg.slice(0, -1) : (dg + x).slice(0, 8); lk.value = dg.length > 4 ? dg.slice(0, 4) + " " + dg.slice(4) : dg; } break;
     case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#ff8a8a"; } } break;
     case "goto": var gi = x.indexOf("|"); gotoOpt(x.slice(0, gi), x.slice(gi + 1)); break;
     case "resetTimes": S.adj = JSON.parse(JSON.stringify(A.DEF.adj)); S.iq = JSON.parse(JSON.stringify(A.DEF.iq)); S.duha = A.DEF.duha; S.shift = 0; S.summer = false; S.ramadan30 = false; S.hijriAdj = 0; commit(); render(); toast("تمت إعادة الضبط"); break;
@@ -1409,6 +1413,11 @@ function shortcuts(){
 }
 /* التنقل بأسهم الريموت داخل الإعدادات والنوافذ: يختار أقرب عنصر في اتجاه السهم كما يراه المستخدم على الشاشة
    (يعمل صحيحاً حتى لو كانت الشاشة مدوّرة)، ولا يعلق التركيز خارج القائمة */
+// أزرار الأرقام في الريموت تكتب في كود التفعيل مباشرة
+addEventListener("keydown", function(e){
+  if (!/^[0-9]$/.test(e.key)) return; var lp = document.querySelector(".licpad"); if (!lp || !lp.contains(document.activeElement) || document.activeElement.id === "liccode") return;
+  e.preventDefault(); var lk = document.getElementById("liccode"), dg = (lk.value.replace(/\D/g, "") + e.key).slice(0, 8); lk.value = dg.length > 4 ? dg.slice(0, 4) + " " + dg.slice(4) : dg;
+});
 function spatialNav(){
   var dirs = {ArrowUp:[0, -1], ArrowDown:[0, 1], ArrowLeft:[-1, 0], ArrowRight:[1, 0]};
   var SEL = 'button:not([disabled]),a[href],input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea,[tabindex]:not([tabindex="-1"])';
