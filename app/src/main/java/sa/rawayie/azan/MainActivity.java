@@ -6,6 +6,9 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.os.Handler;
+import android.os.Looper;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -330,6 +333,62 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    /* ===== تدوير الشاشة من النظام =====
+       بدل رسم الصفحة مدوّرة (فتتحرك الفأرة وأزرار الريموت بعكس الاتجاه)، يطلب التطبيق من أندرويد تدوير الشاشة نفسها.
+       deg: زاوية التدوير المطلوبة باتجاه عقارب الساعة (0، 90، 180، 270)، أو -1 لإيقاف التدوير من النظام */
+    private final Handler ui = new Handler(Looper.getMainLooper());
+    private int rotWant = -2, rotTry = 0;
+
+    @SuppressWarnings("deprecation")
+    private int nativeRotDeg() {
+        try { return getWindowManager().getDefaultDisplay().getRotation() * 90; } catch (Exception e) { return 0; }
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean naturalLandscape() {
+        try {
+            Display d = getWindowManager().getDefaultDisplay(); DisplayMetrics dm = new DisplayMetrics(); d.getRealMetrics(dm);
+            boolean wide = dm.widthPixels >= dm.heightPixels; int r = d.getRotation();
+            return (r % 2 == 0) == wide;
+        } catch (Exception e) { return true; }
+    }
+
+    private void applyRotation(int deg) {
+        if (deg == rotWant) return;
+        rotWant = deg; rotTry++;
+        final int token = rotTry;
+        if (deg < 0) { setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); notifyRotation(); return; }
+        boolean side = deg == 90 || deg == 270, nat = naturalLandscape();
+        // الاتجاهان المحتملان لهذه الزاوية؛ يُجرَّب الأول ثم الثاني إذا لم تطابق النتيجة الزاوية المطلوبة
+        final int[] c = (side == nat)
+                ? new int[]{ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT}
+                : new int[]{ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE};
+        if (deg == 0 || deg == 180) {
+            if (nat) { c[0] = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE; c[1] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE; }
+            else { c[0] = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; c[1] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT; }
+            if (deg == 180) { int t = c[0]; c[0] = c[1]; c[1] = t; }
+        }
+        if (nativeRotDeg() == deg) { setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED); notifyRotation(); return; }
+        setRequestedOrientation(c[0]);
+        ui.postDelayed(() -> {
+            if (token != rotTry) return;
+            if (nativeRotDeg() != deg) {
+                setRequestedOrientation(c[1]);
+                ui.postDelayed(() -> {
+                    if (token != rotTry) return;
+                    // الجهاز لا يدعم هذا الاتجاه: يرجع لوضعه الطبيعي ويكمل التطبيق التدوير برسم الصفحة
+                    if (nativeRotDeg() != deg && nativeRotDeg() != 0) setRequestedOrientation(nat ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    notifyRotation();
+                }, 1200);
+            } else notifyRotation();
+        }, 1200);
+        notifyRotation();
+    }
+
+    private void notifyRotation() {
+        ui.postDelayed(() -> { if (web != null) web.evaluateJavascript("try{dispatchEvent(new Event('resize'))}catch(e){}", null); }, 250);
+    }
+
     /* ===== واجهة يستخدمها التطبيق من داخل الصفحة ===== */
     class Bridge {
         @JavascriptInterface public String version() { return BuildConfig.VERSION_NAME; }
@@ -341,6 +400,8 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String licGet() { return getSharedPreferences("rawayie", MODE_PRIVATE).getString("lic", ""); }
         @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
+        @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
+        @JavascriptInterface public int nativeRot() { return nativeRotDeg(); }
         @JavascriptInterface public void setPrefer4k(boolean on) {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();
             runOnUiThread(MainActivity.this::applyDisplayMode);

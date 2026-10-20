@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, nativeRot:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -315,15 +315,26 @@ var $ = function(s, r){ return (r || document).querySelector(s); };
 var stage, ovEl, mainEl, layout = "", ui = {};
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
+/* تدوير الشاشة: في تطبيق أندرويد يُطلب التدوير من النظام نفسه، فتتحرك الفأرة وأزرار الريموت بالاتجاه الصحيح.
+   إذا لم يستجب الجهاز (أو في المتصفح) يكمل التطبيق الدوران المتبقي برسم الشاشة مدوّرة كما كان */
+var natKey = "";
+function rotCSS(){
+  var r = (((+S.look.rot || 0) % 360) + 360) % 360, AN = window.RawayieAndroid;
+  if (!AN || !AN.setRotation || window.RAWAYIE_PREVIEW) return r;
+  var want = S.look.nativeRot === false ? -1 : r;
+  if (natKey !== String(want)) { natKey = String(want); try { AN.setRotation(want); } catch(e){} }
+  var n = 0; try { n = +AN.nativeRot() || 0; } catch(e){}
+  return (((r - n) % 360) + 360) % 360;
+}
 function orient(){
-  var r = +S.look.rot, w = innerWidth, h = innerHeight;
+  var r = rotCSS(), w = innerWidth, h = innerHeight;
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }
   if (S.look.orient === "portrait") return "P";
   if (S.look.orient === "landscape") return "L";
   return h >= w ? "P" : "L";
 }
 function fit(){
-  var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = +S.look.rot;
+  var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
   var vw = innerWidth, vh = innerHeight; if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
   // ملء الشاشة بالكامل: يتمدد ارتفاع التصميم حسب نسبة الجهاز (جوال، تابلت، تلفاز 4:3 أو 21:9) فلا تظهر أشرطة سوداء
   if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = Math.round(o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)));

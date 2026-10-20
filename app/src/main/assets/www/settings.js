@@ -90,6 +90,15 @@ function allowed(sec){ if (sec === "home") return true; if (!S.pass || role === 
 function firstAllowed(){ for (var i = 0; i < SECTIONS.length; i++) if (allowed(SECTIONS[i][0])) return SECTIONS[i][0]; return ""; }
 function anyAllowed(){ return !!firstAllowed(); }
 
+/* حالة التدوير من النظام (تطبيق أندرويد فقط) */
+function rotNativeHTML(r){
+  var AN = window.RawayieAndroid;
+  if (!AN || !AN.setRotation) return r ? '<p class="note">تنبيه: في المتصفح تُرسم الشاشة مدوّرة، فتتحرك الفأرة بالاتجاه الأصلي للجهاز. للتحكم الصحيح بالفأرة دوّر الشاشة من إعدادات العرض في النظام (ويندوز: إعدادات العرض ← اتجاه العرض) واترك التدوير هنا على «الوضع الطبيعي».</p>' : "";
+  var n = 0; try { n = +AN.nativeRot() || 0; } catch(e){}
+  var ok = S.look.nativeRot !== false && r && n === r;
+  return tog("تدوير الشاشة من نظام أندرويد (موصى به)", "look.nativeRot", "يجعل مؤشر الفأرة وأسهم الريموت تتحرك بالاتجاه الصحيح مع الشاشة المدوّرة") +
+    (r && S.look.nativeRot !== false ? '<p class="note">' + (ok ? "✓ الجهاز دوّر الشاشة بنفسه: الفأرة والريموت بالاتجاه الصحيح. إذا ظهرت الشاشة مقلوبة اختر الاتجاه المعاكس." : "هذا الجهاز لا يسمح بتدوير الشاشة من التطبيق، فتُرسم مدوّرة. للفأرة بالاتجاه الصحيح دوّر الشاشة من إعدادات الجهاز ← العرض، واترك التدوير هنا على «الوضع الطبيعي».") + '</p>' : "");
+}
 R.rotate = function(){
   var r = +S.look.rot || 0, o = S.look.orient || "auto";
   var R4 = [[0,"الوضع الطبيعي","بدون تدوير"],[90,"تدوير يمين","90° مع عقارب الساعة"],[180,"مقلوب","180°"],[270,"تدوير يسار","90° عكس عقارب الساعة"]];
@@ -97,7 +106,7 @@ R.rotate = function(){
   return card("تدوير الشاشة",
     '<div class="rots">' + R4.map(function(x){ return '<button type="button" class="rot' + (x[0] === r ? " on" : "") + '" data-act="setRot" data-x="' + x[0] + '" aria-pressed="' + (x[0] === r) + '">' +
       '<span class="rscr" style="transform:rotate(' + x[0] + 'deg)"><i></i><em>↑</em></span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join("") + '</div>' +
-    '<div class="row-end">' + btn("تدوير 90° ↻", "rotStep", "ghost") + '</div>',
+    '<div class="row-end">' + btn("تدوير 90° ↻", "rotStep", "ghost") + '</div>' + rotNativeHTML(r),
     "لشاشة معلقة باتجاه مختلف عن الجهاز، مثل تلفاز أفقي مركّب عمودياً. تدور معها كل محتويات الشاشة والقوائم.") +
   card("ملاءمة الشاشة",
     tog("ملء الشاشة تلقائياً عند التشغيل", "look.autoFS", "تدخل الشاشة ملء الشاشة وحدها، وإن منعها المتصفح فعند أول ضغطة على الريموت أو لمسة") +
@@ -1066,7 +1075,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
@@ -1208,8 +1217,8 @@ function onClick(e){
     case "offInstall": window.OFFLINE.install().then(function(ok){ toast(ok ? "تم تثبيت التطبيق، افتحه من أيقونته" : "لم يكتمل التثبيت"); render(); }); break;
     case "offPersist": window.OFFLINE.persist(true).then(function(p){ toast(p ? "تم تفعيل الحفظ الدائم" : "رفض المتصفح الطلب. ثبّت التطبيق ثم أعد المحاولة"); render(); }); break;
     case "offPrep": if (window.OFFLINE) { b.disabled = true; $("#offst").textContent = "جارٍ تنزيل الملفات..."; window.OFFLINE.prepare().then(function(){ render(); toast(window.OFFLINE.state.supported ? "تم تجهيز الشاشة" : offState()); }); } break;
-    case "setRot": S.look.rot = +x; commit(); render(); break;
-    case "rotStep": S.look.rot = ((+S.look.rot || 0) + 90) % 360; commit(); render(); break;
+    case "setRot": S.look.rot = +x; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
+    case "rotStep": S.look.rot = ((+S.look.rot || 0) + 90) % 360; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "wxRefresh": A.refreshWeather(); setTimeout(render, 1500); break;
     case "nSave":
@@ -1394,7 +1403,46 @@ function shortcuts(){
   var lp = null; $("#stage").addEventListener("pointerdown", function(){ lp = setTimeout(open, 1200); });
   ["pointerup", "pointerleave", "pointercancel"].forEach(function(e){ $("#stage").addEventListener(e, function(){ clearTimeout(lp); }); });
 }
-function init(){ shortcuts(); }
+/* التنقل بأسهم الريموت داخل الإعدادات والنوافذ: يختار أقرب عنصر في اتجاه السهم كما يراه المستخدم على الشاشة
+   (يعمل صحيحاً حتى لو كانت الشاشة مدوّرة)، ولا يعلق التركيز خارج القائمة */
+function spatialNav(){
+  var dirs = {ArrowUp:[0, -1], ArrowDown:[0, 1], ArrowLeft:[-1, 0], ArrowRight:[1, 0]};
+  var SEL = 'button:not([disabled]),a[href],input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea,[tabindex]:not([tabindex="-1"])';
+  addEventListener("keydown", function(e){
+    var d0 = dirs[e.key]; if (!d0 || e.altKey || e.ctrlKey || e.metaKey) return;
+    // الشاشة المرسومة مدوّرة: «أسفل» عند المستخدم هو اتجاه آخر على الجهاز، فيُدار السهم بنفس زاوية الرسم
+    var th = (+document.documentElement.getAttribute("data-rot") || 0) * Math.PI / 180, cs0 = Math.round(Math.cos(th)), sn0 = Math.round(Math.sin(th));
+    var d = [d0[0]*cs0 - d0[1]*sn0, d0[0]*sn0 + d0[1]*cs0];
+    var root = null, sp = $("#set"), ae = document.activeElement;
+    if (actEl && !actEl.hidden) return; // لوحة أرقام التفعيل لها تنقل خاص
+    if (sp && !sp.hidden) root = sp; else return;
+    var t = e.target, tag = (t.tagName || "").toLowerCase(), ty = (t.type || "").toLowerCase();
+    // داخل حقل نص: السهمان الأفقيان يحركان المؤشر، وشريط التمرير يتغير بالأسهم الأفقية
+    if (tag === "textarea") return;
+    if (tag === "input" && /text|search|url|email|number|password|tel/.test(ty) && d0[0] !== 0) return;
+    if (tag === "input" && ty === "range" && d0[0] !== 0) return;
+    var list = Array.prototype.slice.call(root.querySelectorAll(SEL)).filter(function(el){
+      if (el === ae) return false; var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
+      if (el.closest("[hidden]")) return false; var cs = getComputedStyle(el); if (cs.visibility === "hidden" || cs.display === "none") return false;
+      return true; });
+    if (!list.length) return;
+    e.preventDefault();
+    if (!ae || ae === document.body || !root.contains(ae)) { list[0].focus(); return; }
+    var o = ae.getBoundingClientRect(), ox = o.left + o.width/2, oy = o.top + o.height/2, best = null, bs = 1e9;
+    list.forEach(function(el){
+      var r = el.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+      // المسافة على امتداد السهم من حافة العنصر الحالي، مع عقوبة الانحراف الجانبي
+      var vx = cx - ox, vy = cy - oy, along = vx*d[0] + vy*d[1];
+      if (along <= 4) return;
+      var edge = d[0] ? Math.max(0, (d[0] > 0 ? r.left - o.right : o.left - r.right)) : Math.max(0, (d[1] > 0 ? r.top - o.bottom : o.top - r.bottom));
+      var overlap = d[0] ? Math.min(o.bottom, r.bottom) - Math.max(o.top, r.top) : Math.min(o.right, r.right) - Math.max(o.left, r.left);
+      var perp = Math.abs(vx*d[1] - vy*d[0]), sc = edge + along*.3 + (overlap > 0 ? 0 : perp*2.2);
+      if (sc < bs) { bs = sc; best = el; }
+    });
+    if (best) { try { best.focus({preventScroll:true}); } catch(x){ best.focus(); } if (best.scrollIntoView) try { best.scrollIntoView({block:"nearest", inline:"nearest"}); } catch(x){ best.scrollIntoView(false); } }
+  }, true);
+}
+function init(){ shortcuts(); spatialNav(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 window.SETTINGS = {open:open, close:close};
 })();
