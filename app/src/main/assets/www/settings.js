@@ -840,7 +840,7 @@ R.layout = function(){
     tog("وضع أسماء الصلوات في المنتصف في الوضع العمودي", "look.centerP") + tog("وضع أسماء الصلوات في المنتصف في العرض الأفقي", "look.centerL") +
     tog("تكبير الإقامة والأذان في وضع العرض الأفقي", "look.bigL") +
     tog("تكبير عداد المتبقي للصلاة القادمة", "look.bigCounter") + tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.2. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.3. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
 };
 
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
