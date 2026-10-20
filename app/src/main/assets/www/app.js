@@ -402,10 +402,18 @@ function applyLook(){
   st.setProperty("--emb", L.embSize == null ? .7 : +L.embSize);
   var lc = L.logoColor === "custom" ? (L.logoCustom || "#EBD1A0") : (light ? (auto ? acc : shade(L.accent)) : (auto ? accRaw : L.accent));
   if (lc.indexOf("rgb") === 0) { var m3 = lc.match(/\d+/g); lc = "#" + m3.slice(0, 3).map(function(v){ v = (+v).toString(16); return v.length < 2 ? "0" + v : v; }).join(""); }
-  st.setProperty("--logog", L.logoColor === "silver"
+  // لون الشعار حسب إضاءة الخلفية خلفه تحديداً (وليس متوسط الصورة كلها) ليبقى بأعلى تباين على كل الخلفيات
+  var bl = window.BG_LOGO && !L.customBg ? window.BG_LOGO[b.file] : null, logoDark = bl != null ? bl > 234 : light;
+  stage.classList.toggle("logodk", logoDark); stage.classList.toggle("logolt", !logoDark);
+  st.setProperty("--logog", L.logoColor === "silver" && logoDark
+    // على الخلفيات الفاتحة يصبح الفضي رمادياً داكناً (جرافيت) ليبقى الشعار واضحاً بتباين عالٍ
+    ? "repeating-linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 3px,rgba(255,255,255,.06) 3px,rgba(255,255,255,.06) 4px),linear-gradient(180deg,#34373c 0%,#1d1f22 55%,#0d0e10 100%)"
+    : L.logoColor === "silver"
     // فضي شفاف بخطوط أفقية ناعمة (مثل الشعارات الزجاجية)
-    ? "repeating-linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px),linear-gradient(180deg,#f2f2f2 0%,#d2d2d2 50%,#b9b9b9 100%)"
+    ? "repeating-linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px),linear-gradient(180deg,#ffffff 0%,#e9e9e9 50%,#cfcfcf 100%)"
     : "linear-gradient(165deg," + mixHex(lc, "#ffffff", light ? .25 : .45) + " 0%," + lc + " 45%," + mixHex(lc, "#000000", light ? .25 : .35) + " 100%)");
+  // رسالة البداية فوقها تعتيم داكن دائماً، فيبقى الشعار الفضي فيها فاتحاً
+  if (L.logoColor === "silver") st.setProperty("--logosv", "linear-gradient(180deg,#f2f2f2 0%,#d2d2d2 50%,#b9b9b9 100%)"); else st.removeProperty("--logosv");
   if (S.look.logoId && customLogo) st.setProperty("--logom", "url(" + customLogo + ")"); else if (window.LOGO_DATA) st.setProperty("--logom", "url(" + window.LOGO_DATA + ")");
   stage.classList.toggle("lightbg", !!light);
   var tl = window.BG_TOP && !L.customBg ? window.BG_TOP[b.file] : null, topLight = tl == null ? light : tl > 150;
