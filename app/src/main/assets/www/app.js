@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = "2.4.1";
+var VERSION = "2.4.2";
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1004,7 +1004,7 @@ function annHTML(kind, p){
   tpl = tpl.replace(/\{الصلاة\}\s*[،,]\s*/g, "{الصلاة} "); // اسم الصلاة يظهر في سطر مستقل، فلا تبدأ الجملة التالية بفاصلة
   return '<div class="o-ann">' + esc(tpl).replace(/\{الصلاة\}/g, '<b>' + esc(pn) + '</b>').replace(/\{المسجد\}/g, '<b class="mq">' + esc(mq) + '</b>').replace(/\n/g, "<br>") + '</div>';
 }
-/* سطر أسفل الشاشة: rawayie.sa | الدمام | 2.4.1 (الفاصل يتلوّن بحالة الاتصال) */
+/* سطر أسفل الشاشة: rawayie.sa | الدمام | 2.4.2 (الفاصل يتلوّن بحالة الاتصال) */
 function footHTML(){
   var site = String(S.look.footSite == null ? "rawayie.sa" : S.look.footSite).trim();
   var loc = S.look.showLoc === false ? "" : [String(S.addr || "").trim(), cityInfo().name].filter(Boolean).join("، ");
