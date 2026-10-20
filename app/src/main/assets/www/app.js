@@ -54,6 +54,9 @@ function merge(def, v){
 }
 var S;
 try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catch(e){ S = clone(DEF); }
+// تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
+// (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
+try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 11; } catch(e){}
 S.slides.items = S.slides.items.map(function(x){ return typeof x === "string" ? {id:"s" + x, img:x, imgMode:"contain", active:true} : x; });
 if ((S.lookV || 0) < 3) { // تصميم التطبيق الجديد: يعيد المظهر والذكر الثابت للافتراضي مرة واحدة
   S.look = clone(DEF.look); S.fixedZekr = DEF.fixedZekr; S.marquee = DEF.marquee; S.lookV = 3;

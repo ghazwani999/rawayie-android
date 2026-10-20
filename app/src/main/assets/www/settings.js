@@ -51,7 +51,7 @@ var SECTIONS = [
   ["weather","حالة الطقس","درجة الحرارة وحالة الجو على الشاشة","sun","look"],
   ["remote","الإدارة عن بعد","تفعيل الشاشة بكود وربطها بلوحة المدير","wifi","sys"],
   ["perms","الصلاحيات","كلمة سر المدير وحساب مشرف المسجد","lock","sys"],
-  ["general","التشغيل والنسخ الاحتياطي","بداية التشغيل والعمل بدون إنترنت وحفظ الإعدادات","gear","sys"]
+  ["general","التشغيل والنسخ الاحتياطي","تفعيل التطبيق وبداية التشغيل والعمل بدون إنترنت وحفظ الإعدادات","gear","sys"]
 ];
 /* أقسام فرعية تتبع صلاحية القسم الأصلي للمشرف */
 var PERM_OF = {hide:"screens", fonts:"look", layout:"look"};
@@ -243,6 +243,18 @@ R.hide = function(){
     '<div class="fld"><span><b>الحالة</b><small>' + esc(awakeText()) + '</small></span></div>' +
     '<p class="note">يمنع التطبيق المتصفح والجهاز من إطفاء الشاشة أو الدخول في السكون طوال الوقت. في بعض أجهزة التلفاز أوقف أيضاً من إعداداتها: «توفير الطاقة» و«الإيقاف التلقائي» و«مؤقت النوم»، وفي الكمبيوتر: إعدادات الطاقة ← عدم إيقاف الشاشة أبداً.</p>');
 };
+/* تفعيل التطبيق: الحالة ورقم الجهاز وإدخال كود التفعيل */
+function licCard(){
+  var L = window.LICENSE; if (!L) return "";
+  var s = L.status();
+  var stt = s.active ? "مفعّل ✓ شكراً لكم" : s.trial ? "فترة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : "انتهت الفترة التجريبية";
+  return card("تفعيل التطبيق",
+    '<div class="fld"><span><b>الحالة</b><small>' + esc(stt) + '</small></span><span class="pill ' + (s.active ? "ok" : s.trial ? "" : "bad") + '">' + (s.active ? "مفعّل" : s.trial ? "تجريبي" : "منتهي") + '</span></div>' +
+    '<div class="fld"><span><b>رقم الجهاز</b><small>أرسله مع طلب التفعيل</small></span><b dir="ltr" style="font-size:20px;letter-spacing:2px">' + esc(s.idText) + '</b></div>' +
+    (s.active ? "" : '<label class="fld" for="liccode"><span><b>كود التفعيل</b><small id="licmsg">8 أرقام تصلك بعد التواصل</small></span><span class="nb"><input type="text" id="liccode" inputmode="numeric" maxlength="12" dir="ltr" style="width:170px;text-align:center">' + btn("تفعيل", "licAct", "sm") + '</span></label>' +
+      '<div class="row-end"><a class="btn" href="' + s.waLink + '" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">تواصل عبر واتساب ' + esc(s.wa) + '</a></div>'),
+    s.active ? "" : "فترة تجريبية لمدة 3 أيام. يرجى التواصل لتفعيل تطبيق روائع الأذان. واتساب: " + s.wa);
+}
 /* دقة العرض على التلفاز (تطبيق أندرويد فقط) */
 function hdmiCard(){
   var AN = window.RawayieAndroid; if (!AN || !AN.displayInfo) return "";
@@ -896,7 +908,7 @@ function autoCard(){
 }
 
 R.general = function(){
-  return card("رسالة بداية التشغيل",
+  return licCard() + card("رسالة بداية التشغيل",
     tog("تفعيل رسالة بداية التشغيل", "splash.on", "تظهر عند فتح التطبيق: البسملة ثم الشعار ثم اسم المسجد، وتختفي وحدها") +
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
@@ -1105,6 +1117,7 @@ function onClick(e){
     case "sbTab": R.hide.sb = x; render(); break;
     case "sleepPrevK": close(); A.previewBlack(10000, true, x); break;
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
+    case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#ff8a8a"; } } break;
     case "goto": var gi = x.indexOf("|"); gotoOpt(x.slice(0, gi), x.slice(gi + 1)); break;
     case "resetTimes": S.adj = JSON.parse(JSON.stringify(A.DEF.adj)); S.iq = JSON.parse(JSON.stringify(A.DEF.iq)); S.duha = A.DEF.duha; S.shift = 0; S.summer = false; S.ramadan30 = false; S.hijriAdj = 0; commit(); render(); toast("تمت إعادة الضبط"); break;
     case "calEdit": calEdit = x; render(); var cb = $(".calbox", body); if (cb && cb.scrollIntoView) cb.scrollIntoView({block:"center"}); break;

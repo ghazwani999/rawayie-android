@@ -337,6 +337,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void requestAutostart() { runOnUiThread(MainActivity.this::openOverlaySettings); }
         @JavascriptInterface public void reload() { runOnUiThread(() -> { if (web != null) web.reload(); }); }
         @JavascriptInterface public void exit() { runOnUiThread(MainActivity.this::finish); }
+        // نسخة من بيانات الفترة التجريبية والتفعيل داخل التطبيق نفسه
+        @JavascriptInterface public String licGet() { return getSharedPreferences("rawayie", MODE_PRIVATE).getString("lic", ""); }
+        @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setPrefer4k(boolean on) {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();

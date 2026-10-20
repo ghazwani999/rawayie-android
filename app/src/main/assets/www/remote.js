@@ -97,7 +97,7 @@ function sendStatus(){
   return req("PUT", "/status", {name:S.mosque, city:ci.name, code:S.remote.code, lastSeen:Date.now(),
     version:A.VERSION, rev:S.remote.rev, orient:A.orient() === "P" ? "رأسي" : "أفقي", rot:+(S.look.rot || 0),
     screen:innerWidth + "×" + innerHeight, time:A.two(z.h) + ":" + A.two(z.m),
-    err:(A.lastErr ? A.lastErr() : "").slice(0, 200), ua:navigator.userAgent.slice(0, 160)});
+    err:(A.lastErr ? A.lastErr() : "").slice(0, 200), lic:(window.LICENSE ? window.LICENSE.info() : null), ua:navigator.userAgent.slice(0, 160)});
 }
 function poll(){
   if (!S.remote.on || !base()) { state.status = "off"; return; }
