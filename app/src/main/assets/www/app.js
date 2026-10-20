@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, flag:false, rowColor:"#000000", rowOpacity:0.3, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -384,6 +384,9 @@ function applyLook(){
   st.setProperty("--hi", hi); st.setProperty("--hifg", light && !L.hiCustom ? "#fff" : (light ? "#fff" : fg));
   if (!(auto && L.rowAuto)) row = hexA(L.rowColor || "#000000", +L.rowOpacity);
   st.setProperty("--rowbg", row);
+  // ظل شريط الإعلانات أسفل الشاشة: تلقائي مثل جدول المواقيت، أو بدرجة مخصصة، أو بدون ظل
+  st.setProperty("--newsbg", L.newsShade === false ? "transparent" : (+L.newsShadeOp > 0 ? hexA(light ? "#ffffff" : "#000000", +L.newsShadeOp) : row));
+  stage.classList.toggle("nonewsbg", L.newsShade === false);
   st.setProperty("--rowsh", "0 6px 18px rgba(0,0,0," + (+L.rowShadow) + ")");
   st.setProperty("--rowrad", (+L.rowRadius) + "px"); st.setProperty("--rowgap", (+L.rowGap) + "px");
   var fs = L.fs || {}; ["ts","ns"].forEach(function(k){ st.setProperty("--" + k, +(fs[k] || 1)); });

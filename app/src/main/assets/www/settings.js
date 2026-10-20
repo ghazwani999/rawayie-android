@@ -354,7 +354,9 @@ R.news = function(){
   }).join("");
   return card("إعلانات المسجد أسفل الشاشة",
     tog("تفعيل شريط الإعلانات", "tickerOn") + tog("تفعيل شريط النص المتحرك", "marquee", "عند إيقافه تظهر الرسائل واحدة تلو الأخرى") +
-    numIn("سرعة الشريط", "speed", 40, 300, 10, "بكسل/ث") + numIn("مدة عرض الرسالة", "newsSec", 4, 60, 1, "ثانية")) +
+    numIn("سرعة الشريط", "speed", 40, 300, 10, "بكسل/ث") + numIn("مدة عرض الرسالة", "newsSec", 4, 60, 1, "ثانية") +
+    tog("ظل خلف شريط الإعلانات", "look.newsShade", "عند إيقافه يظهر النص مباشرة فوق الخلفية بدون شريط داكن") +
+    (S.look.newsShade !== false ? rangeIn("درجة الظل", "look.newsShadeOp", 0, 0.9, 0.05, "%", "0% = تلقائي بنفس ظل جدول المواقيت") : "")) +
   card("الرسائل", '<ul class="list">' + (list || '<li class="empty">لا توجد رسائل بعد</li>') + '</ul>' + (newsEdit === "new" ? '<div class="ed">' + newsForm({id:"new", text:"", type:"none", days:[], date:""}) + '</div>' : "") +
     '<div class="row-end">' + btn("إضافة رسالة", "nAdd") + (S.news.length ? btn("حذف الكل", "nClear", "danger ghost") : "") + '</div>',
     "هنا يمكنك إضافة الرسائل أو أي معلومات مفيدة لتُعرض أسفل الشاشة") + alertsCard();
@@ -1031,7 +1033,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30);
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
