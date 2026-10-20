@@ -756,19 +756,25 @@ function actOpen(){
   var known = R0.wpSite(), site0 = known || (S.remote && S.remote.site) || "";
   if (!actEl) { actEl = document.createElement("div"); actEl.id = "act"; actEl.className = "actov"; $("#ui").appendChild(actEl); }
   var keys = ["1","2","3","4","5","6","7","8","9","del","0","ok"];
-  actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/logo.png" alt=""><h2 id="acth">تفعيل الشاشة</h2>' +
-    '<p>اكتب كود التفعيل المكوّن من 6 أرقام من لوحة المدير ← شاشات المساجد ← «كود التفعيل»</p>' +
+  actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/logo.png" alt=""><h2 id="acth">ربط الشاشة وتفعيلها</h2>' +
+    '<p>اكتب <b>كود التفعيل (8 أرقام)</b> الخاص برقم هذا الجهاز، أو <b>كود الربط (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
+    (window.LICENSE ? '<p class="actdev">رقم الجهاز: <b dir="ltr">' + esc(window.LICENSE.status().idText) + '</b></p>' : "") +
     (known ? '<p class="actsite" dir="ltr">' + esc(known.replace(/^https?:\/\//, "")) + '</p>' :
       '<label class="actf" for="actsite"><span>عنوان موقع الإدارة</span><input id="actsite" type="url" dir="ltr" placeholder="example.com" autocomplete="url" value="' + esc(site0.replace(/^https?:\/\//, "")) + '"></label>') +
-    '<input id="actcode" class="actcode" dir="ltr" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="••• •••" aria-label="كود التفعيل">' +
+    '<input id="actcode" class="actcode" dir="ltr" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="•••• ••••" aria-label="كود التفعيل أو الربط">' +
     '<div class="actpad">' + keys.map(function(k, i){ return '<button type="button" data-k="' + k + '" data-i="' + i + '"' + (k === "ok" ? ' class="ok"' : "") + '>' + (k === "del" ? "⌫" : k === "ok" ? "تفعيل" : k) + '</button>'; }).join("") + '</div>' +
     '<p class="acterr" id="acterr" role="alert"></p><button type="button" class="actlater" data-k="later">لاحقاً</button></div>';
   actEl.hidden = false;
   var code = $("#actcode", actEl), err = $("#acterr", actEl);
-  var fmt = function(){ var d = code.value.replace(/\D/g, "").slice(0, 6); code.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; };
+  var fmt = function(){ var d = code.value.replace(/\D/g, "").slice(0, 8); code.value = d.length > 6 ? d.slice(0, 4) + " " + d.slice(4) : d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; };
   var go = function(){
-    var site = known || ($("#actsite", actEl) || {}).value || ""; err.textContent = "جارٍ التفعيل..."; err.className = "acterr";
-    R0.activate(site, code.value).then(function(j){ err.className = "acterr ok"; err.textContent = "تم تفعيل الشاشة" + (j.name ? ": " + j.name : "");
+    var dg = code.value.replace(/\D/g, "");
+    // 8 أرقام: كود تفعيل الترخيص لهذا الجهاز (بدون إنترنت)
+    if (dg.length === 8) { if (window.LICENSE && window.LICENSE.activate(dg)) { err.className = "acterr ok"; err.textContent = "تم تفعيل التطبيق، شكراً لكم"; setTimeout(function(){ actClose(true); }, 1600); }
+      else { err.className = "acterr bad"; err.textContent = "كود التفعيل غير صحيح لهذا الجهاز"; } return; }
+    if (dg.length !== 6) { err.className = "acterr bad"; err.textContent = "اكتب 8 أرقام لكود التفعيل أو 6 أرقام لكود الربط"; return; }
+    var site = known || ($("#actsite", actEl) || {}).value || ""; err.textContent = "جارٍ الربط..."; err.className = "acterr";
+    R0.activate(site, code.value).then(function(j){ err.className = "acterr ok"; err.textContent = "تم ربط الشاشة" + (j.name ? ": " + j.name : "");
       setTimeout(function(){ actClose(); A.rebuild(); }, 1400); }, function(e){ err.className = "acterr bad"; err.textContent = e.message || String(e); });
   };
   code.addEventListener("input", fmt);
