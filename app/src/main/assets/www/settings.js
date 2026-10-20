@@ -953,10 +953,15 @@ R.general = function(){
 };
 
 /* ===== الصفحة الرئيسية للإعدادات: كل الأقسام في مجموعات مع البحث في كل الخيارات ===== */
+/* شريط التفعيل أعلى صفحة الإعدادات: رقم الجهاز ظاهر دائماً حتى يُرسل لطلب كود التفعيل */
+function licStrip(){
+  var L = window.LICENSE; if (!L) return ""; var s = L.status(); if (s.active) return "";
+  return '<button type="button" class="licstrip' + (s.expired ? " bad" : "") + '" data-act="goto" data-x="general|كود التفعيل"><span><b>' + (s.trial ? "نسخة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : "انتهت الفترة التجريبية") + '</b><small>أرسل رقم الجهاز عبر واتساب ' + esc(s.wa) + ' لطلب كود التفعيل، ثم أدخل الكود هنا</small></span><span class="lsid"><small>رقم الجهاز</small><b dir="ltr">' + esc(s.idText) + '</b></span></button>';
+}
 function homeHTML(){
   return '<div class="shome"><h2>' + ico("gear") + 'الإعدادات</h2><p class="sdesc">اختر القسم الذي تريد ضبطه، أو ابحث عن أي خيار باسمه.</p>' +
     '<label class="ssearch" for="sq">' + ico("search") + '<input type="search" id="sq" placeholder="ابحث في الإعدادات… مثل: الإقامة، الخلفية، الخط، السكون" autocomplete="off"></label>' +
-    '<div id="sres" class="sres" hidden></div><div id="sgroups">' +
+    licStrip() + '<div id="sres" class="sres" hidden></div><div id="sgroups">' +
     GROUPS.map(function(g){ var ss = SECTIONS.filter(function(s){ return s[4] === g[0] && allowed(s[0]); }); if (!ss.length) return "";
       return '<section class="hgrp"><h3>' + esc(g[1]) + '</h3><div class="tiles">' + ss.map(function(s){
         return '<button type="button" class="tile" data-sec="' + s[0] + '"><span class="ti">' + ico(s[3]) + '</span><span class="tt"><b>' + esc(s[1]) + '</b><small>' + esc(s[2]) + '</small></span></button>'; }).join("") + '</div></section>'; }).join("") + '</div></div>';

@@ -102,7 +102,7 @@ function render(){
   // شريط صغير أثناء التجربة
   if (s.trial) {
     if (!badge) { badge = document.createElement("div"); badge.className = "licbadge"; sg.appendChild(badge); }
-    var bt = "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · للتفعيل واتساب " + WA;
+    var bt = "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · رقم الجهاز " + s.idText + " · للتفعيل واتساب " + WA;
     if (badge.textContent !== bt) badge.textContent = bt;
   } else if (badge) { badge.parentNode.removeChild(badge); badge = null; }
   // رسالة انتهاء التجربة
