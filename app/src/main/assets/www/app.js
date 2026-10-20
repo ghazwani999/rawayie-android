@@ -299,7 +299,8 @@ function fmtT(ms, sec, clk){
   if (!S.look.h24) h = h % 12 || 12;
   return num((S.look.h24 || zr ? two(h) : h) + ":" + two(z.m) + (sec ? ":" + two(z.s) : ""));
 }
-function ampm(ms){ if (S.look.h24) return ""; return zp(ms).h >= 12 ? t("pm_label") : t("am_label"); }
+// صباحاً/مساءً مع الأرقام العربية، وAM/PM مع الأرقام الإنجليزية
+function ampm(ms){ if (S.look.h24) return ""; var pm = zp(ms).h >= 12; return S.look.arabicDigits ? (pm ? "مساءً" : "صباحاً") : (pm ? "PM" : "AM"); }
 function dur(sec, withSec){
   sec = Math.max(0, sec); var h = Math.floor(sec/3600), m = Math.floor(sec%3600/60), s = sec%60;
   return num((h ? h + ":" + two(m) : m) + (withSec !== false ? ":" + two(s) : ""));
@@ -406,6 +407,7 @@ function applyLook(){
   stage.classList.toggle("shadow", !!S.look.shadow);
   stage.classList.toggle("arch", b.arch && !S.look.customBg);
   stage.dir = S.lang === "ar" ? "rtl" : "ltr";
+  stage.classList.toggle("apar", !!S.look.arabicDigits && !S.look.h24); // صباحاً/مساءً يسار الوقت (اتجاه العربية)، وAM/PM يمينه
   document.documentElement.lang = S.lang;
   if (S.look.customBg) mediaURL(S.look.customBg).then(function(u){ setStageBg(u); });
   else { setStageBg("bg/" + b.file); preloadNextBg(); }
@@ -453,7 +455,7 @@ function build(){
       '<div class="mid"><div class="ms wcol">' + (wp === "mid" ? wxh : "") + '<div class="gre"></div></div>' +
       '<div class="emb">' + logoHTML("elogo") + '</div>' +
       '<div class="ms cnt"><div class="cv"></div><div class="cl"></div></div></div>' +
-      '<div class="center"><div class="cpan"><div class="clk"><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span>' + (wp === "clock" ? wxh : "") + '</div></div></div>' +
+      '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span>' + (wp === "clock" ? wxh : "") + '</div></div></div>' +
       '<div class="slide" hidden></div></div>';
     var rows = (S.look.thead ? '<div class="thead"><div class="c1">' + esc(t("prayer")) + '</div><div class="c2">' + esc(t("adhan_time")) + '</div>' +
       (S.look.homeClock ? "" : '<div class="c3">' + esc(S.look.iqFmt === "time" ? t("iqama_time") : "الإقامة بعد") + '</div>') + '</div>' : "") + '<div class="rows"></div>';
@@ -467,7 +469,7 @@ function build(){
     (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "");
   ui = {
     mname: $(".mname", mainEl), dayn: $(".dayn", mainEl), hij: $(".hij", mainEl), gre: $(".gre", mainEl), bdate: $(".bdate", mainEl),
-    tm: $(".tm", mainEl), ap: $(".ap", mainEl), ss: $(".ss", mainEl), cl: $(".cl", mainEl), cv: $(".cv", mainEl), cnt: $(".cnt", mainEl),
+    tm: $(".tm", mainEl), ap: $(".ap", mainEl), aps: mainEl.querySelectorAll(".ap"), ss: $(".ss", mainEl), cl: $(".cl", mainEl), cv: $(".cv", mainEl), cnt: $(".cnt", mainEl),
     rows: $(".rows", mainEl), cards: $(".cards", mainEl), fixed: $(".fixed", mainEl), tick: $(".tick", mainEl), foot: $(".foot", mainEl),
     cpan: $(".cpan", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
   };
@@ -997,7 +999,7 @@ function tick(force){
   safe("clock", function(){ if (ui.tm) {
     if (ui.ss) { digits(ui.tm, fmtT(now, !!S.look.fullClock, 1)); digits(ui.ss, S.look.seconds && !S.look.fullClock ? num(two(z.s)) : ""); }
     else digits(ui.tm, fmtT(now, S.look.seconds, 1));
-    ui.ap.textContent = ampm(now);
+    var apt = ampm(now); for (var ai = 0; ai < ui.aps.length; ai++) if (ui.aps[ai].textContent !== apt) ui.aps[ai].textContent = apt;
   } });
   safe("count", function(){ if (ui.cv) {
     var lbl, target;

@@ -512,6 +512,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 
 /* ===== الفترة التجريبية والتفعيل ===== */
 .licbadge{position:absolute;right:24px;top:18px;z-index:4;font:600 22px/1.4 "Cairo",Tahoma,sans-serif;color:rgba(255,255,255,.78);background:rgba(0,0,0,.38);padding:4px 18px;border-radius:999px;white-space:nowrap;direction:rtl}
+.P .licbadge{top:auto;bottom:50px;right:50%;transform:translateX(50%);font-size:20px}
 .licov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:6;display:flex;align-items:center;justify-content:center;background:rgba(6,10,20,.9);direction:rtl;font-family:"Cairo",Tahoma,sans-serif;color:#fff;text-align:center;padding:60px}
 .licon #menu{z-index:7}
 .licbox{display:flex;flex-direction:column;align-items:center;gap:26px;max-width:1100px}
@@ -527,6 +528,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .licf button{font:700 36px "Cairo",Tahoma,sans-serif;padding:10px 34px;border-radius:16px;border:0;background:#c9a24a;color:#1a1206;cursor:pointer}
 .licerr{font-size:30px;color:#ff8a8a}
 .nofg .licbox>*+*{margin-top:24px}.nofg .licwa>*+*,.nofg .licf>*+*{-webkit-margin-start:16px;margin-inline-start:16px}
+
+/* صباحاً/مساءً على يسار الوقت مع الأرقام العربية، وAM/PM على يمينه مع الإنجليزية */
+.clk .apl{display:none}
+.apar .clk .apl{display:block}
+.apar .clk .sx .ap{display:none}
+.apar .clk>.ap:not(.apl){order:-1}
+.apar .o-tap{order:-1}
+.ap.apl{align-self:flex-end;margin-bottom:.35em}
+.clk .tm{white-space:nowrap}.clk>*{flex:none}
+.P.apar .cpan .clk{gap:14px}
 /* نافذة تفعيل الشاشة بكود */
 #act.actov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:45;pointer-events:auto;background:rgba(5,10,22,.86);display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl;font:400 16px/1.6 "Cairo",Tahoma,sans-serif;color:var(--stext);overflow-y:auto}
 .actbox{width:420px;max-width:100%;background:var(--sbg);border:1px solid var(--sline);border-radius:22px;padding:24px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6)}
@@ -659,12 +670,12 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610201120"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610201120"></script>
-<script charset="utf-8" src="data.js?v=2610201120"></script>
-<script charset="utf-8" src="i18n.js?v=2610201120"></script>
-<script charset="utf-8" src="app.js?v=2610201120"></script>
-<script charset="utf-8" src="license.js?v=2610201120"></script>
-<script charset="utf-8" src="remote.js?v=2610201120"></script>
-<script charset="utf-8" src="offline.js?v=2610201120"></script>
-<script charset="utf-8" src="settings.js?v=2610201120"></script>
+<script charset="utf-8" src="compat.js?v=2610201305"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610201305"></script>
+<script charset="utf-8" src="data.js?v=2610201305"></script>
+<script charset="utf-8" src="i18n.js?v=2610201305"></script>
+<script charset="utf-8" src="app.js?v=2610201305"></script>
+<script charset="utf-8" src="license.js?v=2610201305"></script>
+<script charset="utf-8" src="remote.js?v=2610201305"></script>
+<script charset="utf-8" src="offline.js?v=2610201305"></script>
+<script charset="utf-8" src="settings.js?v=2610201305"></script>
