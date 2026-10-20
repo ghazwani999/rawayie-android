@@ -227,6 +227,13 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .L #ov:not(.black){padding-top:170px}.L .o-top{top:26px}.L .o-tt{font-size:calc(120px*var(--s-clock,1)*var(--ns,1))}.L .o-tap{font-size:calc(38px*var(--s-clock,1)*var(--ts,1))}
 .P.arch #ov:not(.black) .o-top{top:300px}.P.arch #ov:not(.black){padding-top:480px}
 .ovon .main{visibility:hidden}
+/* مساحة الكاميرا الأمامية وشريط الحالة في الجوال: الخلفية تملأ الشاشة، والمحتوى ينزل تحتها */
+.main{top:var(--it,0px);right:var(--ir,0px);bottom:var(--ib,0px);left:var(--il,0px)}
+#ov:not(.black){border:0 solid transparent;border-width:var(--it,0px) var(--ir,0px) var(--ib,0px) var(--il,0px)}
+#menu{margin-top:var(--it,0px);margin-left:var(--il,0px)}
+.splash{padding:var(--it,0px) var(--ir,0px) var(--ib,0px) var(--il,0px)}
+.licbadge{margin-bottom:var(--ib,0px)}
+.P.arch{background-position:center var(--it,0px)} /* القوس ينزل مع المحتوى تحت الكاميرا، والشريط العلوي بلون الخلفية */
 #ov.black{background:#000}
 #ov.black .o-clock{color:rgba(255,255,255,var(--blk,.2));font-size:150px}
 #ov.black .o-date,#ov.black .o-sub{color:rgba(255,255,255,calc(var(--blk,.2) - .04))}
@@ -689,12 +696,12 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610202231"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610202231"></script>
-<script charset="utf-8" src="data.js?v=2610202231"></script>
-<script charset="utf-8" src="i18n.js?v=2610202231"></script>
-<script charset="utf-8" src="app.js?v=2610202231"></script>
-<script charset="utf-8" src="license.js?v=2610202231"></script>
-<script charset="utf-8" src="remote.js?v=2610202231"></script>
-<script charset="utf-8" src="offline.js?v=2610202231"></script>
-<script charset="utf-8" src="settings.js?v=2610202231"></script>
+<script charset="utf-8" src="compat.js?v=2610202244"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610202244"></script>
+<script charset="utf-8" src="data.js?v=2610202244"></script>
+<script charset="utf-8" src="i18n.js?v=2610202244"></script>
+<script charset="utf-8" src="app.js?v=2610202244"></script>
+<script charset="utf-8" src="license.js?v=2610202244"></script>
+<script charset="utf-8" src="remote.js?v=2610202244"></script>
+<script charset="utf-8" src="offline.js?v=2610202244"></script>
+<script charset="utf-8" src="settings.js?v=2610202244"></script>

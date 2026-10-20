@@ -71,6 +71,18 @@ public class MainActivity extends Activity {
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        // الجوال: شريط الحالة ظاهر وشفاف فوق الخلفية، والخلفية تمتد خلفه وخلف الكاميرا
+        if (Build.VERSION.SDK_INT >= 21) {
+            w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            w.setStatusBarColor(Color.TRANSPARENT);
+        }
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp0 = w.getAttributes();
+            lp0.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            w.setAttributes(lp0);
+        }
+        statusBar = isPhone() && getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("statusBar", true);
+        if (statusBar) w.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
@@ -188,12 +200,34 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     private void hideBars() {
         View d = getWindow().getDecorView();
-        d.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        int f = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        if (!statusBar) f |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+        d.setSystemUiVisibility(f);
+    }
+
+    private boolean statusBar = false;
+
+    // جوال (وليس تلفازاً أو جهازاً لوحياً كبيراً)
+    private boolean isPhone() {
+        try {
+            android.app.UiModeManager um = (android.app.UiModeManager) getSystemService(UI_MODE_SERVICE);
+            if (um != null && um.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) return false;
+            return getResources().getConfiguration().smallestScreenWidthDp < 600;
+        } catch (Exception e) { return false; }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setStatusBar(boolean on) {
+        boolean v = on && isPhone();
+        getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("statusBar", on).apply();
+        if (v == statusBar) return;
+        statusBar = v;
+        if (v) getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN); else getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        hideBars(); notifyRotation();
     }
 
     @Override
@@ -544,14 +578,22 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String safeInsets() {
             int t = 0, l = 0, r = 0, b = 0;
             try {
-                if (Build.VERSION.SDK_INT >= 28) {
+                if (Build.VERSION.SDK_INT >= 23) {
                     android.view.WindowInsets wi = getWindow().getDecorView().getRootWindowInsets();
-                    if (wi != null && wi.getDisplayCutout() != null) { android.view.DisplayCutout c = wi.getDisplayCutout(); t = c.getSafeInsetTop(); l = c.getSafeInsetLeft(); r = c.getSafeInsetRight(); b = c.getSafeInsetBottom(); }
+                    if (wi != null) {
+                        // شريط الحالة الظاهر في الجوال فقط (أشرطة النظام المخفية لا تُحسب)
+                        if (statusBar) { int id = getResources().getIdentifier("status_bar_height", "dimen", "android"); t = Math.max(wi.getSystemWindowInsetTop() > 0 && id == 0 ? wi.getSystemWindowInsetTop() : 0, id > 0 ? getResources().getDimensionPixelSize(id) : 0);
+                            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) t = Math.max(t, 0); }
+                        if (Build.VERSION.SDK_INT >= 28 && wi.getDisplayCutout() != null) { android.view.DisplayCutout c = wi.getDisplayCutout();
+                            t = Math.max(t, c.getSafeInsetTop()); l = Math.max(l, c.getSafeInsetLeft()); r = Math.max(r, c.getSafeInsetRight()); b = Math.max(b, c.getSafeInsetBottom()); }
+                    }
                 }
             } catch (Exception ignored) { }
             float d = getResources().getDisplayMetrics().density; if (d <= 0) d = 1;
             return "{\"top\":" + Math.round(t / d) + ",\"left\":" + Math.round(l / d) + ",\"right\":" + Math.round(r / d) + ",\"bottom\":" + Math.round(b / d) + "}";
         }
+        @JavascriptInterface public void setStatusBar(boolean on) { runOnUiThread(() -> MainActivity.this.setStatusBar(on)); }
+        @JavascriptInterface public boolean isPhone() { return MainActivity.this.isPhone(); }
         @JavascriptInterface public int nativeRot() { return fillsScreen() ? nativeRotDeg() : 0; }
         @JavascriptInterface public String rotInfo() {
             View dv = getWindow().getDecorView();

@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -324,6 +324,7 @@ function rotCSS(){
   var r = (((+S.look.rot || 0) % 360) + 360) % 360, AN = window.RawayieAndroid;
   if (!AN || !AN.setRotation || window.RAWAYIE_PREVIEW) return r;
   var want = S.look.sysRot === true ? r : -1;
+  if (AN.setStatusBar) { var sb = S.look.phoneBar !== false; if (rotCSS.sb !== sb) { rotCSS.sb = sb; try { AN.setStatusBar(sb); } catch(e){} } }
   if (natKey !== String(want)) { natKey = String(want); try { AN.setRotation(want); } catch(e){} }
   // بدون تدوير النظام: الجهاز يتصرف كعادته (الجوال يدور مع الحساس) والتدوير المختار يُرسم فوقه
   var n = 0; if (want >= 0) try { n = +AN.nativeRot() || 0; } catch(e){}
@@ -356,7 +357,7 @@ function safeIns(){
   return o;
 }
 function orient(){
-  var r = rotCSS(), si = safeIns(), w = innerWidth - si.l - si.r, h = innerHeight - si.t - si.b;
+  var r = rotCSS(), w = innerWidth, h = innerHeight;
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }
   if (S.look.orient === "portrait") return "P";
   if (S.look.orient === "landscape") return "L";
@@ -364,13 +365,15 @@ function orient(){
 }
 function fit(){
   var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
-  var si = safeIns(), vw = innerWidth - si.l - si.r, vh = innerHeight - si.t - si.b;
-  stage.style.left = (si.l + vw/2) + "px"; stage.style.top = (si.t + vh/2) + "px";
+  var si = safeIns(), vw = innerWidth, vh = innerHeight;
   var rs = document.documentElement.style; rs.setProperty("--sat", si.t + "px"); rs.setProperty("--sab", si.b + "px"); rs.setProperty("--sal", si.l + "px"); rs.setProperty("--sar", si.r + "px");
   if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
   // ملء الشاشة بالكامل: يتمدد ارتفاع التصميم حسب نسبة الجهاز (جوال، تابلت، تلفاز 4:3 أو 21:9) فلا تظهر أشرطة سوداء
   if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = Math.round(o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)));
   var sc = Math.min(vw/W, vh/H);
+  // مساحة الكاميرا وشريط الحالة داخل الشاشة (بوحدات التصميم) حسب اتجاه التدوير
+  var q = r === 180 ? [si.b, si.l, si.t, si.r] : r === 90 ? [si.l, si.b, si.r, si.t] : r === 270 ? [si.r, si.t, si.l, si.b] : [si.t, si.r, si.b, si.l];
+  ["--it", "--ir", "--ib", "--il"].forEach(function(k, i){ stage.style.setProperty(k, (q[i] / sc).toFixed(1) + "px"); });
   stage.style.width = W + "px"; stage.style.height = H + "px";
   stage.style.transform = "translate(-50%,-50%) rotate(" + r + "deg) scale(" + sc + ")";
   var mb = document.getElementById("menu"); if (mb) mb.hidden = S.look.menuBtn === false;
@@ -467,6 +470,7 @@ function applyLook(){
   st.setProperty("--fz", "'" + S.look.fontZekr + "', 'Amiri', serif");
   stage.classList.toggle("shadow", !!S.look.shadow);
   stage.classList.toggle("arch", b.arch && !S.look.customBg);
+  stage.style.backgroundColor = (!S.look.customBg && window.BG_COLOR && window.BG_COLOR[b.file]) || "";
   stage.dir = S.lang === "ar" ? "rtl" : "ltr";
   stage.classList.toggle("apar", !!S.look.arabicDigits && !S.look.h24); // صباحاً/مساءً يسار الوقت (اتجاه العربية)، وAM/PM يمينه
   document.documentElement.lang = S.lang;
