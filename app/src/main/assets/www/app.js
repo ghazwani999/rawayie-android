@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.4"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -957,7 +957,7 @@ function overlayInner(now, ph){
   if (m === "dua") {
     if (ovKey !== key) { ovKey = key; ovEl.className = "on zk";
       ovEl.innerHTML = '<div class="o-title">' + esc(t("dua_after_azan_title")) + '</div><div class="o-zk" style="font-size:' + zkSize(S.texts.dua || window.DUA_AFTER_AZAN) + 'px">' + esc(S.texts.dua || window.DUA_AFTER_AZAN) + '</div>' +
-        '<div class="o-sub sm">' + esc(t("remaining_for_iqamaa")) + ' <span class="o-cnt"></span></div>'; }
+        '<div class="o-sub sm">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt duacnt"></div>'; }
     digits($(".o-cnt", ovEl), dur(Math.floor((p.I - now)/1000)));
     return;
   }
