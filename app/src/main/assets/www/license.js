@@ -51,7 +51,15 @@ function save(){
   try { if (AN && AN.licSet) AN.licSet(j); } catch(e){}
   try { A.IDB.put("__lic", j); } catch(e){}
 }
-if (!st.id) st.id = newId();
+// رقم الجهاز في تطبيق أندرويد مشتق من معرّف الجهاز الثابت: يبقى نفسه بعد حذف التطبيق وإعادة تثبيته
+function stableId(){
+  try { var d = AN && AN.deviceId ? String(AN.deviceId() || "") : ""; if (d.length < 6 || d === "9774d56d682e549c") return "";
+    var c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", h1 = h32("rw-dev|" + d, 2166136261), h2 = h32(d + "|rw-dev", 84696351), out = "";
+    for (var i = 0; i < 4; i++) { out += c.charAt(h1 % 32); h1 = Math.floor(h1 / 32); }
+    for (var j = 0; j < 4; j++) { out += c.charAt(h2 % 32); h2 = Math.floor(h2 / 32); }
+    return out; } catch(e){ return ""; }
+}
+if (!st.id) st.id = stableId() || newId();
 if (!st.start) st.start = Date.now();
 // نسخة احتياطية في قاعدة بيانات المتصفح: تُكمل البيانات إذا مُسح التخزين المحلي فقط
 try { A.IDB.get("__lic").then(function(v){ if (!v) return; var r = merge([st, JSON.parse(v)]); if (r.start !== st.start || r.id !== st.id || r.code !== st.code || (!st.link && r.link)) { st = r; save(); if (restoreLink() && window.REMOTE && window.REMOTE.start) window.REMOTE.start(); refresh(); } }).catch(function(){}); } catch(e){}

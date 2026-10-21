@@ -570,6 +570,10 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void reload() { runOnUiThread(() -> { if (web != null) web.reload(); }); }
         @JavascriptInterface public void exit() { runOnUiThread(MainActivity.this::finish); }
         // نسخة من بيانات الفترة التجريبية والتفعيل داخل التطبيق نفسه
+        // معرّف ثابت للجهاز (لا يتغير بحذف التطبيق وإعادة تثبيته) حتى يبقى «رقم الجهاز» وكود التفعيل صالحين
+        @JavascriptInterface public String deviceId() {
+            try { String v = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID); return v == null ? "" : v; } catch (Exception e) { return ""; }
+        }
         @JavascriptInterface public String licGet() { return getSharedPreferences("rawayie", MODE_PRIVATE).getString("lic", ""); }
         @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
