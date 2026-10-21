@@ -965,6 +965,10 @@ R.display = function(){
       sel("وقت الظهور", "look.nightShow", [["maghrib","من المغرب حتى الفجر"],["isha","بعد صلاة العشاء حتى الفجر"],["always","طوال اليوم"],["custom","من ساعة إلى ساعة"]], "الليل من أذان المغرب إلى أذان الفجر") +
       (S.look.nightShow === "isha" ? numIn("يظهر بعد انتهاء صلاة العشاء بـ", "look.nightAfter", 0, 240, 5, "دقيقة") : "") +
       (S.look.nightShow === "custom" ? timeIn("من الساعة", "look.nightFrom") + timeIn("إلى الساعة", "look.nightTo", "يمكن أن يتجاوز منتصف الليل، مثل من 21:00 إلى 04:00") : "") +
+      rangeIn("حجم شريط أوقات الليل", "look.nbSize", 0.5, 1.8, 0.05, "%", "حجم النصوص والأيقونات والشريط كله") +
+      tog("تخصيص الظل والاستدارة والخلفية", "look.nbCustom", "عند إيقافه يتبع شكل صفوف الصلوات (قسم ظل الصلوات)") +
+      (S.look.nbCustom ? rangeIn("قوة الظل", "look.nbShadow", 0, 1, 0.05, "%", "صفر = بدون ظل") + rangeIn("انتشار الظل", "look.nbBlur", 0, 60, 1, "px") +
+        rangeIn("استدارة الزوايا", "look.nbRadius", 0, 60, 1, "px") + rangeIn("شفافية الخلفية", "look.nbBgOp", 0, 1, 0.05, "%", "صفر = بدون خلفية") : "") +
       '</div>' : "") +
     tog("التحقق من اتصال الإنترنت", "look.netStar", "نجمة أسفل الشاشة: خضراء عند الاتصال وحمراء عند الانقطاع")) +
   card("اتجاه الشاشة",
@@ -1350,7 +1354,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }

@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.11"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.12"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", nbCustom:false, nbSize:1, nbShadow:0.3, nbBlur:18, nbRadius:26, nbBgOp:0.3, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -447,6 +447,12 @@ function applyLook(){
   st.setProperty("--hiline", L.hiCustom ? L.hiColor : acc);
   stage.classList.toggle("hitxt", !!hiTx); stage.classList.toggle("hiframe", !!L.hiFrame); stage.classList.toggle("hizoom", !!L.hiZoom);
   // شكل جدول المواقيت: بطاقات بإطار رفيع، والصلاة القادمة بتعبئة ملوّنة
+  // شريط أوقات الليل: الحجم والظل والاستدارة وشفافية الخلفية
+  st.setProperty("--nbs", Math.max(.5, Math.min(1.8, +L.nbSize || 1)));
+  if (L.nbCustom) { var nsh = +L.nbShadow, nbl = +L.nbBlur;
+    st.setProperty("--nbrad", (+L.nbRadius) + "px"); st.setProperty("--nbbg", hexA(L.rowColor || "#000000", +L.nbBgOp));
+    st.setProperty("--nbsh", nsh > 0 ? "0 " + Math.round(nbl/3) + "px " + nbl + "px rgba(0,0,0," + nsh + ")" : "none"); }
+  else { st.removeProperty("--nbrad"); st.removeProperty("--nbbg"); st.removeProperty("--nbsh"); }
   var tc = L.tblStyle === "cards"; stage.classList.toggle("tcards", tc); setTimeout(fitRows, 60);
   if (tc) { st.setProperty("--tcn", L.tcName || "#FFD54A"); st.setProperty("--tca", L.tcAdhan || "#FFFFFF"); st.setProperty("--tci", L.tcIqama || "#FFD54A");
     st.setProperty("--tch", L.hiCustom ? hexA(L.hiColor, Math.max(+L.hiOpacity, .6)) : (L.tcHi || "#3B93E3")); }
