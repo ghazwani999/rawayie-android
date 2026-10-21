@@ -840,7 +840,7 @@ R.layout = function(){
     tog("وضع أسماء الصلوات في المنتصف في الوضع العمودي", "look.centerP") + tog("وضع أسماء الصلوات في المنتصف في العرض الأفقي", "look.centerL") +
     tog("تكبير الإقامة والأذان في وضع العرض الأفقي", "look.bigL") +
     tog("تكبير عداد المتبقي للصلاة القادمة", "look.bigCounter") + tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.5. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.6. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
 };
 
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
@@ -1079,7 +1079,7 @@ R.general = function(){
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
       numIn("مدة الظهور", "splash.sec", 2, 60, 1, "ثانية") : "") +
-    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
+    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("مظهر الإعدادات", sel("الوضع", "uiTheme", [["dark","الوضع الداكن"],["light","الوضع الفاتح"],["auto","حسب وضع الجهاز"]], "لصفحة الإعدادات والمحرر ولوحة المفاتيح. الزر ☀/🌙 أعلى الإعدادات يبدّل بسرعة")) + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
     sel("لوحة المفاتيح", "vkb", [["on","محرر ولوحة التطبيق دائماً (المفضل)"],["auto","تلقائي: في تطبيق أندرويد والشاشة المدوّرة فقط"],["off","لوحة مفاتيح الجهاز"]], "لوحة التطبيق عربي وإنجليزي وأرقام ورموز، تدور مع الشاشة وتعمل بالريموت والفأرة")) +
     card("العمل بدون إنترنت",
     '<div class="fld"><span><b>الحالة</b><small id="offst">' + esc(offState()) + '</small></span>' + btn("تجهيز الآن", "offPrep", "sm") + '</div>' + offBrowser() +
@@ -1199,6 +1199,7 @@ function onChange(e){
   if (el.type === "number") { var mn = parseFloat(el.min), mx = parseFloat(el.max); if (v < mn) v = mn; if (v > mx) v = mx; }
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
+  if (el.dataset.p === "uiTheme") uiTheme();
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
   if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
@@ -1290,6 +1291,7 @@ function onClick(e){
     case "sbTab": R.hide.sb = x; render(); break;
     case "sleepPrevK": close(); A.previewBlack(10000, true, x); break;
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
+    case "thm": S.uiTheme = document.documentElement.classList.contains("uilight") ? "dark" : "light"; A.save(); uiTheme(); if (cur === "general") render(); break;
     case "licKey": var lk = $("#liccode"); if (lk) { var dg = lk.value.replace(/\D/g, ""); dg = x === "del" ? dg.slice(0, -1) : (dg + x).slice(0, 8); lk.value = dg.length > 4 ? dg.slice(0, 4) + " " + dg.slice(4) : dg; } break;
     case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#ff8a8a"; } } break;
     case "goto": var gi = x.indexOf("|"); gotoOpt(x.slice(0, gi), x.slice(gi + 1)); break;
@@ -1436,7 +1438,7 @@ function open(){
 function close(){ if (S.pass) { unlocked = false; } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
-  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><button type="button" class="thm" id="thm" data-act="thm" aria-label="تبديل الوضع الداكن والفاتح">☀</button><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
     '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
@@ -1586,7 +1588,15 @@ function spatialNav(){
     if (best) { try { best.focus({preventScroll:true}); } catch(x){ best.focus(); } if (best.scrollIntoView) try { best.scrollIntoView({block:"nearest", inline:"nearest"}); } catch(x){ best.scrollIntoView(false); } }
   }, true);
 }
-function init(){ shortcuts(); spatialNav(); }
+/* الوضع الداكن والفاتح لواجهة الإعدادات والمحرر ولوحة المفاتيح */
+function uiTheme(){
+  var m = S.uiTheme || "dark", light = m === "light";
+  if (m === "auto") try { light = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches; } catch(e){}
+  document.documentElement.classList.toggle("uilight", !!light);
+  var b = document.getElementById("thm"); if (b) { b.textContent = light ? "🌙" : "☀"; b.title = light ? "الوضع الداكن" : "الوضع الفاتح"; }
+}
+try { if (window.matchMedia) matchMedia("(prefers-color-scheme: light)").addListener(function(){ if (S.uiTheme === "auto") uiTheme(); }); } catch(e){}
+function init(){ shortcuts(); spatialNav(); uiTheme(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 // زر الرجوع في الريموت: يغلق لوحة المفاتيح ثم المحرر ثم الإعدادات بالترتيب
 function back(){

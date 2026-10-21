@@ -101,7 +101,12 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false); // صوت الأذان والإقامة بدون لمس الشاشة
-        s.setTextZoom(100);                             // حجم خط النظام لا يغيّر تصميم الشاشة
+        s.setTextZoom(100);
+        // الوضع الداكن في الجهاز لا يغيّر ألوان التطبيق (كان يجعل بعض النصوص غير ظاهرة)؛ التطبيق له وضعه الداكن والفاتح
+        try {
+            if (Build.VERSION.SDK_INT >= 33) s.setAlgorithmicDarkeningAllowed(false);
+            else if (Build.VERSION.SDK_INT >= 29) s.setForceDark(WebSettings.FORCE_DARK_OFF);
+        } catch (Throwable ignored) { }                             // حجم خط النظام لا يغيّر تصميم الشاشة
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
         s.setAllowFileAccess(false);
