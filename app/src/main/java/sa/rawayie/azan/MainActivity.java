@@ -84,7 +84,14 @@ public class MainActivity extends Activity {
         statusBar = isPhone() && getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("statusBar", true);
         if (statusBar) w.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        web = new WebView(this);
+        // بعض الأجهزة يكون فيها «Android System WebView» معطلاً أو قيد التحديث: بدل أن يُغلق التطبيق تظهر رسالة وإعادة محاولة
+        try {
+            web = new WebView(this);
+        } catch (Throwable t) {
+            web = null;
+            showWebViewError();
+            return;
+        }
         web.setBackgroundColor(Color.BLACK);
         web.setKeepScreenOn(true);
         FrameLayout root = new FrameLayout(this);
@@ -160,6 +167,15 @@ public class MainActivity extends Activity {
         else web.loadUrl(START);
         hideBars();
         askAutostartOnce();
+    }
+
+    private void showWebViewError() {
+        android.widget.TextView tv = new android.widget.TextView(this);
+        tv.setText("تعذّر تشغيل محرك العرض (Android System WebView) على هذا الجهاز.\n\nحدّث أو فعّل «Android System WebView» من متجر التطبيقات أو إعدادات الجهاز ← التطبيقات، ثم أعد فتح التطبيق.\n\nستتم إعادة المحاولة تلقائياً خلال 30 ثانية.");
+        tv.setTextColor(Color.WHITE); tv.setTextSize(22); tv.setGravity(android.view.Gravity.CENTER);
+        tv.setBackgroundColor(Color.BLACK); int p = Math.round(32 * getResources().getDisplayMetrics().density); tv.setPadding(p, p, p, p);
+        setContentView(tv);
+        ui.postDelayed(this::recreate, 30000);
     }
 
     /* ===== تقديم ملفات التطبيق من assets/www ===== */
@@ -258,7 +274,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if (web != null) { web.destroy(); web = null; }
+        ui.removeCallbacksAndMessages(null);
+        if (web != null) { try { ((android.view.ViewGroup) web.getParent()).removeView(web); } catch (Exception ignored) { } web.destroy(); web = null; }
         super.onDestroy();
     }
 
