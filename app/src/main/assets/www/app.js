@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.4"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.5"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -296,11 +296,12 @@ function phase(now){
 function digits(el, str){
   if (!el) return; str = String(str);
   if (el._dv === str) return; el._dv = str;
-  el.innerHTML = str.replace(/[\s\S]/g, function(ch){
+  // bdo يفرض ترتيب الأرقام من اليسار لليمين دائماً (الدقائق ثم الثواني)، حتى لو كان اتجاه الصفحة عربياً في أي متصفح أو تلفاز
+  el.innerHTML = '<bdo dir="ltr">' + str.replace(/[\s\S]/g, function(ch){
     if (/[0-9\u0660-\u0669]/.test(ch)) return '<span class="dg">' + ch + '</span>';
     if (ch === ":") return '<span class="dc">:</span>';
     return ch === "<" ? "&lt;" : ch === "&" ? "&amp;" : ch;
-  });
+  }) + '</bdo>';
 }
 function fmtT(ms, sec, clk){
   var z = zp(ms), h = z.h, zr = S.look.zeroH === "all" || (clk && S.look.zeroH === "clock");
