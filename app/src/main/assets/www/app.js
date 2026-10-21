@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.6"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.7"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1252,7 +1252,9 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var el = D.elementFromPoint(x, y); if (!el) return;
     fire("pointerdown", el); fire("mousedown", el); fire("pointerup", el); fire("mouseup", el);
     var tag = el.tagName.toLowerCase(), ty = (el.type || "").toLowerCase();
-    if (tag === "select") { el.focus(); try { if (el.showPicker) el.showPicker(); } catch(e){} return; }
+    // نافذة الاختيار الخاصة بالتطبيق فُتحت (تدور مع الشاشة): لا تُفتح نافذة النظام
+    if (D.querySelector(".pkov:not([hidden])")) return;
+    if (tag === "select" || (tag === "input" && /^(color|time|date)$/.test(ty))) { el.focus(); try { if (el.showPicker) el.showPicker(); } catch(e){} return; }
     if (tag === "textarea" || (tag === "input" && !/checkbox|radio|button|submit|range|color|file/.test(ty))) { el.focus(); return; }
     if (tag === "input" && ty === "range") { // نقل المؤشر إلى مكان الضغط على امتداد الشريط حسب اتجاهه الظاهر
       var r = el.getBoundingClientRect(), a = rot(), f;

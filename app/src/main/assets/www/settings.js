@@ -630,6 +630,89 @@ function vkClick(e){
   vkIns(c); if (VK.shift) { VK.shift = false; vkRender(); }
 }
 
+/* ===== منتقيات التطبيق: القوائم المنسدلة والألوان والوقت والتاريخ =====
+   نوافذ النظام (قائمة الاختيار، منتقي اللون والوقت) تظهر بالاتجاه الأصلي للجهاز ولا تدور مع الشاشة،
+   فيعرض التطبيق بدلها نوافذه الخاصة داخل الإعدادات: تدور مع الشاشة وتعمل بالريموت والفأرة واللمس */
+var PK = {el:null, t:null};
+function pkOn(){ return vkOn(); }
+function pkTarget(el){
+  if (!el || !el.closest) return null;
+  var t = el.closest("select,input[type=color],input[type=time],input[type=date]");
+  if (!t || t.disabled || t.closest(".pkov")) return null;
+  return t;
+}
+function pkLabel(t){ var f = t.closest(".fld,.fcol,label"), b = f && f.querySelector("b"); return b ? b.textContent : (t.getAttribute("aria-label") || ""); }
+function pkClose(){ if (PK.el) { PK.el.hidden = true; PK.el.innerHTML = ""; } var t = PK.t; PK.t = null; if (t) try { t.focus({preventScroll:true}); } catch(e){} }
+function pkSet(v){ var t = PK.t; if (!t) return; t.value = v; t.dispatchEvent(new Event("input", {bubbles:true})); t.dispatchEvent(new Event("change", {bubbles:true})); }
+function pkPal(){
+  var out = [], hs = [0, 15, 30, 45, 60, 90, 140, 170, 195, 210, 230, 260, 285, 320];
+  [[.85, .25], [.75, .4], [.7, .55], [.6, .72]].forEach(function(sl){ hs.forEach(function(h){ out.push(A.hsl ? A.hsl(h, sl[0], sl[1]) : "hsl(" + h + "," + sl[0]*100 + "%," + sl[1]*100 + "%)"); }); });
+  return out;
+}
+function hsl2hex(h, s, l){ var c = (1 - Math.abs(2*l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c/2, r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; } else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+  var hx = function(v){ v = Math.round((v + m) * 255).toString(16); return v.length < 2 ? "0" + v : v; }; return "#" + hx(r) + hx(g) + hx(b); }
+function pkOpen(t){
+  PK.t = t;
+  if (!PK.el) { PK.el = document.createElement("div"); PK.el.className = "pkov"; PK.el.setAttribute("role", "dialog");
+    PK.el.addEventListener("click", function(e){ if (e.target === PK.el) { pkClose(); return; } var b = e.target.closest("[data-pk]"); if (!b) return; e.stopPropagation(); pkAct(b.dataset.pk, b.dataset.v); }); }
+  var host = $("#ed") && !$("#ed").hidden ? $("#ed") : panel; if (PK.el.parentNode !== host) host.appendChild(PK.el);
+  var tag = t.tagName.toLowerCase(), ty = (t.type || "").toLowerCase(), h = '<div class="pkbox"><div class="pkh"><b>' + esc(pkLabel(t)) + '</b><button type="button" class="btn ghost sm" data-pk="x">إغلاق</button></div>';
+  if (tag === "select") {
+    h += '<div class="pklist">' + Array.prototype.map.call(t.children, function(n){
+      var one = function(o){ return '<button type="button" class="pkopt' + (o.value === t.value ? " on" : "") + '" data-pk="opt" data-v="' + esc(o.value) + '"' + (o.disabled ? " disabled" : "") + '>' + esc(o.textContent) + '</button>'; };
+      return n.tagName === "OPTGROUP" ? '<div class="pkgrp">' + esc(n.label) + '</div>' + Array.prototype.map.call(n.children, one).join("") : one(n);
+    }).join("") + '</div>';
+  } else if (ty === "color") {
+    var cols = [];
+    [[.9, .3], [.85, .45], [.75, .6], [.65, .75]].forEach(function(sl){ [0, 15, 30, 45, 55, 90, 140, 170, 190, 205, 225, 260, 285, 320].forEach(function(hh){ cols.push(hsl2hex(hh, sl[0], sl[1])); }); });
+    cols = cols.concat(["#ffffff", "#e6e6e6", "#bdbdbd", "#8a8a8a", "#5c5c5c", "#333333", "#1a1a1a", "#000000", "#EBD1A0", "#E7B65B", "#C9A24A", "#1F5A8A", "#0E6B5C", "#7A1E2C"]);
+    h += '<div class="pkcur"><span style="background:' + esc(t.value) + '"></span><b dir="ltr">' + esc(t.value) + '</b></div><div class="pkcols">' +
+      cols.map(function(c){ return '<button type="button" class="pkc' + (c.toLowerCase() === String(t.value).toLowerCase() ? " on" : "") + '" data-pk="col" data-v="' + c + '" style="background:' + c + '" aria-label="' + c + '"></button>'; }).join("") + '</div>';
+  } else if (ty === "time") {
+    var tv = (t.value || "00:00").split(":"); PK.h = +tv[0] || 0; PK.m = +tv[1] || 0;
+    h += '<div class="pktime" dir="ltr"><div class="pkcol"><button type="button" class="pkst" data-pk="h" data-v="1">▲</button><b id="pkh"></b><button type="button" class="pkst" data-pk="h" data-v="-1">▼</button></div><b class="pksep">:</b>' +
+      '<div class="pkcol"><button type="button" class="pkst" data-pk="m" data-v="1">▲</button><b id="pkm"></b><button type="button" class="pkst" data-pk="m" data-v="-1">▼</button></div>' +
+      '<div class="pkcol sm"><button type="button" class="pkst" data-pk="m" data-v="10">+10</button><button type="button" class="pkst" data-pk="m" data-v="-10">−10</button></div></div>' +
+      '<div class="row-end">' + (t.value ? '<button type="button" class="btn ghost" data-pk="clr">مسح</button>' : "") + '<button type="button" class="btn" data-pk="ok">تم</button></div>';
+  } else if (ty === "date") {
+    var d0 = t.value ? t.value.split("-") : null, nw = new Date(); PK.y = d0 ? +d0[0] : nw.getFullYear(); PK.mo = d0 ? +d0[1] : nw.getMonth() + 1; PK.d = d0 ? +d0[2] : nw.getDate();
+    var st = function(k, lab){ return '<div class="pkcol"><small>' + lab + '</small><button type="button" class="pkst" data-pk="' + k + '" data-v="1">▲</button><b id="pk' + k + '"></b><button type="button" class="pkst" data-pk="' + k + '" data-v="-1">▼</button></div>'; };
+    h += '<div class="pktime" dir="ltr">' + st("y", "السنة") + st("mo", "الشهر") + st("d", "اليوم") + '</div>' +
+      '<div class="row-end">' + (t.value ? '<button type="button" class="btn ghost" data-pk="clr">مسح</button>' : "") + '<button type="button" class="btn" data-pk="ok">تم</button></div>';
+  }
+  PK.el.innerHTML = h + '</div>'; PK.el.hidden = false; pkShow();
+  var f = PK.el.querySelector(".pkopt.on,.pkc.on,.pkst,.pkopt,.pkc"); if (f) { try { f.focus({preventScroll:true}); } catch(e){ f.focus(); } if (f.scrollIntoView) try { f.scrollIntoView({block:"center"}); } catch(e){} }
+}
+function two2(n){ return (n < 10 ? "0" : "") + n; }
+function pkShow(){
+  var g = function(id){ return document.getElementById(id); };
+  if (g("pkh")) { g("pkh").textContent = two2(PK.h); g("pkm").textContent = two2(PK.m); }
+  if (g("pky")) { var dim = new Date(PK.y, PK.mo, 0).getDate(); if (PK.d > dim) PK.d = dim; g("pky").textContent = PK.y; g("pkmo").textContent = two2(PK.mo); g("pkd").textContent = two2(PK.d); }
+}
+function pkAct(a, v){
+  var t = PK.t; if (!t) return;
+  if (a === "x") { pkClose(); return; }
+  if (a === "opt" || a === "col") { pkSet(v); pkClose(); return; }
+  if (a === "h") { PK.h = (PK.h + +v + 24) % 24; pkShow(); return; }
+  if (a === "m") { var tm = PK.h * 60 + PK.m + +v; tm = (tm + 1440) % 1440; PK.h = Math.floor(tm / 60); PK.m = tm % 60; pkShow(); return; }
+  if (a === "y") { PK.y += +v; pkShow(); return; }
+  if (a === "mo") { PK.mo = ((PK.mo - 1 + +v + 12) % 12) + 1; pkShow(); return; }
+  if (a === "d") { var dim = new Date(PK.y, PK.mo, 0).getDate(); PK.d = ((PK.d - 1 + +v + dim) % dim) + 1; pkShow(); return; }
+  if (a === "clr") { pkSet(""); pkClose(); return; }
+  if (a === "ok") { pkSet(t.type === "time" ? two2(PK.h) + ":" + two2(PK.m) : PK.y + "-" + two2(PK.mo) + "-" + two2(PK.d)); pkClose(); }
+}
+function pkBind(root){
+  var stop = function(e){ if (!pkOn()) return; var t = pkTarget(e.target); if (!t) return; e.preventDefault(); e.stopPropagation(); return t; };
+  root.addEventListener("mousedown", function(e){ if (stop(e)) { /* يفتح عند الضغط */ var t = pkTarget(e.target); try { t.focus({preventScroll:true}); } catch(x){} pkOpen(t); } }, true);
+  root.addEventListener("touchend", function(e){ var t = stop(e); if (t) pkOpen(t); }, {capture:true, passive:false});
+  root.addEventListener("click", function(e){ if (pkOn() && pkTarget(e.target)) { e.preventDefault(); e.stopPropagation(); } }, true);
+  root.addEventListener("keydown", function(e){
+    if (PK.el && !PK.el.hidden && e.key === "Escape") { e.preventDefault(); e.stopPropagation(); pkClose(); return; }
+    if (!pkOn() || !/^(Enter| |Spacebar)$/.test(e.key)) return; var t = pkTarget(e.target); if (!t || e.target !== t) return;
+    e.preventDefault(); e.stopPropagation(); pkOpen(t); }, true);
+}
+
 function edClose(save){
   var ed = $("#ed"), el = ED.el; if (!ed || !el) return;
   if (save) { var v = $("#edt").value; if (ed.dataset.multi !== "1") v = v.replace(/\s*\n+\s*/g, " ");
@@ -1513,6 +1596,7 @@ function build(){
   panel.addEventListener("mousedown", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el)) { e.preventDefault(); edOpen(el); } });
   panel.addEventListener("keydown", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el) && (e.key.length === 1 || e.key === "Enter") && !e.ctrlKey && !e.metaKey) { e.preventDefault(); edOpen(el); if (e.key.length === 1) { var t = $("#edt"); t.value += e.key; t.dispatchEvent(new Event("input")); } } });
   panel.addEventListener("touchend", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el)) { e.preventDefault(); edOpen(el); } });
+  pkBind(panel);
   panel.addEventListener("click", onClick); panel.addEventListener("change", onChange); panel.addEventListener("input", onSlInput);
   // لوحة المفاتيح الخاصة: تمنع لوحة النظام قبل أن تظهر، وتفتح تحت الحقل
   var vkPre = function(e){ var el = e.target; if (vkOn() && vkTyping(el) && !el.closest(".vkwrap")) el.setAttribute("inputmode", "none"); };
@@ -1617,6 +1701,7 @@ function spatialNav(){
     if (actEl && !actEl.hidden) return; // لوحة أرقام التفعيل لها تنقل خاص
     if (sp && !sp.hidden) root = sp; else return;
     var edv = $("#ed"); if (edv && !edv.hidden) root = edv; // داخل المحرر: التنقل بين أزراره ولوحة المفاتيح فقط
+    if (PK.el && !PK.el.hidden) root = PK.el; // داخل نافذة الاختيار
     var t = e.target, tag = (t.tagName || "").toLowerCase(), ty = (t.type || "").toLowerCase();
     // داخل حقل نص: السهمان الأفقيان يحركان المؤشر، وشريط التمرير يتغير بالأسهم الأفقية
     if (tag === "textarea") return;
@@ -1647,6 +1732,7 @@ function init(){ shortcuts(); spatialNav(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 // زر الرجوع في الريموت: يغلق لوحة المفاتيح ثم المحرر ثم الإعدادات بالترتيب
 function back(){
+  if (PK.el && !PK.el.hidden) { pkClose(); return true; }
   if (VK.el && !VK.el.hidden) { if (VK.t && VK.t.id === "edt") edClose(false); else vkClose(); return true; }
   var ed = $("#ed"); if (ed && !ed.hidden) { edClose(false); return true; }
   return false;

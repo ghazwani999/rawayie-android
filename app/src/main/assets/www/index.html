@@ -515,6 +515,23 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .vkalt .vk{flex:none;width:48px}
 .edbox .vkwrap{margin-top:2px}
 @container ui (max-width:600px){ .vk{height:40px;font-size:17px}.vk.fn,.vk.sp,.vk.ok{font-size:12px}.vkr{gap:4px}.vkb{gap:4px} }
+/* نوافذ الاختيار الخاصة بالتطبيق (بدل نوافذ النظام التي لا تدور مع الشاشة) */
+.pkov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.pkbox{width:min(560px,100%);max-height:100%;display:flex;flex-direction:column;gap:12px;background:var(--sbg);border:1px solid var(--sline);border-radius:16px;padding:14px 16px;box-shadow:0 20px 60px var(--sshadow,rgba(0,0,0,.6))}
+.pkh{display:flex;align-items:center;gap:10px}.pkh b{flex:1;color:var(--sacc);font-size:18px;min-width:0}
+.pklist{overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:0}
+.pkopt{font:inherit;font-size:17px;text-align:start;color:var(--stext);background:var(--scard);border:1px solid var(--sline);border-radius:10px;padding:10px 14px;cursor:pointer}
+.pkopt.on{border-color:var(--sacc);background:var(--shov);font-weight:700}.pkopt.on::before{content:"✓ ";color:var(--sacc)}
+.pkopt:focus,.pkc:focus,.pkst:focus{outline:3px solid var(--sacc);outline-offset:1px}
+.pkgrp{font-size:13px;color:var(--smuted);padding:6px 4px 0}
+.pkcur{display:flex;align-items:center;gap:10px}.pkcur span{width:44px;height:44px;border-radius:10px;border:2px solid var(--sline)}
+.pkcols{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;overflow-y:auto}
+.pkc{aspect-ratio:1/1;min-width:0;border-radius:8px;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0}.pkc.on{border-color:var(--sacc);box-shadow:0 0 0 2px var(--sacc)}
+.pktime{display:flex;align-items:center;justify-content:center;gap:14px}
+.pkcol{display:flex;flex-direction:column;align-items:center;gap:8px}.pkcol b{font:700 46px/1 "Cairo",sans-serif;color:var(--stext);min-width:2.2ch;text-align:center}.pkcol small{color:var(--smuted)}
+.pkcol.sm .pkst{font-size:15px}.pksep{font:700 46px/1 "Cairo",sans-serif;color:var(--smuted)}
+.pkst{font:700 20px "Cairo",sans-serif;color:var(--stext);background:var(--scard);border:1px solid var(--sline);border-radius:10px;padding:8px 18px;cursor:pointer}
+@container ui (max-width:520px){ .pkcols{grid-template-columns:repeat(7,1fr)} }
 #ed{position:absolute;top:0;right:0;bottom:0;left:0;z-index:50;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
 #ed[hidden]{display:none!important}
 .edbox{width:min(1100px,100%);height:100%;max-height:100%;overflow:hidden;background:var(--sbg);border:1px solid var(--sline);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
@@ -789,15 +806,15 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610212020"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610212020"></script>
-<script charset="utf-8" src="data.js?v=2610212020"></script>
-<script charset="utf-8" src="i18n.js?v=2610212020"></script>
-<script charset="utf-8" src="version.js?v=2610212020"></script>
-<script charset="utf-8" src="app.js?v=2610212020"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610212020"></script>
-<script charset="utf-8" src="lic-key.js?v=2610212020"></script>
-<script charset="utf-8" src="license.js?v=2610212020"></script>
-<script charset="utf-8" src="remote.js?v=2610212020"></script>
-<script charset="utf-8" src="offline.js?v=2610212020"></script>
-<script charset="utf-8" src="settings.js?v=2610212020"></script>
+<script charset="utf-8" src="compat.js?v=2610212109"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610212109"></script>
+<script charset="utf-8" src="data.js?v=2610212109"></script>
+<script charset="utf-8" src="i18n.js?v=2610212109"></script>
+<script charset="utf-8" src="version.js?v=2610212109"></script>
+<script charset="utf-8" src="app.js?v=2610212109"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610212109"></script>
+<script charset="utf-8" src="lic-key.js?v=2610212109"></script>
+<script charset="utf-8" src="license.js?v=2610212109"></script>
+<script charset="utf-8" src="remote.js?v=2610212109"></script>
+<script charset="utf-8" src="offline.js?v=2610212109"></script>
+<script charset="utf-8" src="settings.js?v=2610212109"></script>
