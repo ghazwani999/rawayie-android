@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = "2.4.3";
+var VERSION = "2.4.4";
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -37,7 +37,7 @@ var DEF = {
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
         hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
-  dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"auto", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
+  dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
   texts:{after:[], morning:[], evening:[], dua:""},
@@ -56,7 +56,7 @@ var S;
 try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catch(e){ S = clone(DEF); }
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
-try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 12; } catch(e){}
+try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 13; } catch(e){}
 S.slides.items = S.slides.items.map(function(x){ return typeof x === "string" ? {id:"s" + x, img:x, imgMode:"contain", active:true} : x; });
 if ((S.lookV || 0) < 3) { // تصميم التطبيق الجديد: يعيد المظهر والذكر الثابت للافتراضي مرة واحدة
   S.look = clone(DEF.look); S.fixedZekr = DEF.fixedZekr; S.marquee = DEF.marquee; S.lookV = 3;
@@ -83,6 +83,8 @@ if (S.lookV < 11) { // الشعار الفضي الشفاف صار الشكل ا
   S.lookV = 11; }
 if (S.lookV < 12) { // التدوير بالرسم هو الافتراضي (يعمل على كل الأجهزة ويملأ الشاشة)، مع مؤشر فأرة بالاتجاه الصحيح
   S.look.sysRot = false; S.lookV = 12; }
+if (S.lookV < 13) { // محرر التطبيق ولوحته صارا المفضلين في كل الأجهزة والمتصفحات
+  S.vkb = "on"; S.textEditor = true; S.lookV = 13; }
 function save(){ if (window.RAWAYIE_PREVIEW) return; try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ===== التخزين المحلي للصور والأصوات ===== */
@@ -1004,7 +1006,7 @@ function annHTML(kind, p){
   tpl = tpl.replace(/\{الصلاة\}\s*[،,]\s*/g, "{الصلاة} "); // اسم الصلاة يظهر في سطر مستقل، فلا تبدأ الجملة التالية بفاصلة
   return '<div class="o-ann">' + esc(tpl).replace(/\{الصلاة\}/g, '<b>' + esc(pn) + '</b>').replace(/\{المسجد\}/g, '<b class="mq">' + esc(mq) + '</b>').replace(/\n/g, "<br>") + '</div>';
 }
-/* سطر أسفل الشاشة: rawayie.sa | الدمام | 2.4.3 (الفاصل يتلوّن بحالة الاتصال) */
+/* سطر أسفل الشاشة: rawayie.sa | الدمام | 2.4.4 (الفاصل يتلوّن بحالة الاتصال) */
 function footHTML(){
   var site = String(S.look.footSite == null ? "rawayie.sa" : S.look.footSite).trim();
   var loc = S.look.showLoc === false ? "" : [String(S.addr || "").trim(), cityInfo().name].filter(Boolean).join("، ");

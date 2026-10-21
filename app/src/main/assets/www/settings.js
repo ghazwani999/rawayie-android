@@ -487,15 +487,15 @@ function edOpen(el){
   var ed = $("#ed"); if (!ed) { ed = document.createElement("div"); ed.id = "ed"; ed.setAttribute("role", "dialog"); ed.setAttribute("aria-modal", "true"); panel.appendChild(ed); }
   var font = /zekr|fixed|hadith|dua|texts|ADHKAR/i.test(el.dataset.p || el.id || "") ? S.look.fontZekr : S.look.fontText;
   ed.innerHTML = '<div class="edbox"><div class="edh"><b>' + esc(edLabel(el)) + '</b><span class="edc" id="edc"></span><button type="button" class="btn ghost sm" data-ed="x">إغلاق</button></div>' +
-    '<div class="edtools"><span class="edg">' + ED_SYM.map(function(c){ return '<button type="button" data-ins="' + c + '">' + c + '</button>'; }).join("") + '</span>' +
+    '<div class="edbody"><div class="edmain"><div class="edtools"><span class="edg">' + ED_SYM.map(function(c){ return '<button type="button" data-ins="' + c + '">' + c + '</button>'; }).join("") + '</span>' +
     '<span class="edg har">' + ED_HAR.map(function(c){ return '<button type="button" data-ins="' + c[0] + '" title="' + c[1] + '">ـ' + c[0] + '</button>'; }).join("") + '</span>' +
     '<span class="edg"><button type="button" data-ed="strip" title="إزالة التشكيل">إزالة التشكيل</button><button type="button" data-ed="clear">مسح</button>' +
     '<label class="edfile">استيراد ملف<input type="file" accept=".txt,.docx,text/plain" hidden id="edf"></label></span></div>' +
     '<textarea id="edt" dir="rtl" spellcheck="false" rows="' + (multi ? 9 : 3) + '" style="font-family:\'' + esc(font) + '\',Amiri,serif"></textarea>' +
-    '<div class="edpv"><small>معاينة على الشاشة</small><div id="edp" style="font-family:\'' + esc(font) + '\',Amiri,serif"></div></div>' +
+    '<div class="edpv"><small>معاينة على الشاشة</small><div id="edp" style="font-family:\'' + esc(font) + '\',Amiri,serif"></div></div></div><div class="edside"></div></div>' +
     '<div class="edf"><small>' + (multi ? "Enter لسطر جديد · Ctrl+Enter للحفظ" : "سطر واحد · Enter للحفظ") + '</small><button type="button" class="btn ghost" data-ed="x">إلغاء</button><button type="button" class="btn" data-ed="ok">حفظ</button></div></div>';
   var t = $("#edt"); t.value = el.value; ed.hidden = false; ed.dataset.multi = multi ? "1" : "";
-  if (vkOn()) { t.setAttribute("inputmode", "none"); vkOpen(t, $(".edbox", ed), false); }
+  if (vkOn()) { t.setAttribute("inputmode", "none"); vkOpen(t, $(".edside", ed), false); }
   var upd = function(){ $("#edp").textContent = t.value || " "; var w = t.value.trim() ? t.value.trim().split(/\s+/).length : 0; $("#edc").textContent = t.value.length + " حرف · " + w + " كلمة"; };
   t.addEventListener("input", upd); upd(); setTimeout(function(){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); }, 30);
   t.addEventListener("keydown", function(e){
@@ -840,7 +840,7 @@ R.layout = function(){
     tog("وضع أسماء الصلوات في المنتصف في الوضع العمودي", "look.centerP") + tog("وضع أسماء الصلوات في المنتصف في العرض الأفقي", "look.centerL") +
     tog("تكبير الإقامة والأذان في وضع العرض الأفقي", "look.bigL") +
     tog("تكبير عداد المتبقي للصلاة القادمة", "look.bigCounter") + tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.3. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.4. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
 };
 
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
@@ -1080,7 +1080,7 @@ R.general = function(){
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
       numIn("مدة الظهور", "splash.sec", 2, 60, 1, "ثانية") : "") +
     '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
-    sel("لوحة المفاتيح", "vkb", [["auto","تلقائي: لوحة التطبيق في تطبيق أندرويد والشاشة المدوّرة"],["on","لوحة التطبيق دائماً"],["off","لوحة مفاتيح الجهاز"]], "لوحة التطبيق عربي وإنجليزي وأرقام ورموز، تدور مع الشاشة وتعمل بالريموت والفأرة")) +
+    sel("لوحة المفاتيح", "vkb", [["on","محرر ولوحة التطبيق دائماً (المفضل)"],["auto","تلقائي: في تطبيق أندرويد والشاشة المدوّرة فقط"],["off","لوحة مفاتيح الجهاز"]], "لوحة التطبيق عربي وإنجليزي وأرقام ورموز، تدور مع الشاشة وتعمل بالريموت والفأرة")) +
     card("العمل بدون إنترنت",
     '<div class="fld"><span><b>الحالة</b><small id="offst">' + esc(offState()) + '</small></span>' + btn("تجهيز الآن", "offPrep", "sm") + '</div>' + offBrowser() +
     tog("تنزيل كل الخلفيات", "offlineAllBg", "حتى يمكن تغيير الخلفية بدون إنترنت (حوالي 15 ميغابايت). تُنزَّل تلقائياً عند اختيار تغيير الخلفية التلقائي"),
