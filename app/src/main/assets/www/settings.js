@@ -986,14 +986,14 @@ R.shadow = function(){
       (!auto || !S.look.rowAuto ? colorIn("لون الظل", "look.rowColor") : "") +
       rangeIn("شفافية الظل", "look.rowOpacity", 0, 1, 0.05, "%", "0% شفاف تماماً، 100% لون كامل") +
       rangeIn("قوة الظل حول الشريط", "look.rowShadow", 0, 0.8, 0.02, "%") +
-      rangeIn("استدارة الزوايا", "look.rowRadius", 0, 60, 1, "px") +
-      rangeIn("المسافة بين الصلوات", "look.rowGap", 0, 40, 1, "px") : "") +
+      rangeIn("استدارة الزوايا", "look.rowRadius", 0, 60, 1, "px") : "") +
+    rangeIn("المسافة بين صفوف الصلوات", "look.rowGap", 0, 60, 1, "px", "تعمل مع الظل وبدونه، والصفوف تتكيف مع المساحة") +
     '<div class="shprev" id="shprev"></div><p class="note">معاينة على خلفيتك الحالية</p>');
 };
 function shPreview(){
   var p = $("#shprev"), st = document.getElementById("stage"); if (!p || !st) return;
   var cs = st.style, on = S.look.shadow, bgimg = st.style.backgroundImage;
-  p.style.backgroundImage = bgimg; p.style.gap = on ? cs.getPropertyValue("--rowgap") : "0";
+  p.style.backgroundImage = bgimg; p.style.gap = cs.getPropertyValue("--rowgap") || "0";
   p.innerHTML = [["الفجر","4:22"],["الظهر","11:25"],["العصر","2:42"]].map(function(r, i){
     return '<div style="border-radius:' + cs.getPropertyValue("--rowrad") + ';background:' + (i === 2 ? cs.getPropertyValue("--hi") : on ? cs.getPropertyValue("--rowbg") : "transparent") +
       ';box-shadow:' + (on && i !== 2 ? cs.getPropertyValue("--rowsh") : "none") + ';color:' + cs.getPropertyValue("--fg") + '"><b style="color:' + cs.getPropertyValue("--acc") + '">' + r[0] + '</b><span>' + r[1] + '</span></div>'; }).join("");
@@ -1735,7 +1735,14 @@ function back(){
   if (PK.el && !PK.el.hidden) { pkClose(); return true; }
   if (VK.el && !VK.el.hidden) { if (VK.t && VK.t.id === "edt") edClose(false); else vkClose(); return true; }
   var ed = $("#ed"); if (ed && !ed.hidden) { edClose(false); return true; }
+  // خطوة للخلف: من أي قسم إلى الصفحة الرئيسية للإعدادات، ومنها يُغلق
+  if (panel && !panel.hidden && cur !== "home") { cur = "home"; render(); if (body) body.scrollTop = 0; return true; }
   return false;
 }
-window.SETTINGS = {open:open, close:close, back:back};
+function stepBack(){ if (back()) return; if (panel && !panel.hidden) close(); }
+// زر الرجوع في الفأرة، والضغط باليمين داخل الإعدادات: خطوة للخلف
+document.addEventListener("mouseup", function(e){ if (e.button === 3) { e.preventDefault(); stepBack(); } }, true);
+document.addEventListener("auxclick", function(e){ if (e.button === 3) e.preventDefault(); }, true);
+document.addEventListener("contextmenu", function(e){ if (panel && !panel.hidden) { e.preventDefault(); stepBack(); } }, true);
+window.SETTINGS = {open:open, close:close, back:back, stepBack:stepBack};
 })();

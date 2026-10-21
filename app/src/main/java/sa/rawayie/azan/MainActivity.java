@@ -517,6 +517,10 @@ public class MainActivity extends Activity {
     private boolean onVMouse(MotionEvent ev) {
         if (web == null) return false;
         int a = ev.getActionMasked();
+        // الزر الأيمن وزر الرجوع في الفأرة: خطوة للخلف (مثل زر الرجوع في الريموت)
+        int sec = MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_BACK;
+        if (Build.VERSION.SDK_INT >= 23 && a == MotionEvent.ACTION_BUTTON_PRESS && (ev.getActionButton() & sec) != 0) { onBackPressed(); return true; }
+        if ((a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_BUTTON_RELEASE) && (ev.getButtonState() & sec) != 0 && !vDown) return true;
         if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE || a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_UP) {
             float dx = ev.getX(), dy = ev.getY();
             if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE) {
