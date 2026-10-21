@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.2"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1072,7 +1072,7 @@ function footHTML(){
   if (site) parts.push('<span class="fsite" dir="ltr">' + esc(site) + '</span>'); if (loc) parts.push('<span class="floc">' + esc(loc) + '</span>');
   return parts.join('<span class="fsep net">|</span>') || '<span class="net">★</span>';
 }
-function versionText(){ return t("copy_right_for_sadja") + " · نسخة الويب " + VERSION; }
+function versionText(){ return t("copy_right_for_sadja") + " · " + (window.RawayieAndroid ? "نسخة أندرويد " : "نسخة الويب ") + VERSION; }
 
 /* ===== ملاءمة النصوص الطويلة =====
    اسم المسجد والتاريخ يبقيان في سطر واحد ويصغران تلقائياً إذا كانا أطول من المساحة، فلا يتكسّران ولا يدفعان الجدول */

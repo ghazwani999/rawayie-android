@@ -1136,8 +1136,9 @@ R.general = function(){
       '<div class="fld"><span><b>ملف الإعدادات</b><small>ملف واحد فيه كل الإعدادات مع الشعار والخلفيات والأصوات والشرائح المرفوعة. انقله لشاشة أخرى أو احتفظ به نسخة احتياطية</small></span><span class="nb">' + btn("حفظ في ملف", "bkFile", "sm") + '<label class="btn sm ghost">فتح ملف<input type="file" accept=".json,application/json" data-up="bkfile" hidden></label></span></div>') +
     card("إعادة ضبط", '<p class="note">تمسح جميع الإعدادات وتعيد الشاشة لحالتها الأولى.</p><div class="row-end" id="rstw">' + btn("إعادة ضبط", "reset", "danger") + btn("إعادة تحميل", "reload", "ghost") + '</div>') +
     card("معلومات عن البرنامج",
-      '<div class="about"><img src="img/mark.png" alt=""><div><b>روائع الأذان · نسخة الويب ' + A.VERSION + '</b><p>هذا التطبيق وقف لبيوت الله ولا يجوز بيعه</p>' +
-      '<p>المملكة العربية السعودية · مؤسسة روائع لتقنية المعلومات</p><p>الموقع الإلكتروني: <span dir="ltr">rawayie.sa</span></p></div><img class="qr" src="img/qr.png" alt="رمز موقع روائع"></div>');
+      '<div class="about"><img src="img/mark.png" alt=""><div><b>روائع الأذان · ' + (window.RawayieAndroid ? 'نسخة أندرويد ' : 'نسخة الويب ') + A.VERSION + '</b><p>هذا التطبيق وقف لبيوت الله ولا يجوز بيعه</p>' +
+      '<p>مؤسسة روائع لتقنية المعلومات · المملكة العربية السعودية</p><p>الرقم الوطني الموحد: <span dir="ltr">7033223112</span></p><p>الموقع الإلكتروني: <span dir="ltr">rawayie.sa</span></p></div>' +
+      '<img class="qr" src="img/qr.png" alt="رمز QR لمعلومات مؤسسة روائع لتقنية المعلومات"></div><p class="note">امسح الرمز بالجوال لعرض معلومات المؤسسة والرقم الوطني الموحد وموقعها.</p>');
 };
 
 /* ===== الصفحة الرئيسية للإعدادات: كل الأقسام في مجموعات مع البحث في كل الخيارات ===== */
