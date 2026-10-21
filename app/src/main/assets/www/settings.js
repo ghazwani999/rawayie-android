@@ -891,8 +891,12 @@ function hiCard(){
   var tx = ["#ffffff","#111111","#F4D58D","#E7B65B","#9CC7FF"];
   var sw = function(list, act, cur, on){ return '<div class="sw">' + list.map(function(c){ return '<button type="button" data-act="' + act + '" data-x="' + c + '" style="background:' + c + '" class="' + (on && String(cur).toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>'; };
   var pv = hiPrevHTML();
-  var on = L.hiOn !== false;
-  return card("تمييز الصلاة القادمة",
+  var on = L.hiOn !== false, tc = L.tblStyle === "cards";
+  return card("شكل جدول المواقيت",
+    sel("نمط الجدول", "look.tblStyle", [["cards","بطاقات بإطار وتمييز ملوّن"],["classic","كلاسيكي (حسب ألوان الخلفية)"]], "البطاقات: كل صلاة داخل إطار مستدير، والصلاة القادمة بتعبئة زرقاء") +
+    (tc ? colorIn("لون أسماء الصلوات والعناوين", "look.tcName") + colorIn("لون وقت الأذان", "look.tcAdhan") + colorIn("لون وقت الإقامة", "look.tcIqama") +
+      (L.hiCustom ? "" : colorIn("لون تعبئة الصلاة القادمة", "look.tcHi")) + btn("ألوان الشكل الافتراضية", "tcReset", "sm ghost") : "")) +
+  card("تمييز الصلاة القادمة",
     tog("إظهار تمييز الصلاة القادمة", "look.hiOn", "تلوين سطر الصلاة القادمة في جدول المواقيت، أو الصلاة الحالية أثناء انتظار الإقامة") +
     (!on ? "" : pv +
     tog("لون مخصص لتمييز الصلاة القادمة", "look.hiCustom", "عند إيقافه يُختار لون مناسب للخلفية تلقائياً") +
@@ -974,6 +978,7 @@ R.layout = function(){
   return card("الساعة والأرقام",
     tog("إظهار الثواني صغيرة بجانب الساعة", "look.seconds"), "نظام 12/24 ساعة والأرقام العربية والصفر قبل الساعة في «خيارات العرض»") +
   card("جدول المواقيت",
+    sel("نمط الجدول", "look.tblStyle", [["cards","بطاقات بإطار وتمييز ملوّن"],["classic","كلاسيكي (حسب ألوان الخلفية)"]], "ألوان البطاقات في قسم «تمييز الصلاة القادمة»") +
     tog("إظهار عناوين الأعمدة", "look.thead", "الصلاة - وقت الأذان - وقت الإقامة فوق الجدول") +
     (S.look.homeClock ? "" : sel("عرض الإقامة", "look.iqFmt", [["time","بوقت الإقامة (3:02)"],["min","بالدقائق بعد الأذان (20’)"]]))) +
   card("عناصر الشاشة",
@@ -1541,6 +1546,7 @@ function onClick(e){
     case "bgRestore": S.look.bgHidden = (S.look.bgHidden || []).filter(function(q){ return q !== x; }); A.save(); var sp2 = b.parentNode; if (sp2 && sp2.parentNode) sp2.parentNode.removeChild(sp2); toast("أُعيدت الخلفية"); break;
     case "bgClear": A.IDB.del(S.look.customBg); S.look.customBg = ""; commit(); render(); break;
     case "accent": S.look.accent = x; commit(); render(); break;
+    case "tcReset": S.look.tcName = "#FFD54A"; S.look.tcAdhan = "#FFFFFF"; S.look.tcIqama = "#FFD54A"; S.look.tcHi = "#3B93E3"; commit(); render(); break;
     case "hiSw": S.look.hiCustom = true; S.look.hiColor = x; commit(); render(); break;
     case "hiTx": S.look.hiTextOn = true; S.look.hiTextColor = x; commit(); render(); break;
     case "pwSave": var np = $("#pw").value; if (np && np === S.sup.pass) { toast("كلمة سر المدير يجب أن تختلف عن كلمة سر المشرف"); return; }
