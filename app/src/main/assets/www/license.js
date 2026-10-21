@@ -1,29 +1,46 @@
-/* روائع الأذان: الفترة التجريبية والتفعيل
-   - فترة تجريبية 3 أيام تبدأ من أول تشغيل على الجهاز.
-   - لكل جهاز «رقم جهاز» ثابت، وكود التفعيل خاص بهذا الرقم (يصدره المدير من لوحة ووردبريس أو مولّد الأكواد).
-   - بعد انتهاء التجربة بدون تفعيل تظهر رسالة التواصل للتفعيل فوق الشاشة. */
+/* روائع الأذان: ترخيص الشاشة
+   - الترخيص يصدر من موقع الإدارة فقط، موقّعاً بتوقيع رقمي Ed25519. التطبيق فيه المفتاح العام فقط (lic-key.js)،
+     فلا يمكن صنع ترخيص بقراءة ملفات التطبيق أو تعديلها.
+   - الترخيص مرتبط برقم هذا الجهاز وبرمز الشاشة، ويجدده التطبيق تلقائياً من الموقع، ويبقى صالحاً 14 يوماً بدون إنترنت.
+   - الشاشة غير المرتبطة بموقع الإدارة، أو الموقوفة من الإدارة، لا تعمل وتظهر رسالة التفعيل. */
 (function(){
 "use strict";
 var A = window.APP; if (!A) return;
 var S = A.S;
-var TRIAL_DAYS = 3, WA = "0540450400", WA_INTL = "966540450400", DAY = 864e5;
-var LSK = "rawayie-lic", SECRET = "rw-1448-ghz-azan";
+var WA = "0540450400", WA_INTL = "966540450400", DAY = 864e5;
+var LSK = "rawayie-lic", WAIT_MS = 3 * DAY; // مهلة لمرة واحدة للشاشات المفعّلة بالإصدار السابق حتى تجلب ترخيصها الجديد بدون انقطاع
+var bootAt = Date.now();
 
-/* ===== كود التفعيل: FNV-1a بـ32 بت (نفس الحساب في لوحة ووردبريس) ===== */
+function normId(x){ return String(x || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); }
+function newId(){ var c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", s = "";
+  var r = new Uint8Array(8); try { (window.crypto || window.msCrypto).getRandomValues(r); } catch(e){ for (var k = 0; k < 8; k++) r[k] = Math.floor(Math.random() * 256); }
+  for (var i = 0; i < 8; i++) s += c.charAt(r[i] % 32); return s; }
+function fmtId(id){ id = normId(id); return id.slice(0, 4) + "-" + id.slice(4); }
 function mul32(a, b){ return (((a & 0xffff) * b) + ((((a >>> 16) * b) & 0xffff) << 16)) >>> 0; }
 function h32(str, seed){ var h = seed >>> 0; for (var i = 0; i < str.length; i++) { h = (h ^ str.charCodeAt(i)) >>> 0; h = mul32(h, 16777619); } return h >>> 0; }
-function codeFor(id){
-  id = normId(id); if (!id) return "";
-  var a = h32(SECRET + "|" + id, 2166136261), b = h32(id + "|" + SECRET, 84696351);
-  var s = String((a % 10000) * 10000 + (b % 10000)); while (s.length < 8) s = "0" + s;
-  return s;
-}
-function normId(x){ return String(x || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); }
-function normCode(x){ return String(x || "").replace(/[٠-٩]/g, function(d){ return "٠١٢٣٤٥٦٧٨٩".indexOf(d); }).replace(/\D/g, ""); }
-function newId(){ var c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", s = ""; for (var i = 0; i < 8; i++) s += c.charAt(Math.floor(Math.random() * c.length)); return s; }
-function fmtId(id){ id = normId(id); return id.slice(0, 4) + "-" + id.slice(4); }
 
-/* ===== الحفظ في أكثر من مكان حتى لا تضيع بداية التجربة بسهولة ===== */
+/* ===== التحقق من التوقيع ===== */
+function b64(s){ var bin = atob(String(s || "")), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+function pubKey(){ return window.RWS_PK || st.pk || ""; }
+var vCache = {t:"", k:"", p:null};
+function parse(tok){
+  tok = String(tok || ""); var pk = pubKey();
+  if (!tok || !pk || !window.nacl) return null;
+  var ck = pk + "|" + st.id + "|" + (S.remote && S.remote.code || "");
+  if (vCache.t === tok && vCache.k === ck) return vCache.p;
+  var p = null;
+  try {
+    var parts = tok.split("."), msg = b64(parts[0]), sig = b64(parts[1]), key = b64(pk);
+    if (parts.length === 2 && sig.length === 64 && key.length === 32 && window.nacl.sign.detached.verify(msg, sig, key)) {
+      var j = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
+      if (j && j.v === 1 && normId(j.dev) === st.id && (!S.remote || !S.remote.code || j.code === S.remote.code)) p = j;
+    }
+  } catch(e){ p = null; }
+  vCache = {t:tok, k:ck, p:p};
+  return p;
+}
+
+/* ===== الحفظ في أكثر من مكان حتى لا يضيع رقم الجهاز والترخيص بسهولة ===== */
 var AN = window.RawayieAndroid;
 function readAll(){
   var list = [];
@@ -33,17 +50,26 @@ function readAll(){
   return list.filter(function(x){ return x && typeof x === "object"; });
 }
 function merge(list){
-  var r = {id:"", start:0, last:0, code:"", link:null};
+  var r = {id:"", last:0, lic:"", pk:"", link:null, wait:0, waitUsed:0, denied:null, legacy:0, oldCode:""};
   list.forEach(function(x){
     if (!r.id && normId(x.id).length === 8) r.id = normId(x.id);
-    if (+x.start > 0 && (!r.start || +x.start < r.start)) r.start = +x.start;
     if (+x.last > r.last) r.last = +x.last;
+    if (!r.pk && x.pk) r.pk = String(x.pk);
+    if (+x.wait > 0 && (!r.wait || +x.wait < r.wait)) r.wait = +x.wait;
+    if (x.waitUsed) r.waitUsed = 1;
+    if (x.legacy || x.code || +x.start > 0) r.legacy = 1; // جهاز كان يعمل بالإصدار السابق
+    var oc = String(x.oldCode || x.code || "").replace(/\D/g, ""); if (!r.oldCode && oc.length === 8) r.oldCode = oc; // كود التفعيل القديم: يتحقق منه الموقع فقط
+    if (!r.denied && x.denied && x.denied.code) r.denied = x.denied;
     if (!r.link && x.link && x.link.server && x.link.code) r.link = x.link; // نسخة احتياطية من ربط الشاشة بلوحة المدير
   });
-  list.forEach(function(x){ if (!r.code && x.code && r.id && normCode(x.code) === codeFor(r.id)) r.code = normCode(x.code); });
+  // أحدث ترخيص سليم التوقيع
+  var best = null; st = r;
+  list.forEach(function(x){ var p = x.lic ? parse(x.lic) : null; if (p && (!best || p.iat > best.p.iat)) best = {t:x.lic, p:p}; });
+  if (best) r.lic = best.t;
   return r;
 }
-var st = merge(readAll());
+var st = {id:""};
+st = merge(readAll());
 function save(){
   var j = JSON.stringify(st);
   try { localStorage.setItem(LSK, j); } catch(e){}
@@ -60,12 +86,11 @@ function stableId(){
     return out; } catch(e){ return ""; }
 }
 if (!st.id) st.id = stableId() || newId();
-if (!st.start) st.start = Date.now();
+if (window.RWS_PK && st.pk !== window.RWS_PK) st.pk = window.RWS_PK; // المفتاح العام من الموقع له الأولوية ويُحفظ للعمل بدون إنترنت
 // نسخة احتياطية في قاعدة بيانات المتصفح: تُكمل البيانات إذا مُسح التخزين المحلي فقط
-try { A.IDB.get("__lic").then(function(v){ if (!v) return; var r = merge([st, JSON.parse(v)]); if (r.start !== st.start || r.id !== st.id || r.code !== st.code || (!st.link && r.link)) { st = r; save(); if (restoreLink() && window.REMOTE && window.REMOTE.start) window.REMOTE.start(); refresh(); } }).catch(function(){}); } catch(e){}
+try { A.IDB.get("__lic").then(function(v){ if (!v) return; var r = merge([st, JSON.parse(v)]); if (r.id !== st.id || r.lic !== st.lic || (!st.link && r.link)) { st = r; save(); if (restoreLink() && window.REMOTE && window.REMOTE.start) window.REMOTE.start(); refresh(); } else st = r; }).catch(function(){}); } catch(e){}
 save();
-/* الشاشة المرتبطة سابقاً بلوحة المدير لا تطلب كود الربط مرة أخرى: إذا ضاعت إعداداتها (مسح بيانات المتصفح جزئياً
-   أو تحديث) يُعاد ربطها تلقائياً من النسخة الاحتياطية */
+/* الشاشة المرتبطة سابقاً بلوحة المدير لا تطلب كود الربط مرة أخرى: إذا ضاعت إعداداتها يُعاد ربطها تلقائياً من النسخة الاحتياطية */
 function restoreLink(){
   var l = st.link, R = S.remote || {};
   if (window.RAWAYIE_PREVIEW || !l || !l.server || !l.code || (R.on && R.server)) return false;
@@ -79,64 +104,127 @@ function setLink(l){
   if (JSON.stringify(n) === JSON.stringify(st.link || null)) return;
   st.link = n; save();
 }
+function linked(){ var R = S.remote || {}; return !!(R.on && R.server && R.code); }
 
 function status(){
   var now = Date.now();
   if (now > st.last) { st.last = now; if (!status.t || now - status.t > 600000) { status.t = now; save(); } }
-  var ref = Math.max(now, st.last); // إرجاع ساعة الجهاز للخلف لا يطيل التجربة
-  var remoteOk = S.lic && normCode(S.lic) === codeFor(st.id);
-  if (remoteOk && st.code !== normCode(S.lic)) { st.code = normCode(S.lic); save(); }
-  var active = !!st.code && st.code === codeFor(st.id);
-  var left = st.start + TRIAL_DAYS * DAY - ref;
-  return {id:st.id, idText:fmtId(st.id), active:active, trial:!active && left > 0, expired:!active && left <= 0,
-    leftMs:Math.max(0, left), leftDays:Math.max(0, Math.ceil(left / DAY)), start:st.start, wa:WA, waLink:"https://wa.me/" + WA_INTL};
+  var ref = Math.max(now, st.last); // إرجاع ساعة الجهاز للخلف لا يطيل الترخيص
+  var p = parse(st.lic), valid = !!(p && p.exp * 1000 > ref);
+  if (valid && !st.waitUsed) { st.waitUsed = 1; st.denied = null; save(); }
+  var migr = !linked() && !!st.oldCode && !!siteKnown(); // مفعّلة سابقاً وغير مرتبطة: تُضاف للوحة الإدارة تلقائياً
+  if (!valid && (linked() || migr) && !st.wait && !st.waitUsed) { st.wait = now; save(); }
+  var pending = !valid && (linked() || migr) && !st.denied && ((!st.waitUsed && st.legacy && st.wait > 0 && ref - st.wait < WAIT_MS) || (!firstDone && now - bootAt < 15000));
+  var active = valid && p.st === "active", trial = valid && p.st === "trial";
+  var end = valid ? (p.until ? p.until * 1000 : 0) : 0, left = end ? end - ref : 0;
+  return {id:st.id, idText:fmtId(st.id), active:active, trial:trial, pending:pending, expired:!valid && !pending,
+    leftMs:Math.max(0, left), leftDays:Math.max(0, Math.ceil(left / DAY)), until:end,
+    offlineDays:valid ? Math.max(0, Math.ceil((p.exp * 1000 - ref) / DAY)) : 0, renewedAt:valid ? p.iat * 1000 : 0,
+    linked:linked(), msg:st.denied ? st.denied.msg : "", wa:WA, waLink:"https://wa.me/" + WA_INTL};
 }
-function activate(code){
-  code = normCode(code);
-  if (code && code === codeFor(st.id)) { st.code = code; save(); refresh(); return true; }
-  return false;
+
+/* ===== جلب الترخيص من موقع الإدارة ===== */
+var busy = false, firstDone = false;
+function fetchLic(){
+  var R = window.REMOTE;
+  if (busy || window.RAWAYIE_PREVIEW || !R || !R.url || !linked()) return Promise.resolve(false);
+  busy = true;
+  var u = R.url("/license"); u += (u.indexOf("?") >= 0 ? "&" : "?") + "dev=" + encodeURIComponent(st.id) + "&_=" + Date.now();
+  return fetch(u, {cache:"no-store"}).then(function(res){
+    return res.text().then(function(t){ var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
+      if (res.ok && j && j.lic) {
+        if (!window.RWS_PK && !st.pk && j.pk) st.pk = String(j.pk); // نسخة محلية بدون ملف المفتاح: يُعتمد مفتاح أول اتصال ناجح ويثبت بعده
+        var p = parse(j.lic);
+        if (p) { st.lic = j.lic; st.denied = null; save(); refresh(); return true; }
+        return false;
+      }
+      // رفض صريح من الموقع (إيقاف، انتهاء، جهاز آخر، رمز غير صحيح): يتوقف الترخيص فوراً
+      if (res.status === 401 || res.status === 403 || res.status === 404 || (j && /^rws_lic_/.test(j.code || ""))) {
+        st.lic = ""; st.denied = {code:(j && j.code) || "http" + res.status, msg:(j && j.message && /^rws_lic_/.test(j.code || "")) ? j.message : "تعذر التحقق من هذه الشاشة في موقع الإدارة. تواصل مع إدارة التطبيق", at:Date.now()};
+        save(); refresh();
+      }
+      return false;
+    });
+  }).catch(function(){ return false; }).then(function(r){ busy = false; if (!firstDone) { firstDone = true; refresh(); } return r; });
+}
+// التجديد: كل ساعة إن كان الترخيص سارياً، وكل دقيقة إن لم يكن (حتى يصل تفعيل المدير بسرعة)
+var lastTry = 0;
+var migBusy = false;
+function migrate(site){
+  var R = window.REMOTE; if (migBusy || !R || !R.activate || !st.oldCode || !site) return Promise.resolve(false);
+  migBusy = true;
+  return R.activate(site, "", st.oldCode).then(function(){ st.oldCode = ""; st.denied = null; save(); return fetchLic(); },
+    function(e){ if (e && e.hard) { st.oldCode = ""; save(); refresh(); } return false; }) // كود قديم غير صحيح: لا يُعاد المحاولة
+    .then(function(r){ migBusy = false; if (!firstDone) { firstDone = true; refresh(); } return r; });
+}
+function tick(){
+  if (window.RAWAYIE_PREVIEW) return;
+  if (!linked()) { if (st.oldCode && siteKnown() && Date.now() - lastTry > 6e4) { lastTry = Date.now(); migrate(siteKnown()); } return; }
+  var p = parse(st.lic), now = Date.now(), ok = p && p.exp * 1000 > now;
+  var age = ok ? now - p.iat * 1000 : Infinity, gap = now - lastTry;
+  if ((ok && age > 36e5 && gap > 36e5) || (!ok && gap > 6e4)) { lastTry = now; fetchLic(); }
 }
 
 /* ===== العرض على الشاشة ===== */
-var ov = null, badge = null;
+var ov = null, badge = null, ovKey = "";
 function stage(){ return document.getElementById("stage"); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function daysText(n){ return n <= 1 ? "يوم واحد" : n === 2 ? "يومان" : n + " أيام"; }
+function siteKnown(){ var R = window.REMOTE; return (R && R.wpSite && R.wpSite()) || (S.remote && S.remote.site) || ""; }
 function render(){
   var s = status(), sg = stage(); if (!sg) return;
   if (badge && !sg.contains(badge)) badge = null; // أُعيد بناء الشاشة
   if (ov && !sg.contains(ov)) ov = null;
   document.body.classList.toggle("licon", s.expired);
-  // شريط صغير أثناء التجربة
-  if (s.trial) {
+  // شريط صغير: تجربة، أو تحقق أول مرة، أو قرب انتهاء مدة العمل بدون إنترنت
+  var bt = s.trial ? "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · رقم الجهاز " + s.idText + " · للتفعيل واتساب " + WA
+    : s.pending ? "جارٍ التحقق من ترخيص الشاشة من موقع الإدارة..."
+    : s.active && s.until && s.leftDays <= 7 ? "ينتهي ترخيص الشاشة بعد " + daysText(s.leftDays) + " · للتجديد واتساب " + WA
+    : (s.active || s.trial) && s.offlineDays <= 3 ? "تعذر الاتصال بموقع الإدارة · تعمل الشاشة " + daysText(s.offlineDays) + " أخرى بدون إنترنت" : "";
+  if (bt) {
     if (!badge) { badge = document.createElement("div"); badge.className = "licbadge"; sg.appendChild(badge); }
-    var bt = "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · رقم الجهاز " + s.idText + " · للتفعيل واتساب " + WA;
     if (badge.textContent !== bt) badge.textContent = bt;
   } else if (badge) { badge.parentNode.removeChild(badge); badge = null; }
-  // رسالة انتهاء التجربة
+  // الشاشة غير مفعّلة: رسالة التواصل وربط الشاشة بكود من لوحة الإدارة
   if (s.expired) {
+    var site = siteKnown(), key = s.msg + "|" + (site ? 1 : 0);
+    if (ov && ovKey !== key) { ov.parentNode.removeChild(ov); ov = null; }
     if (!ov) {
+      ovKey = key;
       ov = document.createElement("div"); ov.className = "licov";
       ov.innerHTML = '<div class="licbox"><img class="liclogo" src="img/mark.png" alt="">' +
-        '<div class="lict">انتهت الفترة التجريبية لمدة ' + TRIAL_DAYS + ' أيام</div>' +
-        '<div class="licm">يرجى التواصل لتفعيل تطبيق روائع الأذان</div>' +
-        '<a class="licwa" href="' + s.waLink + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +
+        '<div class="lict">' + esc(s.msg || (s.linked ? "هذه الشاشة غير مفعّلة" : "هذه الشاشة غير مرتبطة بموقع الإدارة")) + '</div>' +
+        '<div class="licm">' + (st.oldCode && !site ? "هذه الشاشة كانت مفعّلة سابقاً: اكتب عنوان موقع الإدارة واضغط «تفعيل» بدون كود" : "يرجى التواصل لتفعيل تطبيق روائع الأذان، ثم اكتب كود التفعيل (6 أرقام) الذي يصلك من الإدارة") + '</div>' +
+        '<a class="licwa" href="https://wa.me/' + WA_INTL + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +
         '<div class="licid">رقم الجهاز: <b dir="ltr">' + esc(s.idText) + '</b><small>أرسل رقم الجهاز مع طلب التفعيل</small></div>' +
-        '<form class="licf"><input inputmode="none" autocomplete="off" maxlength="12" placeholder="كود التفعيل" aria-label="كود التفعيل"><button type="submit">تفعيل</button></form>' +
+        '<form class="licf">' + (site ? "" : '<input class="licsite" type="url" dir="ltr" autocomplete="url" placeholder="عنوان موقع الإدارة" aria-label="عنوان موقع الإدارة">') +
+        '<input class="liccode" inputmode="none" autocomplete="off" maxlength="6" placeholder="كود التفعيل" aria-label="كود التفعيل"><button type="submit">تفعيل</button></form>' +
         '<div class="licnum">' + ["1","2","3","4","5","6","7","8","9","del","0"].map(function(k){ return '<button type="button" data-k="' + k + '">' + (k === "del" ? "⌫" : k) + '</button>'; }).join("") + '</div>' +
-        '<div class="licerr" hidden>الكود غير صحيح لهذا الجهاز</div></div>';
+        '<div class="licerr" hidden></div></div>';
       sg.appendChild(ov);
-      ov.querySelector(".licnum").addEventListener("click", function(e){ var b = e.target.closest ? e.target.closest("[data-k]") : null; if (!b) return; var inp = ov.querySelector("input"), d = inp.value.replace(/\D/g, "");
-        d = b.getAttribute("data-k") === "del" ? d.slice(0, -1) : (d + b.getAttribute("data-k")).slice(0, 8); inp.value = d; });
+      var inp = ov.querySelector(".liccode"), er = ov.querySelector(".licerr");
+      ov.querySelector(".licnum").addEventListener("click", function(e){ var b = e.target.closest ? e.target.closest("[data-k]") : null; if (!b) return; var d = inp.value.replace(/\D/g, "");
+        d = b.getAttribute("data-k") === "del" ? d.slice(0, -1) : (d + b.getAttribute("data-k")).slice(0, 6); inp.value = d; });
       ov.querySelector("form").addEventListener("submit", function(e){ e.preventDefault();
-        var box = ov, inp = box.querySelector("input"), er = box.querySelector(".licerr"), ok = activate(inp.value);
-        er.hidden = ok; if (!ok) inp.select(); });
+        var R = window.REMOTE, si = ov.querySelector(".licsite"), st0 = siteKnown() || (si ? si.value : "");
+        var show = function(t, bad){ er.hidden = false; er.textContent = t; er.style.color = bad ? "" : "#9be29b"; };
+        if (!R || !R.activate) return show("تعذر الربط في هذه النسخة", true);
+        if (!inp.value && st.oldCode && st0) { show("جارٍ التفعيل..."); migrate(st0).then(function(ok){ if (ok) { show("تمت إضافة الشاشة إلى لوحة الإدارة"); refresh(); } else show("تعذر التحقق من التفعيل السابق. تواصل مع الإدارة", true); }); return; }
+        if (inp.value.replace(/\D/g, "").length !== 6) return show("كود التفعيل 6 أرقام", true);
+        show("جارٍ التفعيل...");
+        R.activate(st0, inp.value).then(function(){ st.denied = null; st.waitUsed = 0; st.wait = 0; save(); return fetchLic(); })
+          .then(function(ok){ if (ok) { show("تم تفعيل الشاشة، شكراً لكم"); refresh(); } else show(status().msg || "تم الربط، لكن الشاشة غير مفعّلة بعد من الإدارة", true); },
+            function(err){ show(err && err.message || String(err), true); });
+      });
     }
   } else if (ov) { ov.parentNode.removeChild(ov); ov = null; }
 }
 function refresh(){ try { render(); } catch(e){} }
-window.LICENSE = {status:status, activate:activate, setLink:setLink, codeFor:null, refresh:refresh, info:function(){ var s = status(); return {id:s.id, state:s.active ? "active" : s.trial ? "trial" : "expired", left:s.leftDays, start:s.start}; }};
-if (window.RAWAYIE_PREVIEW) { window.LICENSE.status = function(){ var s = status(); s.expired = false; s.trial = false; return s; }; return; } // معاينة المدير: بدون رسائل
+window.LICENSE = {status:status, setLink:setLink, check:function(){ lastTry = Date.now(); return fetchLic(); }, refresh:refresh,
+  activate:function(){ return false; }, // أكواد التفعيل القديمة (8 أرقام) لم تعد مقبولة
+  info:function(){ var s = status(); return {id:s.id, state:s.active ? "active" : s.trial ? "trial" : s.pending ? "pending" : "expired", left:s.leftDays, until:s.until, renewed:s.renewedAt}; }};
+if (window.RAWAYIE_PREVIEW) { window.LICENSE.status = function(){ var s = status(); s.expired = false; s.trial = false; s.pending = false; return s; }; return; } // معاينة المدير: بدون رسائل
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ setTimeout(refresh, 300); }); else setTimeout(refresh, 300);
-setInterval(refresh, 20000);
+setTimeout(tick, 1500);
+setInterval(function(){ tick(); refresh(); }, 20000);
 })();

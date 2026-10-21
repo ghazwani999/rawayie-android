@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = "2.4.6";
+var VERSION = String(window.RWS_VERSION || "2.6.1"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -15,7 +15,7 @@ var DEF = {
   hidePrayer:true, blackTime:true, blackDate:false, hideSunrise:20, hideIsha:30, wakeBefore:20,
   sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
-  lastMinOnly:false, circle:true, iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
+  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
   snd:{azan:"short", iqama:"short", beep:true, vol:1},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -35,9 +35,9 @@ var DEF = {
   look:{orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
-        centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false,
+        centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:false, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false,
         hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
-  dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", uiTheme:"dark", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
+  dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
   texts:{after:[], morning:[], evening:[], dua:""},
@@ -85,6 +85,8 @@ if (S.lookV < 12) { // التدوير بالرسم هو الافتراضي (يع
   S.look.sysRot = false; S.lookV = 12; }
 if (S.lookV < 13) { // محرر التطبيق ولوحته صارا المفضلين في كل الأجهزة والمتصفحات
   S.vkb = "on"; S.textEditor = true; S.lookV = 13; }
+if (S.lookV < 14) { // الموقع ورقم الإصدار يظهران أسفل الشاشة في كل الشاشات: rawayie.sa 2.5.9
+  S.lookV = 14; }
 function save(){ if (window.RAWAYIE_PREVIEW) return; try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ===== التخزين المحلي للصور والأصوات ===== */
@@ -256,7 +258,7 @@ function phase(now){
   else if (p.fri && now < I) res.mode = "khutbah";
   else if (S.duaAfterAzan && now < A + az + M60 && now < I) res.mode = "dua";
   else if (now < I) res.mode = (S.lastMinOnly !== true || I - now <= M60) ? "iqcount" : "";
-  else if (now < I + 30000) res.mode = "iqnow";
+  else if (S.iqNowOn !== false && now < I + Math.max(5, +S.iqNowSec || 30)*1000) res.mode = "iqnow"; // شاشة الإقامة قبل الشاشة السوداء
   else if (now < I + p.pd*M60) res.mode = ((p.fri ? S.fri.hide : S.hidePrayer) ? "black" : "praying");
   else {
     var tt = I + p.pd*M60, Z = S.zk, aOn = Z.after && (!Z.afterOn || Z.afterOn[p.k === "jumuah" ? "dhuhr" : p.k] !== false);
@@ -367,17 +369,22 @@ function orient(){
 }
 function fit(){
   var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
-  var si = safeIns(), vw = innerWidth, vh = innerHeight;
+  var si = safeIns(), vw = innerWidth, vh = innerHeight, RW = vw, RH = vh;
   var rs = document.documentElement.style; rs.setProperty("--sat", si.t + "px"); rs.setProperty("--sab", si.b + "px"); rs.setProperty("--sal", si.l + "px"); rs.setProperty("--sar", si.r + "px");
   if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
   // ملء الشاشة بالكامل: يتمدد ارتفاع التصميم حسب نسبة الجهاز (جوال، تابلت، تلفاز 4:3 أو 21:9) فلا تظهر أشرطة سوداء
-  if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = Math.round(o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)));
+  if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)); // بدون تقريب: يملأ الشاشة تماماً حتى آخر بكسل
   var sc = Math.min(vw/W, vh/H);
   // مساحة الكاميرا وشريط الحالة داخل الشاشة (بوحدات التصميم) حسب اتجاه التدوير
   var q = r === 180 ? [si.b, si.l, si.t, si.r] : r === 90 ? [si.l, si.b, si.r, si.t] : r === 270 ? [si.r, si.t, si.l, si.b] : [si.t, si.r, si.b, si.l];
   ["--it", "--ir", "--ib", "--il"].forEach(function(k, i){ stage.style.setProperty(k, (q[i] / sc).toFixed(1) + "px"); });
   stage.style.width = W + "px"; stage.style.height = H + "px";
-  stage.style.transform = "translate(-50%,-50%) rotate(" + r + "deg) scale(" + sc + ")";
+  // التموضع على بكسلات كاملة في الجهاز: الإزاحة بأنصاف البكسل تجعل النصوص والخطوط والصور ضبابية
+  var dpr = window.devicePixelRatio || 1, px = function(v){ return Math.round(v*dpr)/dpr; };
+  var side = r === 90 || r === 270, bw = (side ? H : W)*sc, bh = (side ? W : H)*sc, x0 = (RW - bw)/2, y0 = (RH - bh)/2;
+  var tx = r === 90 || r === 180 ? x0 + bw : x0, ty = r === 180 || r === 270 ? y0 + bh : y0;
+  stage.style.left = "0"; stage.style.top = "0"; stage.style.transformOrigin = "0 0";
+  stage.style.transform = "translate(" + px(tx) + "px," + px(ty) + "px) rotate(" + r + "deg) scale(" + sc + ")";
   var mb = document.getElementById("menu"); if (mb) mb.hidden = S.look.menuBtn === false;
   document.documentElement.setAttribute("data-rot", String(((r % 360) + 360) % 360));
   // حجم لوحة الإعدادات حسب دقة الشاشة: 1 حتى 1080p، ويكبر تدريجياً حتى 2.2 في شاشات 4K وما فوق
@@ -504,7 +511,7 @@ function logoHTML(cls){
 function build(){
   layout = orient();
   var P = layout === "P";
-  stage.className = "stage " + layout;
+  stage.className = "stage " + layout + (S.look.ovGlass === false ? " noglass" : "") + (S.look.bigIqCnt ? " bigiq" : "");
   applyLook();
   var boards = S.boards.on && S.boards.items.some(function(b){ return b.active; });
   var flag = "";
@@ -517,31 +524,35 @@ function build(){
       (S.fixedOn ? '<div class="fixed"></div>' : "") + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
   } else {
     var wp = S.weather.pos || "mid", wxh = '<div class="wx" hidden><span></span><img alt=""></div>';
-    var top = '<div class="dayn"></div><div class="hij"></div><div class="zone">' +
+    var LH = !P && !!S.look.dateSide, IQC = !!S.look.iqClock && !S.look.homeClock; // التاريخ يميناً واسم المسجد يساراً في العرض الأفقي
+    var top = (LH ? "" : '<div class="dayn"></div><div class="hij"></div>') + '<div class="zone">' +
       '<div class="mid"><div class="ms wcol">' + (wp === "mid" ? wxh : "") + '<div class="gre"></div></div>' +
       '<div class="emb">' + logoHTML("elogo") + '</div>' +
       '<div class="ms cnt"><div class="cv"></div><div class="cl"></div></div></div>' +
-      '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span>' + (wp === "clock" ? wxh : "") + '</div></div></div>' +
+      '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span>' + (wp === "clock" ? wxh : "") + '</div>' + (IQC ? '<div class="iqclk"></div>' : "") + '</div></div>' +
       '<div class="slide" hidden></div></div>';
     var rows = (S.look.thead ? '<div class="thead"><div class="c1">' + esc(t("prayer")) + '</div><div class="c2">' + esc(t("adhan_time")) + '</div>' +
       (S.look.homeClock ? "" : '<div class="c3">' + esc(S.look.iqFmt === "time" ? t("iqama_time") : "الإقامة بعد") + '</div>') + '</div>' : "") + '<div class="rows"></div>';
+    var nb = S.look.nightTimes && (S.look.nightMid !== false || S.look.nightThird !== false) ? '<div class="nightbar" hidden></div>' : "";
     var fx = S.fixedOn ? '<div class="fixed"></div>' : "";
-    html = '<div class="mname"></div>' + (P ? top + rows : '<div class="lcols"><div class="lc1">' + top + '</div><div class="lc2">' + rows + '</div></div>') +
-      fx + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag +
+    html = (LH ? '<div class="lhdr"><div class="ldate"><div class="dayn"></div><div class="hij"></div></div><div class="mname"></div></div>' : '<div class="mname"></div>') + (P ? top + rows : '<div class="lcols"><div class="lc1">' + top + '</div><div class="lc2">' + rows + '</div></div>') +
+      nb + fx + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag +
       (wp === "top" || wp === "bottom" ? wxh.replace('class="wx"', 'class="wx wx-' + wp + '"') : "");
   }
+  if (S.look.netStar) html += '<i class="nstar net" aria-hidden="true">★</i>'; // نجمة الاتصال: خضراء متصل، حمراء منقطع
   mainEl.innerHTML = html;
   mainEl.className = "main" + (boards ? " boards" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
-    (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "");
+    (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
+    (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
   ui = {
     mname: $(".mname", mainEl), dayn: $(".dayn", mainEl), hij: $(".hij", mainEl), gre: $(".gre", mainEl), bdate: $(".bdate", mainEl),
     tm: $(".tm", mainEl), ap: $(".ap", mainEl), aps: mainEl.querySelectorAll(".ap"), ss: $(".ss", mainEl), cl: $(".cl", mainEl), cv: $(".cv", mainEl), cnt: $(".cnt", mainEl),
     rows: $(".rows", mainEl), cards: $(".cards", mainEl), fixed: $(".fixed", mainEl), tick: $(".tick", mainEl), foot: $(".foot", mainEl),
-    cpan: $(".cpan", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
+    cpan: $(".cpan", mainEl), iqclk: $(".iqclk", mainEl), night: $(".nightbar", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
   };
   ui.mname.textContent = S.mosque; fitText(ui.mname, .5);
   if (ui.fixed) ui.fixed.textContent = String(S.fixedZekr || "").trim() || DEF.fixedZekr; // إذا كان فارغاً يظهر الدعاء الافتراضي
-  lastRowKey = ""; lastDay = ""; tickerKey = ""; slideState = {i:-1, until:0, show:false, next: Date.now() + S.slides.every*1000}; var fs0 = $("#fslide"); if (fs0) fs0.hidden = true; boardState = {i:-1, until:0};
+  lastRowKey = ""; lastDay = ""; tickerKey = ""; nightKey = ""; slideState = {i:-1, until:0, show:false, next: Date.now() + S.slides.every*1000}; var fs0 = $("#fslide"); if (fs0) fs0.hidden = true; boardState = {i:-1, until:0};
   renderWeather(); tick(true);
 }
 
@@ -623,6 +634,42 @@ function renderTimes(ph){
       (S.look.homeClock || x.k === "eid" ? "" : '<div class="i">' + off + '</div>') + '</div>';
   }).join("");
   if (ui.rows) ui.rows.innerHTML = html; if (ui.cards) ui.cards.innerHTML = html;
+}
+/* ===== أوقات الليل: منتصف الليل والثلث الأخير =====
+   الليل من أذان المغرب إلى أذان الفجر التالي. تظهر في شريط أسفل الشاشة حسب «وقت الظهور» */
+function nightTimes(day, ph, now){
+  var fj = byK(day, "fajr"), d0 = day;
+  if (now < fj.A) d0 = dayTimes(day.Y, day.M, day.D - 1); // بعد منتصف الليل: الليلة بدأت أمس
+  var mg = byK(d0, "maghrib"), is = byK(d0, "isha"), fn = d0 === day ? byK(ph.tom || dayTimes(day.Y, day.M, day.D + 1), "fajr") : fj;
+  if (!mg || !fn) return null;
+  var len = fn.A - mg.A; return {mg:mg, isha:is, fajr:fn, mid: mg.A + len/2, third: mg.A + len*2/3};
+}
+function nightVisible(n0, now){
+  var m = S.look.nightShow || "maghrib";
+  if (m === "always") return true;
+  if (m === "maghrib") return now >= n0.mg.A && now < n0.fajr.A;
+  if (m === "isha") { var st = n0.isha ? n0.isha.I + (+n0.isha.pd || 0)*60000 + (+S.look.nightAfter || 0)*60000 : n0.mg.A; return now >= st && now < n0.fajr.A; }
+  var z = zp(now), cur = z.h*60 + z.m, a = hm(S.look.nightFrom || "21:00"), b = hm(S.look.nightTo || "04:00"); // وقت محدد (يمكن أن يتجاوز منتصف الليل)
+  return a <= b ? (cur >= a && cur < b) : (cur >= a || cur < b);
+}
+var NIGHT_IC = {
+  mid:'<svg class="nb-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+  third:'<svg class="nb-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 16.5A6 6 0 1 1 9 7.2a4.8 4.8 0 0 0 6.5 9.3z"/><path d="M18 3.5l.7 1.6 1.6.7-1.6.7L18 8.1l-.7-1.6-1.6-.7 1.6-.7zM20.5 10l.4.9.9.4-.9.4-.4.9-.4-.9-.9-.4.9-.4z"/></svg>'
+};
+var nightKey = "";
+function renderNight(ph, now){
+  if (!ui.night) return;
+  var n0 = nightTimes(ph.today, ph, now), show = !!n0 && nightVisible(n0, now);
+  if (ui.night.hidden === show) ui.night.hidden = !show;
+  if (!show) return;
+  var inThird = now >= n0.third && now < n0.fajr.A, en = S.lang === "en";
+  var key = n0.mid + "|" + n0.third + "|" + inThird + "|" + layout + S.look.arabicDigits + S.look.h24 + S.look.zeroH;
+  if (key === nightKey) return; nightKey = key;
+  var it = function(k, lbl, ms, on){ return '<div class="nb-it' + (on ? " on" : "") + '">' + NIGHT_IC[k] + '<span class="nb-l">' + esc(lbl) + '</span>' +
+    (on ? '<span class="nb-now">' + esc(en ? "Now" : "الآن") + '</span>' : "") +
+    '<span class="nb-t"><b>' + fmtT(ms) + '</b><i>' + esc(ampm(ms)) + '</i></span></div>'; };
+  ui.night.innerHTML = (S.look.nightMid !== false ? it("mid", en ? "Midnight" : "منتصف الليل", n0.mid, false) : "") +
+    (S.look.nightThird !== false ? it("third", layout === "P" ? (en ? "Last third" : "الثلث الأخير") : (en ? "Last third of the night" : "الثلث الأخير من الليل"), n0.third, inThird) : "");
 }
 
 /* ===== الشريط السفلي ===== */
@@ -926,8 +973,15 @@ function overlayInner(now, ph){
     var waitStart = Math.min(p.I - 1000, p.A + ((S.azanScreen ? +S.azanDur : 0) + (S.duaAfterAzan ? 1 : 0))*60000);
     var left = Math.max(0, Math.ceil((p.I - now)/1000)), tot = Math.max(1, (p.I - waitStart)/1000), frac = Math.max(0, Math.min(1, left/tot));
     var lastMin = left <= 60, hadith = S.hadithOn && left <= S.hadithSec;
-    var wt = !!S.iqTimes;
-    key += (lastMin ? "L" : "") + (hadith ? "H" : "") + (wt ? "T" : "");
+    var wt = !!S.iqTimes, lb = lastMin && !!S.lastMinBlack;
+    key += (lastMin ? "L" : "") + (hadith ? "H" : "") + (wt ? "T" : "") + (lb ? "B" : "");
+    if (lb) { // آخر دقيقة: عداد كبير على شاشة سوداء
+      if (ovKey !== key) { ovKey = key; ovEl.className = "on iq lastblk";
+        ovEl.innerHTML = '<div class="o-sub">' + esc(t("iqama")) + " " + esc(p.name) + '</div><div class="o-cnt huge"></div>' +
+          (S.notifyOn ? '<div class="o-msg"><img src="img/nophone.png" alt="">' + esc(S.notifyMsg) + '</div>' : ""); }
+      var cb = $(".o-cnt", ovEl); digits(cb, dur(left)); tcls(cb, "red", S.red90 && left <= 90);
+      return;
+    }
     if (ovKey !== key) { ovKey = key; ovEl.className = "on iq wait" + (wt ? " wt" : "");
       var ticks = ""; for (var q = 0; q < 60; q++) ticks += '<line x1="100" y1="' + (q % 5 ? 4 : 2) + '" x2="100" y2="' + (q % 5 ? 8 : 11) + '" transform="rotate(' + (q*6) + ' 100 100)"/>';
       ovEl.innerHTML = '<div class="o-sub">' + esc(t("iqama")) + " " + esc(p.name) + '</div>' +
@@ -1006,12 +1060,14 @@ function annHTML(kind, p){
   tpl = tpl.replace(/\{الصلاة\}\s*[،,]\s*/g, "{الصلاة} "); // اسم الصلاة يظهر في سطر مستقل، فلا تبدأ الجملة التالية بفاصلة
   return '<div class="o-ann">' + esc(tpl).replace(/\{الصلاة\}/g, '<b>' + esc(pn) + '</b>').replace(/\{المسجد\}/g, '<b class="mq">' + esc(mq) + '</b>').replace(/\n/g, "<br>") + '</div>';
 }
-/* سطر أسفل الشاشة: rawayie.sa | الدمام | 2.4.6 (الفاصل يتلوّن بحالة الاتصال) */
+/* سطر أسفل الشاشة: rawayie.sa 2.6.0 | الدمام
+   اسم التطبيق ورقم الإصدار يظهران دائماً في كل الشاشات، ولا تخفيهما الإعدادات المرسلة من لوحة الإدارة.
+   رقم الإصدار يُقرأ من version.js الذي تكتبه الإضافة من رقم إصدارها، فيتحدث وحده مع كل تحديث */
 function footHTML(){
-  var site = String(S.look.footSite == null ? "rawayie.sa" : S.look.footSite).trim();
+  var site = String(S.look.footSite == null ? "" : S.look.footSite).trim(); if (/^(https?:\/\/)?(www\.)?rawayie\.sa\/?$/i.test(site)) site = ""; // نص إضافي اختياري
   var loc = S.look.showLoc === false ? "" : [String(S.addr || "").trim(), cityInfo().name].filter(Boolean).join("، ");
-  var parts = []; if (site) parts.push('<span class="fsite" dir="ltr">' + esc(site) + '</span>'); if (loc) parts.push('<span class="floc">' + esc(loc) + '</span>');
-  if (S.look.footVer !== false) parts.push('<span class="fver" dir="ltr">' + esc(VERSION) + '</span>');
+  var parts = ['<span class="fsite" dir="ltr">rawayie.sa </span><span class="fver" dir="ltr">' + esc(VERSION) + '</span>'];
+  if (site) parts.push('<span class="fsite" dir="ltr">' + esc(site) + '</span>'); if (loc) parts.push('<span class="floc">' + esc(loc) + '</span>');
   return parts.join('<span class="fsep net">|</span>') || '<span class="net">★</span>';
 }
 function versionText(){ return t("copy_right_for_sadja") + " · نسخة الويب " + VERSION; }
@@ -1079,11 +1135,19 @@ function tick(force){
       if (cw && vw > cw) ui.cv.style.transform = "scale(" + (cw / vw).toFixed(3) + ")"; }
     ui.cnt.classList.toggle("red", S.red90 && sec <= 90);
   } });
+  safe("iqclk", function(){ if (!ui.iqclk) return;
+    var q = ph.inIqama ? ph.cur : ph.next, tx = "";
+    if (q && q.k !== "eid" && q.I > q.A) tx = esc(t("iqama") + " " + q.name) + '<span class="iqt">' + fmtT(q.I) + '</span>' + esc(ampm(q.I));
+    if (ui.iqclk._t !== tx) { ui.iqclk._t = tx; ui.iqclk.innerHTML = tx; }
+  });
   safe("net", function(){ var R0 = window.REMOTE, rf = !!(R0 && S.remote && S.remote.on && R0.state && R0.state.status === "fail");
     Array.prototype.forEach.call(mainEl.querySelectorAll(".net"), function(n){ n.classList.toggle("off", navigator.onLine === false || rf); n.title = rf ? "تعذر الاتصال بلوحة المدير" : ""; }); });
   if (ui.hij && S.dateMode === "alt" && dateTexts.length && now >= dateNext) safe("switchDate", function(){ dateNext = now + (+S.dateSec)*1000; switchDate(); });
   safe("bg", function(){ autoBg(now, ph); });
+  if (verReload && !ph.mode && !document.body.classList.contains("setopen")) { var vr = verReload; verReload = ""; // إعادة التحميل خارج أوقات الصلاة
+    try { sessionStorage.setItem("rws-ver-reload", vr); } catch(e){} setTimeout(function(){ location.reload(); }, 300); }
   safe("times", function(){ renderTimes(ph); });
+  safe("night", function(){ renderNight(ph, now); });
   safe("ticker", function(){ renderTicker(); });
   safe("slides", function(){ slides(now); });
   safe("boards", function(){ boards(now); });
@@ -1092,6 +1156,19 @@ function tick(force){
 }
 
 /* ===== التشغيل ===== */
+/* التحديث التلقائي لرقم الإصدار: كل 10 دقائق تقرأ الشاشة version.js من الموقع (بدون كاش).
+   إذا تغيّر الرقم فهذا تحديث جديد للإضافة: يظهر الرقم الجديد أسفل الشاشة فوراً، وتُعاد تهيئة الشاشة
+   لتحميل الملفات الجديدة (ليس أثناء الأذان أو الإقامة أو الصلاة)، مرة واحدة فقط لكل إصدار */
+var verReload = "";
+function checkVersion(){
+  if (navigator.onLine === false || !window.fetch) return;
+  fetch("version.js?t=" + Date.now(), {cache:"no-store"}).then(function(r){ return r.ok ? r.text() : ""; }).then(function(tx){
+    var m = /RWS_VERSION\s*=\s*"([^"]+)"/.exec(tx || ""); if (!m || m[1] === VERSION) return;
+    VERSION = m[1]; window.RWS_VERSION = m[1]; if (window.APP) window.APP.VERSION = m[1]; lastDay = ""; ovKey = ""; // يظهر الرقم الجديد فوراً
+    var done = ""; try { done = sessionStorage.getItem("rws-ver-reload") || ""; } catch(e){}
+    if (done === m[1]) return; verReload = m[1];
+  }).catch(function(){});
+}
 function start(){
   stage = $("#stage"); ovEl = $("#ov"); mainEl = $("#main");
   addEventListener("resize", fit);
@@ -1105,6 +1182,7 @@ function start(){
   ["click", "keydown", "touchstart"].forEach(function(e){ addEventListener(e, unlock, {once:false, passive:true}); });
   wake(); document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") wake(); });
   addEventListener("online", function(){ lastDay = ""; }); addEventListener("offline", function(){ lastDay = ""; });
+  checkVersion(); setInterval(checkVersion, 10*60000);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ tickerKey = ""; fitAll(); });
   addEventListener("resize", function(){ setTimeout(fitAll, 100); });
   splash();
@@ -1138,7 +1216,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
   setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
-  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, VERSION:VERSION, METHODS:METHODS};
+  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 

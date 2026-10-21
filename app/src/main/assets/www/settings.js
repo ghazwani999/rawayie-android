@@ -43,6 +43,7 @@ var SECTIONS = [
   ["texts","محرر النصوص","الأدعية والأحاديث والنصوص الثابتة","text","content"],
   ["slides","الشرائح","صور وشرائح تُعرض بالتناوب على الشاشة","img","content"],
   ["boards","لوحات العرض","لوحات معلومات بملء الشاشة","board","content"],
+  ["display","خيارات العرض","العدادات والأذان والإقامة والجدول والساعة في مكان واحد","sliders","look"],
   ["look","الخلفية والألوان","صورة الخلفية وتغييرها تلقائياً وألوان النصوص","palette","look"],
   ["fonts","الخطوط والأحجام","نوع الخط وحجم كل عنصر على الشاشة","font","look"],
   ["layout","الساعة والجدول","شكل الساعة وجدول المواقيت وما يظهر أسفل الشاشة","table","look"],
@@ -54,7 +55,7 @@ var SECTIONS = [
   ["general","التشغيل والنسخ الاحتياطي","تفعيل التطبيق وبداية التشغيل والعمل بدون إنترنت وحفظ الإعدادات","gear","sys"]
 ];
 /* أقسام فرعية تتبع صلاحية القسم الأصلي للمشرف */
-var PERM_OF = {hide:"screens", fonts:"look", layout:"look"};
+var PERM_OF = {hide:"screens", fonts:"look", layout:"look", display:"look"};
 var PERM_LABEL = {screens:"شاشات الأذان والإقامة والإخفاء", look:"المظهر (الخلفية والخطوط والساعة)"};
 var ICONS = {
   pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
@@ -78,6 +79,7 @@ var ICONS = {
   wifi:'<path d="M3 9a13 13 0 0 1 18 0M6 12.5a8.5 8.5 0 0 1 12 0M9 16a4 4 0 0 1 6 0"/><circle cx="12" cy="19" r="1"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
+  sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   home:'<path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/>',
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'
 };
@@ -221,7 +223,8 @@ R.screens = function(){
   card("شاشة الأذان",
     tog("إظهار شاشة الأذان", "azanScreen") + numIn("مدة الأذان", "azanDur", 1, 10, 1, "دقيقة") + tog("إظهار دعاء ما بعد الأذان", "duaAfterAzan")) +
   card("شاشة الإقامة",
-    tog("العد التنازلي للإقامة آخر دقيقة فقط", "lastMinOnly") + tog("إظهار الوقت المتبقي للإقامة داخل دائرة", "circle") +
+    tog("العد التنازلي للإقامة آخر دقيقة فقط", "lastMinOnly", "عند تفعيله لا تظهر شاشة انتظار الإقامة إلا في آخر دقيقة قبل الإقامة") +
+    '<p class="note warn" id="lmwarn"' + (S.lastMinOnly ? "" : " hidden") + '>⚠ مفعّل الآن: لن تظهر شاشة انتظار الإقامة بعد الأذان، وتبقى الشاشة الرئيسية ظاهرة، ثم يظهر العداد في آخر دقيقة فقط قبل الإقامة. لإظهار العداد طوال فترة الانتظار أوقف هذا الخيار.</p>' + tog("إظهار الوقت المتبقي للإقامة داخل دائرة", "circle") +
     tog("إظهار أوقات الصلوات أثناء انتظار الإقامة", "iqTimes", "أوقات الأذان فقط (بدون أوقات الإقامة) أسفل العداد، مع تمييز الصلاة الحالية") +
     tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") +
     tog("رسالة التنبيه بالصوت عند آخر دقيقة قبل الإقامة", "notifyOn") + txt("رسالة التنبيه", "notifyMsg") +
@@ -256,20 +259,18 @@ R.hide = function(){
     '<div class="fld"><span><b>الحالة</b><small>' + esc(awakeText()) + '</small></span></div>' +
     '<p class="note">يمنع التطبيق المتصفح والجهاز من إطفاء الشاشة أو الدخول في السكون طوال الوقت. في بعض أجهزة التلفاز أوقف أيضاً من إعداداتها: «توفير الطاقة» و«الإيقاف التلقائي» و«مؤقت النوم»، وفي الكمبيوتر: إعدادات الطاقة ← عدم إيقاف الشاشة أبداً.</p>');
 };
-/* تفعيل التطبيق: الحالة ورقم الجهاز وإدخال كود التفعيل */
+/* ترخيص الشاشة: يصدر من موقع الإدارة فقط ويتجدد تلقائياً */
 function licCard(){
   var L = window.LICENSE; if (!L) return "";
-  var s = L.status();
-  var stt = s.active ? "مفعّل ✓ شكراً لكم" : s.trial ? "فترة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : "انتهت الفترة التجريبية";
-  return card("تفعيل التطبيق",
-    '<div class="fld"><span><b>الحالة</b><small>' + esc(stt) + '</small></span><span class="pill ' + (s.active ? "ok" : s.trial ? "" : "bad") + '">' + (s.active ? "مفعّل" : s.trial ? "تجريبي" : "منتهي") + '</span></div>' +
+  var s = L.status(), d = function(n){ return n <= 1 ? "يوم واحد" : n === 2 ? "يومان" : n + " أيام"; };
+  var stt = s.active ? (s.until ? "مفعّل حتى " + new Date(s.until).toLocaleDateString("ar-SA-u-ca-gregory") : "مفعّل ✓ شكراً لكم") : s.trial ? "فترة تجريبية: متبقي " + d(s.leftDays) : s.pending ? "جارٍ التحقق من موقع الإدارة" : (s.msg || (s.linked ? "غير مفعّلة" : "غير مرتبطة بموقع الإدارة"));
+  return card("ترخيص الشاشة",
+    '<div class="fld"><span><b>الحالة</b><small>' + esc(stt) + '</small></span><span class="pill ' + (s.active ? "ok" : s.trial || s.pending ? "" : "bad") + '">' + (s.active ? "مفعّل" : s.trial ? "تجريبي" : s.pending ? "تحقق" : "غير مفعّل") + '</span></div>' +
     '<div class="fld"><span><b>رقم الجهاز</b><small>أرسله مع طلب التفعيل</small></span><b dir="ltr" style="font-size:20px;letter-spacing:2px">' + esc(s.idText) + '</b></div>' +
-    // لوحة أرقام داخل التطبيق: لا تظهر لوحة مفاتيح النظام (تظهر غير مدوّرة وتغطي الشاشة على التلفاز)
-    (s.active ? "" : '<label class="fld" for="liccode"><span><b>كود التفعيل</b><small id="licmsg">8 أرقام تصلك بعد التواصل. اكتبها من لوحة الأرقام أو أزرار الريموت</small></span></label>' +
-      '<div class="licpad"><input type="text" id="liccode" inputmode="none" autocomplete="off" maxlength="9" dir="ltr" placeholder="•••• ••••" aria-label="كود التفعيل">' +
-      '<div class="actpad">' + ["1","2","3","4","5","6","7","8","9","del","0","ok"].map(function(k){ return '<button type="button" data-act="' + (k === "ok" ? "licAct" : "licKey") + '" data-x="' + k + '"' + (k === "ok" ? ' class="ok"' : "") + '>' + (k === "del" ? "⌫" : k === "ok" ? "تفعيل" : k) + '</button>'; }).join("") + '</div></div>' +
-      '<div class="row-end"><a class="btn" href="' + s.waLink + '" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">تواصل عبر واتساب ' + esc(s.wa) + '</a></div>'),
-    s.active ? "" : "فترة تجريبية لمدة 3 أيام. يرجى التواصل لتفعيل تطبيق روائع الأذان. واتساب: " + s.wa);
+    (s.renewedAt ? '<div class="fld"><span><b>آخر تجديد من الموقع</b><small>تعمل الشاشة ' + d(s.offlineDays) + ' بدون إنترنت</small></span><span dir="ltr">' + esc(new Date(s.renewedAt).toLocaleString("en-GB")) + '</span></div>' : "") +
+    '<div class="row-end">' + (s.linked ? '<button type="button" class="btn" data-act="licCheck">تحديث الترخيص الآن</button>' : "") +
+      (s.active ? "" : '<a class="btn" href="' + s.waLink + '" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">تواصل عبر واتساب ' + esc(s.wa) + '</a>') + '</div>',
+    s.active ? "" : "يُفعَّل الترخيص من لوحة الإدارة فقط. أرسل رقم الجهاز عبر واتساب " + s.wa + "، ثم اكتب كود التفعيل (6 أرقام) الذي يصلك.");
 }
 /* دقة العرض على التلفاز (تطبيق أندرويد فقط) */
 function hdmiCard(){
@@ -828,19 +829,66 @@ R.fonts = function(){
     rangeIn("الأذكار", "look.fs.zk", 0.5, 1.5, 0.05, "%") +
     '<div class="row-end">' + btn("إعادة الأحجام الافتراضية", "fsReset", "ghost") + '</div>', "100% هو الحجم الأصلي");
 };
+/* ===== خيارات العرض: كل خيارات الشاشة الأساسية في مكان واحد ومجموعات واضحة ===== */
+var DISP_REC = {"look.showCount":true, "look.bigCounter":true, "look.bigIqCnt":true, "red90":true, "lastMinBlack":true,
+  "azanScreen":true, "iqNowOn":true, "iqNowSec":30, "look.iqClock":true, "look.ovGlass":true, "look.homeClock":false,
+  "look.shadow":true, "look.dimPast":true, "look.nightTimes":false, "look.netStar":true,
+  "look.bigL":true, "look.centerL":true, "look.dateSide":true, "look.centerP":true,
+  "look.h24":false, "look.zeroH":"all", "look.fullClock":false, "look.arabicDigits":true};
+function dispOri(){ var o = R.display.o; if (o) return o; try { return A.orient() === "P" ? "P" : "L"; } catch(e){ return "L"; } }
+function segBtns(act, opts, on){ return '<div class="seg m0" role="radiogroup">' + opts.map(function(o){ var a = String(o[0]) === String(on);
+  return '<button type="button" role="radio" aria-checked="' + a + '" data-act="' + act + '" data-x="' + esc(o[0]) + '" class="' + (a ? "on" : "") + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>'; }
+R.display = function(){
+  var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
+  return card("العدّاد والعد التنازلي",
+    tog("إظهار العد التنازلي", "look.showCount", "الوقت المتبقي للصلاة القادمة بجانب الشعار") +
+    tog("تكبير عداد الوقت المتبقي للصلاة القادمة", "look.bigCounter") +
+    tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة") +
+    tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") +
+    tog("تكبير العداد على شاشة سوداء عند آخر دقيقة", "lastMinBlack", "قبل الإقامة بدقيقة يملأ العداد شاشة سوداء")) +
+  card("الأذان والإقامة",
+    tog("إظهار شاشة الأذان", "azanScreen") +
+    tog("عرض شاشة الإقامة قبل الشاشة السوداء", "iqNowOn", "رسالة «حان الآن موعد الإقامة» ثم تُخفى الشاشة أثناء الصلاة") +
+    (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "") +
+    tog("عرض الإقامة مع الساعة", "look.iqClock", "وقت إقامة الصلاة القادمة تحت الساعة") +
+    tog("شاشات شبه شفافة للأذان والإقامة والأذكار", "look.ovGlass", "تظهر الخلفية خلفها. عند الإيقاف تكون بلون ثابت") +
+    tog("ساعة المنزل: إخفاء أوقات الإقامة", "look.homeClock", "للبيوت فقط. لا يناسب المساجد لأنه يخفي الإقامة عن المصلين") +
+    (S.look.homeClock ? '<p class="note warn">⚠ ساعة المنزل مفعّلة: أوقات الإقامة مخفية عن المصلين.</p>' : "")) +
+  card("جدول المواقيت",
+    tog("تظليل خلف أوقات الصلاة", "look.shadow", "تفاصيل الظل من قسم «ظل الصلوات»") +
+    tog("تخفيت الصلوات الماضية", "look.dimPast") +
+    tog("إظهار أوقات الليل", "look.nightTimes", "منتصف الليل والثلث الأخير في شريط أسفل الشاشة") +
+    (S.look.nightTimes ? '<div class="subbox">' +
+      tog("منتصف الليل", "look.nightMid") + tog("الثلث الأخير من الليل", "look.nightThird", "يتميّز بعلامة «الآن» عند دخوله حتى أذان الفجر") +
+      sel("وقت الظهور", "look.nightShow", [["maghrib","من المغرب حتى الفجر"],["isha","بعد صلاة العشاء حتى الفجر"],["always","طوال اليوم"],["custom","من ساعة إلى ساعة"]], "الليل من أذان المغرب إلى أذان الفجر") +
+      (S.look.nightShow === "isha" ? numIn("يظهر بعد انتهاء صلاة العشاء بـ", "look.nightAfter", 0, 240, 5, "دقيقة") : "") +
+      (S.look.nightShow === "custom" ? timeIn("من الساعة", "look.nightFrom") + timeIn("إلى الساعة", "look.nightTo", "يمكن أن يتجاوز منتصف الليل، مثل من 21:00 إلى 04:00") : "") +
+      '</div>' : "") +
+    tog("التحقق من اتصال الإنترنت", "look.netStar", "نجمة أسفل الشاشة: خضراء عند الاتصال وحمراء عند الانقطاع")) +
+  card("اتجاه الشاشة",
+    '<div class="fld"><span><b>خيارات العرض</b><small>' + (now ? "الشاشة الآن " + (now === "P" ? "رأسية" : "أفقية") : "") + '</small></span>' +
+      segBtns("dispOri", [["L","الأفقي"],["P","الرأسي"]], o) + '</div>' +
+    (o === "L" ?
+      tog("تكبير أوقات الصلاة والإقامة", "look.bigL") +
+      tog("وضع أسماء الصلوات في المنتصف", "look.centerL") +
+      tog("التاريخ يميناً واسم المسجد يساراً", "look.dateSide", "في سطر واحد أعلى الشاشة، فتتسع المساحة للساعة")
+    : tog("وضع أسماء الصلوات في المنتصف", "look.centerP"))) +
+  card("الوقت والأرقام",
+    '<div class="fld"><span><b>نظام الساعة</b></span>' + segBtns("dispH24", [["12","12 ساعة (ص/م)"],["24","24 ساعة"]], S.look.h24 ? "24" : "12") + '</div>' +
+    sel("إضافة صفر قبل الساعة", "look.zeroH", [["off","بدون صفر (9:05)"],["clock","في الساعة فقط (09:05)"],["all","في الساعة وأوقات الصلوات"]], "في نظام 24 ساعة يظهر الصفر دائماً") +
+    tog("تفعيل عرض الساعة الكاملة 00:00:00", "look.fullClock", "الساعات والدقائق والثواني بحجم واحد") +
+    tog("تفعيل الأرقام العربية", "look.arabicDigits", "١٢:٣٠ بدل 12:30")) +
+  '<div class="row-end">' + btn("استعادة القيم الموصى بها للمساجد", "dispRec", "ghost") + '</div>';
+};
 R.layout = function(){
   return card("الساعة والأرقام",
-    tog("تفعيل 24 ساعة", "look.h24") + tog("تفعيل الساعة الكاملة", "look.fullClock", "الساعات والدقائق والثواني بحجم واحد") + sel("إضافة صفر قبل الساعة", "look.zeroH", [["off","بدون صفر (9:05)"],["clock","في الساعة فقط (09:05)"],["all","في الساعة وأوقات الصلوات"]], "مثل 09:05 بدل 9:05. في نظام 24 ساعة يظهر الصفر دائماً") + tog("إظهار الثواني صغيرة بجانب الساعة", "look.seconds") + tog("تفعيل الأرقام العربية", "look.arabicDigits")) +
+    tog("إظهار الثواني صغيرة بجانب الساعة", "look.seconds"), "نظام 12/24 ساعة والأرقام العربية والصفر قبل الساعة في «خيارات العرض»") +
   card("جدول المواقيت",
     tog("إظهار عناوين الأعمدة", "look.thead", "الصلاة - وقت الأذان - وقت الإقامة فوق الجدول") +
-    tog("إخفاء عمود الإقامة (ساعة المنزل)", "look.homeClock") +
     (S.look.homeClock ? "" : sel("عرض الإقامة", "look.iqFmt", [["time","بوقت الإقامة (3:02)"],["min","بالدقائق بعد الأذان (20’)"]]))) +
   card("عناصر الشاشة",
-    tog("تخفيت الصلاة الماضية", "look.dimPast") +
-    tog("وضع أسماء الصلوات في المنتصف في الوضع العمودي", "look.centerP") + tog("وضع أسماء الصلوات في المنتصف في العرض الأفقي", "look.centerL") +
-    tog("تكبير الإقامة والأذان في وضع العرض الأفقي", "look.bigL") +
-    tog("تكبير عداد المتبقي للصلاة القادمة", "look.bigCounter") + tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص الموقع أسفل الشاشة", "look.footSite", "يظهر هكذا: rawayie.sa | الدمام | 2.4.6. اتركه فارغاً لإخفائه") + tog("إظهار رقم الإصدار أسفل الشاشة", "look.footVer") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+    tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
+    txt("نص إضافي أسفل الشاشة", "look.footSite", "أسفل الشاشة يظهر دائماً: rawayie.sa " + A.VERSION + " | المدينة، ورقم الإصدار يتحدث تلقائياً مع كل تحديث. هذا النص يُضاف بعدهما، اتركه فارغاً إن لم تحتجه") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
 };
 
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
@@ -893,7 +941,7 @@ function actOpen(){
   if (!actEl) { actEl = document.createElement("div"); actEl.id = "act"; actEl.className = "actov"; $("#ui").appendChild(actEl); }
   var keys = ["1","2","3","4","5","6","7","8","9","del","0","ok"];
   actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/mark.png" alt=""><h2 id="acth">ربط الشاشة وتفعيلها</h2>' +
-    '<p>اكتب <b>كود التفعيل (8 أرقام)</b> الخاص برقم هذا الجهاز، أو <b>كود الربط (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
+    '<p>اكتب <b>كود التفعيل (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
     (window.LICENSE ? '<p class="actdev">رقم الجهاز: <b dir="ltr">' + esc(window.LICENSE.status().idText) + '</b></p>' : "") +
     (known ? '<p class="actsite" dir="ltr">' + esc(known.replace(/^https?:\/\//, "")) + '</p>' :
       '<label class="actf" for="actsite"><span>عنوان موقع الإدارة</span><input id="actsite" type="url" dir="ltr" placeholder="example.com" autocomplete="url" value="' + esc(site0.replace(/^https?:\/\//, "")) + '"></label>') +
@@ -902,13 +950,10 @@ function actOpen(){
     '<p class="acterr" id="acterr" role="alert"></p><button type="button" class="actlater" data-k="later">لاحقاً</button></div>';
   actEl.hidden = false;
   var code = $("#actcode", actEl), err = $("#acterr", actEl);
-  var fmt = function(){ var d = code.value.replace(/\D/g, "").slice(0, 8); code.value = d.length > 6 ? d.slice(0, 4) + " " + d.slice(4) : d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; };
+  var fmt = function(){ var d = code.value.replace(/\D/g, "").slice(0, 6); code.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; };
   var go = function(){
     var dg = code.value.replace(/\D/g, "");
-    // 8 أرقام: كود تفعيل الترخيص لهذا الجهاز (بدون إنترنت)
-    if (dg.length === 8) { if (window.LICENSE && window.LICENSE.activate(dg)) { err.className = "acterr ok"; err.textContent = "تم تفعيل التطبيق، شكراً لكم"; setTimeout(function(){ actClose(true); }, 1600); }
-      else { err.className = "acterr bad"; err.textContent = "كود التفعيل غير صحيح لهذا الجهاز"; } return; }
-    if (dg.length !== 6) { err.className = "acterr bad"; err.textContent = "اكتب 8 أرقام لكود التفعيل أو 6 أرقام لكود الربط"; return; }
+    if (dg.length !== 6) { err.className = "acterr bad"; err.textContent = "كود التفعيل 6 أرقام"; return; }
     var site = known || ($("#actsite", actEl) || {}).value || ""; err.textContent = "جارٍ الربط..."; err.className = "acterr";
     R0.activate(site, code.value).then(function(j){ err.className = "acterr ok"; err.textContent = "تم ربط الشاشة" + (j.name ? ": " + j.name : "");
       setTimeout(function(){ actClose(); A.rebuild(); }, 1400); }, function(e){ err.className = "acterr bad"; err.textContent = e.message || String(e); });
@@ -937,7 +982,7 @@ setTimeout(function(){
   var R0 = window.REMOTE, later = false, L0 = window.LICENSE;
   // «لاحقاً» تُحفظ دائماً: لا تظهر النافذة عند كل تشغيل، ويبقى الربط متاحاً من الإعدادات ← الإدارة عن بعد
   try { later = localStorage.getItem("rawayie-act-later") === "1" || /(?:^|; )rwactlater=1/.test(document.cookie) || sessionStorage.getItem("rawayie-act-later") === "1"; } catch(e){}
-  var licensed = false; try { licensed = !!(L0 && L0.status().active); } catch(e){} // شاشة مفعّلة الترخيص تعمل مستقلة بدون طلب الربط
+  var licensed = !!L0; // رسالة الترخيص فوق الشاشة فيها ربط الشاشة بالكود، فلا تُفتح نافذة ثانية
   if (!window.RAWAYIE_PREVIEW && R0 && R0.wpSite && R0.wpSite() && !(S.remote && S.remote.on && S.remote.server) && !later && !licensed) actOpen();
 }, (S.splash && S.splash.on !== false ? (+S.splash.sec || 6) * 1000 + 600 : 800));
 
@@ -1079,7 +1124,7 @@ R.general = function(){
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
       numIn("مدة الظهور", "splash.sec", 2, 60, 1, "ثانية") : "") +
-    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("مظهر الإعدادات", sel("الوضع", "uiTheme", [["dark","الوضع الداكن"],["light","الوضع الفاتح"],["auto","حسب وضع الجهاز"]], "لصفحة الإعدادات والمحرر ولوحة المفاتيح. الزر ☀/🌙 أعلى الإعدادات يبدّل بسرعة")) + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
+    '<div class="row-end">' + btn("معاينة الآن", "splashPrev", "ghost") + '</div>') + autoCard() + card("المحرر ولوحة المفاتيح", tog("فتح المحرر الخاص عند الكتابة", "textEditor", "نافذة كبيرة فيها الرموز والتشكيل والمعاينة واستيراد الملفات، تظهر عند الكتابة في أي حقل نصي") +
     sel("لوحة المفاتيح", "vkb", [["on","محرر ولوحة التطبيق دائماً (المفضل)"],["auto","تلقائي: في تطبيق أندرويد والشاشة المدوّرة فقط"],["off","لوحة مفاتيح الجهاز"]], "لوحة التطبيق عربي وإنجليزي وأرقام ورموز، تدور مع الشاشة وتعمل بالريموت والفأرة")) +
     card("العمل بدون إنترنت",
     '<div class="fld"><span><b>الحالة</b><small id="offst">' + esc(offState()) + '</small></span>' + btn("تجهيز الآن", "offPrep", "sm") + '</div>' + offBrowser() +
@@ -1099,7 +1144,7 @@ R.general = function(){
 /* شريط التفعيل أعلى صفحة الإعدادات: رقم الجهاز ظاهر دائماً حتى يُرسل لطلب كود التفعيل */
 function licStrip(){
   var L = window.LICENSE; if (!L) return ""; var s = L.status(); if (s.active) return "";
-  return '<button type="button" class="licstrip' + (s.expired ? " bad" : "") + '" data-act="goto" data-x="general|كود التفعيل"><span><b>' + (s.trial ? "نسخة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : "انتهت الفترة التجريبية") + '</b><small>أرسل رقم الجهاز عبر واتساب ' + esc(s.wa) + ' لطلب كود التفعيل، ثم أدخل الكود هنا</small></span><span class="lsid"><small>رقم الجهاز</small><b dir="ltr">' + esc(s.idText) + '</b></span></button>';
+  return '<button type="button" class="licstrip' + (s.expired ? " bad" : "") + '" data-act="goto" data-x="general|رقم الجهاز"><span><b>' + (s.trial ? "نسخة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : s.pending ? "جارٍ التحقق من ترخيص الشاشة" : esc(s.msg || "الشاشة غير مفعّلة")) + '</b><small>أرسل رقم الجهاز عبر واتساب ' + esc(s.wa) + ' لطلب كود التفعيل من الإدارة</small></span><span class="lsid"><small>رقم الجهاز</small><b dir="ltr">' + esc(s.idText) + '</b></span></button>';
 }
 function homeHTML(){
   return '<div class="shome"><h2>' + ico("gear") + 'الإعدادات</h2><p class="sdesc">اختر القسم الذي تريد ضبطه، أو ابحث عن أي خيار باسمه.</p>' +
@@ -1183,7 +1228,8 @@ function render(){
 function onChange(e){
   var el = e.target;
   if (el.id === "calm") { calMonth = el.value; render(); return; }
-  if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 1920).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
+  if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
+  if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
   if (el.dataset.sp) { onSlInput(e); return; }
   if (el.dataset.perm) { var ss = S.sup.sections || []; var ix = ss.indexOf(el.dataset.perm); if (el.checked && ix < 0) ss.push(el.dataset.perm); if (!el.checked && ix >= 0) ss.splice(ix, 1); S.sup.sections = ss; A.save(); return; }
   if (el.id === "txt") { txTarget = el.value; render(); return; }
@@ -1199,9 +1245,8 @@ function onChange(e){
   if (el.type === "number") { var mn = parseFloat(el.min), mx = parseFloat(el.max); if (v < mn) v = mn; if (v > mx) v = mx; }
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
-  if (el.dataset.p === "uiTheme") uiTheme();
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
@@ -1209,9 +1254,15 @@ function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(
 function shrink(file, max){
   return new Promise(function(res){
     var img = new Image(), u = URL.createObjectURL(file);
-    img.onload = function(){ var s = Math.min(1, max/Math.max(img.width, img.height)), c = document.createElement("canvas");
-      c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(u); c.toBlob(function(b){ res(b || file); }, file.type === "image/png" ? "image/png" : "image/jpeg", .86); };
+    // تصغير بجودة عالية: على مراحل (النصف كل مرة) مع تنعيم عالٍ، فلا تظهر حواف مسننة أو بكسلة. الصورة الأصغر من الحد تبقى كما هي
+    img.onload = function(){ var s = Math.min(1, max/Math.max(img.width, img.height));
+      if (s >= 1 && file.size < 6e6) { URL.revokeObjectURL(u); res(file); return; }
+      var tw = Math.round(img.width*s), th = Math.round(img.height*s), src = img, cw = img.width, ch = img.height, c;
+      do { cw = Math.max(tw, Math.round(cw/2)); ch = Math.max(th, Math.round(ch/2));
+        c = document.createElement("canvas"); c.width = cw; c.height = ch; var x = c.getContext("2d");
+        x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(src, 0, 0, cw, ch); src = c;
+      } while (cw > tw || ch > th);
+      URL.revokeObjectURL(u); c.toBlob(function(b){ res(b || file); }, file.type === "image/png" ? "image/png" : "image/jpeg", .93); };
     img.onerror = function(){ res(file); }; img.src = u;
   });
 }
@@ -1259,10 +1310,10 @@ function upload(el){
   if (kind === "bkfile") { openFile(files[0]); el.value = ""; return; }
   var one = function(f, max){ var id = A.uid(); return (f.type.indexOf("image") === 0 ? shrink(f, max) : Promise.resolve(f)).then(function(b){ return A.IDB.put(id, b).then(function(){ return id; }); }); };
   var fail = function(){ toast("تعذر حفظ الملف على هذا الجهاز"); };
-  if (kind === "slide") { Promise.all(files.map(function(f){ return one(f, 1920); })).then(function(ids){ S.slides.items = S.slides.items.concat(ids.map(function(m){ return {id:A.uid(), img:m, imgMode:"contain", active:true}; })); commit(); render(); toast("تمت إضافة " + ids.length + " شريحة"); }).catch(fail); return; }
+  if (kind === "slide") { Promise.all(files.map(function(f){ return one(f, 3840); })).then(function(ids){ S.slides.items = S.slides.items.concat(ids.map(function(m){ return {id:A.uid(), img:m, imgMode:"contain", active:true}; })); commit(); render(); toast("تمت إضافة " + ids.length + " شريحة"); }).catch(fail); return; }
   var f = files[0];
-  if (kind.indexOf("sp:") === 0) { var pth = kind.slice(3); one(f, 2200).then(function(id){ var old = get(pth); if (old && old.indexOf("file:") < 0 && !/^(https?:)?\/\//.test(old)) A.IDB.del(old); put(pth, id); commit(); render(); toast("تم الحفظ بنجاح"); }).catch(fail); return; }
-  one(f, kind === "logo" ? 600 : kind === "wm" ? 1200 : 2200).then(function(id){
+  if (kind.indexOf("sp:") === 0) { var pth = kind.slice(3); one(f, 3840).then(function(id){ var old = get(pth); if (old && old.indexOf("file:") < 0 && !/^(https?:)?\/\//.test(old)) A.IDB.del(old); put(pth, id); commit(); render(); toast("تم الحفظ بنجاح"); }).catch(fail); return; }
+  one(f, kind === "logo" ? 1200 : kind === "wm" ? 2000 : 3840).then(function(id){
     if (kind === "logo") { if (S.look.logoId) A.IDB.del(S.look.logoId); S.look.logoId = id; S.look.logoColor = "gold"; S.look.logo = true; }
     if (kind === "wm") { if (S.look.wmImg && !/^(https?:)?\/\//.test(S.look.wmImg)) A.IDB.del(S.look.wmImg); S.look.wmImg = id; S.look.wm = true; }
     if (kind === "bg") { if (S.look.customBg) A.IDB.del(S.look.customBg); S.look.customBg = id; }
@@ -1291,7 +1342,7 @@ function onClick(e){
     case "sbTab": R.hide.sb = x; render(); break;
     case "sleepPrevK": close(); A.previewBlack(10000, true, x); break;
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
-    case "thm": S.uiTheme = document.documentElement.classList.contains("uilight") ? "dark" : "light"; A.save(); uiTheme(); if (cur === "general") render(); break;
+    case "licCheck": if (window.LICENSE) window.LICENSE.check().then(function(ok){ toast(ok ? "تم تحديث الترخيص ✓" : (window.LICENSE.status().msg || "تعذر الاتصال بموقع الإدارة")); render(); }); break;
     case "licKey": var lk = $("#liccode"); if (lk) { var dg = lk.value.replace(/\D/g, ""); dg = x === "del" ? dg.slice(0, -1) : (dg + x).slice(0, 8); lk.value = dg.length > 4 ? dg.slice(0, 4) + " " + dg.slice(4) : dg; } break;
     case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#ff8a8a"; } } break;
     case "goto": var gi = x.indexOf("|"); gotoOpt(x.slice(0, gi), x.slice(gi + 1)); break;
@@ -1348,6 +1399,9 @@ function onClick(e){
     case "setRot": S.look.rot = +x; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
     case "rotStep": S.look.rot = ((+S.look.rot || 0) + 90) % 360; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
     case "setOri": S.look.orient = x; commit(); render(); break;
+    case "dispOri": R.display.o = x; render(); break;
+    case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
+    case "dispRec": Object.keys(DISP_REC).forEach(function(k){ put(k, DISP_REC[k]); }); commit(); render(); toast("تم تطبيق القيم الموصى بها ✓"); break;
     case "wxRefresh": A.refreshWeather(); setTimeout(render, 1500); break;
     case "nSave":
       var tx = $("#ntext").value.trim(); if (!tx) { toast("من فضلك اكتب نص الرسالة"); return; }
@@ -1423,7 +1477,7 @@ function saveBoard(x){
   if (it.pinned) S.boards.items.forEach(function(q){ if (q !== it) q.pinned = false; });
   var f = $("#bimg").files[0];
   var done = function(){ if (x === "new") S.boards.items.push(it); boardEdit = null; commit(); render(); toast("تم الحفظ بنجاح"); };
-  if (f) shrink(f, 1920).then(function(b){ var id = A.uid(); return A.IDB.put(id, b).then(function(){ if (it.img) A.IDB.del(it.img); it.img = id; }); }).then(done, done); else done();
+  if (f) shrink(f, 3840).then(function(b){ var id = A.uid(); return A.IDB.put(id, b).then(function(){ if (it.img) A.IDB.del(it.img); it.img = id; }); }).then(done, done); else done();
 }
 
 /* ===== الفتح والإغلاق ===== */
@@ -1438,7 +1492,7 @@ function open(){
 function close(){ if (S.pass) { unlocked = false; } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
-  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><button type="button" class="thm" id="thm" data-act="thm" aria-label="تبديل الوضع الداكن والفاتح">☀</button><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
     '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
@@ -1588,15 +1642,7 @@ function spatialNav(){
     if (best) { try { best.focus({preventScroll:true}); } catch(x){ best.focus(); } if (best.scrollIntoView) try { best.scrollIntoView({block:"nearest", inline:"nearest"}); } catch(x){ best.scrollIntoView(false); } }
   }, true);
 }
-/* الوضع الداكن والفاتح لواجهة الإعدادات والمحرر ولوحة المفاتيح */
-function uiTheme(){
-  var m = S.uiTheme || "dark", light = m === "light";
-  if (m === "auto") try { light = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches; } catch(e){}
-  document.documentElement.classList.toggle("uilight", !!light);
-  var b = document.getElementById("thm"); if (b) { b.textContent = light ? "🌙" : "☀"; b.title = light ? "الوضع الداكن" : "الوضع الفاتح"; }
-}
-try { if (window.matchMedia) matchMedia("(prefers-color-scheme: light)").addListener(function(){ if (S.uiTheme === "auto") uiTheme(); }); } catch(e){}
-function init(){ shortcuts(); spatialNav(); uiTheme(); }
+function init(){ shortcuts(); spatialNav(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 // زر الرجوع في الريموت: يغلق لوحة المفاتيح ثم المحرر ثم الإعدادات بالترتيب
 function back(){

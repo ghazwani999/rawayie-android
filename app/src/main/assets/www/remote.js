@@ -157,15 +157,19 @@ function siteCandidates(site){
   var m = s.match(/^(.*?)\/wp-json(\/.*)?$/); if (m) s = m[1];
   return [s + "/wp-json/rawayie/v1/activate", s + "/?rest_route=/rawayie/v1/activate"];
 }
-function activate(site, act){
+// legacy: كود الإصدار السابق (8 أرقام) المحفوظ في الجهاز، فتُضاف الشاشة إلى لوحة الإدارة تلقائياً
+function activate(site, act, legacy){
   var urls = siteCandidates(site), code = String(act || "").replace(/\D/g, "");
   if (!urls.length) return Promise.reject(new Error("اكتب عنوان الموقع"));
-  if (code.length !== 6) return Promise.reject(new Error("الكود 6 أرقام"));
+  if (!legacy && code.length !== 6) return Promise.reject(new Error("الكود 6 أرقام"));
+  var dev = window.LICENSE ? window.LICENSE.status().id : "";
+  var body = legacy ? {legacy:legacy, dev:dev, name:S.mosque || ""} : {act:code, dev:dev};
+  var hard = function(m){ var e = new Error(m); e.hard = true; return e; }; // رفض صريح من الموقع (وليس انقطاع اتصال)
   var tryAt = function(i){
-    return fetch(urls[i], {method:"POST", cache:"no-store", headers:{"Content-Type":"application/json"}, body:JSON.stringify({act:code})})
+    return fetch(urls[i], {method:"POST", cache:"no-store", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)})
       .then(function(res){ return res.text().then(function(t){ var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
         if (res.ok && j && j.code) return j;
-        if (j && j.message && (j.code === "rws_bad" || j.code === "rws_wait")) throw new Error(j.message);
+        if (j && j.message && (j.code === "rws_bad" || j.code === "rws_wait" || j.code === "rws_bad_dev")) throw (j.code === "rws_wait" ? new Error(j.message) : hard(j.message));
         if (i + 1 < urls.length) return tryAt(i + 1);
         throw new Error(res.status === 404 ? "الكود غير صحيح أو انتهت صلاحيته" : "تعذر الوصول للموقع (" + res.status + ")"); }); },
       function(){ if (i + 1 < urls.length) return tryAt(i + 1); throw new Error("تعذر الوصول للموقع. تأكد من العنوان والإنترنت"); });
@@ -174,6 +178,7 @@ function activate(site, act){
     S.remote.on = true; S.remote.server = j.server; S.remote.code = j.code; S.remote.key = j.token || ""; S.remote.rev = 0; S.remote.site = urls[0].replace(/\/wp-json\/.*$/, "");
     if (j.name && (!S.mosque || S.mosque === A.DEF.mosque)) S.mosque = j.name;
     origSave(); start();
+    try { if (window.LICENSE && window.LICENSE.check) window.LICENSE.check(); } catch(e){}
     return j;
   });
 }
