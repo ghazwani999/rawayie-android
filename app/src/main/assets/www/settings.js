@@ -45,6 +45,7 @@ var SECTIONS = [
   ["boards","لوحات العرض","لوحات معلومات بملء الشاشة","board","content"],
   ["display","خيارات العرض","العدادات والأذان والإقامة والجدول والساعة في مكان واحد","sliders","look"],
   ["look","الخلفية والألوان","صورة الخلفية وتغييرها تلقائياً وألوان النصوص","palette","look"],
+  ["hilite","تمييز الصلاة القادمة","إظهار السطر المميز ولونه ونصوصه أو إطار حوله","hl","look"],
   ["fonts","الخطوط والأحجام","نوع الخط وحجم كل عنصر على الشاشة","font","look"],
   ["layout","الساعة والجدول","شكل الساعة وجدول المواقيت وما يظهر أسفل الشاشة","table","look"],
   ["rotate","تدوير وملاءمة الشاشة","اتجاه الشاشة وملء الشاشة وأزرار التحكم","rot","look"],
@@ -55,7 +56,7 @@ var SECTIONS = [
   ["general","التشغيل والنسخ الاحتياطي","تفعيل التطبيق وبداية التشغيل والعمل بدون إنترنت وحفظ الإعدادات","gear","sys"]
 ];
 /* أقسام فرعية تتبع صلاحية القسم الأصلي للمشرف */
-var PERM_OF = {hide:"screens", fonts:"look", layout:"look", display:"look"};
+var PERM_OF = {hide:"screens", hilite:"look", fonts:"look", layout:"look", display:"look"};
 var PERM_LABEL = {screens:"شاشات الأذان والإقامة والإخفاء", look:"المظهر (الخلفية والخطوط والساعة)"};
 var ICONS = {
   pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
@@ -74,6 +75,7 @@ var ICONS = {
   font:'<path d="M4 19L10 5l6 14M6.5 14h7M17 19v-7M15 12h4"/>',
   table:'<rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M3.5 14.5h17M10 9v11"/>',
   rot:'<path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4.5h-4.5"/>',
+  hl:'<rect x="3" y="4" width="18" height="4" rx="1.5" opacity=".45"/><rect x="2.5" y="10" width="19" height="4.5" rx="1.5"/><rect x="3" y="16.5" width="18" height="4" rx="1.5" opacity=".45"/>',
   shade:'<rect x="6" y="6" width="13" height="13" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
   wifi:'<path d="M3 9a13 13 0 0 1 18 0M6 12.5a8.5 8.5 0 0 1 12 0M9 16a4 4 0 0 1 6 0"/><circle cx="12" cy="19" r="1"/>',
@@ -872,7 +874,7 @@ R.look = function(){
   card("الألوان",
     tog("تلوين النصوص تلقائياً حسب الخلفية", "look.autoColor", "يختار ألوان النصوص والظل والتمييز من ألوان الخلفية. أوقفه لاستخدام اللون المخصص أدناه") +
     '<div class="sw">' + accents.map(function(c){ return '<button type="button" data-act="accent" data-x="' + c + '" style="background:' + c + '" class="' + (S.look.accent.toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>' +
-    colorIn("لون مخصص", "look.accent")) + hiCard() +
+    colorIn("لون مخصص", "look.accent")) +
   card("العلامة المائية",
     tog("إظهار العلامة المائية خلف جدول المواقيت", "look.wm", "صورة شفافة خلف أوقات الصلوات") +
     (S.look.wm !== false ? '<div class="fld"><span><b>صورة العلامة المائية</b><small>' + (S.look.wmImg ? "صورة مخصصة" : "الهلال والمسجد (الافتراضية)") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الصورة<input type="file" accept="image/*" data-up="wm" hidden></label>' + (S.look.wmImg ? btn("الصورة الافتراضية", "wmReset", "sm ghost") : "") + '</span></div>' + rangeIn("درجة الظهور", "look.wmOp", 0.03, 0.5, 0.01, "%", "كلما قلّت صارت أخف") + rangeIn("الحجم", "look.wmSize", 0.4, 1.2, 0.05, "%", "نسبةً إلى ارتفاع الجدول") : ""));
@@ -889,14 +891,19 @@ function hiCard(){
   var tx = ["#ffffff","#111111","#F4D58D","#E7B65B","#9CC7FF"];
   var sw = function(list, act, cur, on){ return '<div class="sw">' + list.map(function(c){ return '<button type="button" data-act="' + act + '" data-x="' + c + '" style="background:' + c + '" class="' + (on && String(cur).toLowerCase() === c.toLowerCase() ? "on" : "") + '" aria-label="' + c + '"></button>'; }).join("") + '</div>'; };
   var pv = hiPrevHTML();
+  var on = L.hiOn !== false;
   return card("تمييز الصلاة القادمة",
-    pv +
+    tog("إظهار تمييز الصلاة القادمة", "look.hiOn", "تلوين سطر الصلاة القادمة في جدول المواقيت، أو الصلاة الحالية أثناء انتظار الإقامة") +
+    (!on ? "" : pv +
     tog("لون مخصص لتمييز الصلاة القادمة", "look.hiCustom", "عند إيقافه يُختار لون مناسب للخلفية تلقائياً") +
     (L.hiCustom ? sw(hs, "hiSw", L.hiColor, true) + colorIn("لون التمييز", "look.hiColor") + rangeIn("درجة وضوح اللون", "look.hiOpacity", 0.1, 1, 0.05, "%", "كلما قلّت ظهرت الخلفية من خلفه") : "") +
     tog("لون مخصص لنصوص الصلاة القادمة", "look.hiTextOn", "اسم الصلاة ووقت الأذان والإقامة في السطر المميز") +
     (L.hiTextOn ? sw(tx, "hiTx", L.hiTextColor, true) + colorIn("لون النصوص", "look.hiTextColor") : "") +
-    tog("إطار فقط بدل تعبئة الشريط", "look.hiFrame", "يظهر حول الصلاة القادمة إطار بلون التمييز بدل خلفية ملوّنة"), "السطر المميز في جدول المواقيت هو الصلاة القادمة، أو الصلاة الحالية أثناء انتظار الإقامة");
+    tog("إطار فقط بدل تعبئة الشريط", "look.hiFrame", "يظهر حول الصلاة القادمة إطار بلون التمييز بدل خلفية ملوّنة") +
+    tog("تكبير السطر المميز قليلاً", "look.hiZoom", "يبرز سطر الصلاة القادمة بتكبير بسيط عن باقي الصلوات") +
+    tog("تخفيت الصلوات الماضية", "look.dimPast", "الصلوات التي مضت اليوم تظهر بلون أخف")), "السطر المميز في جدول المواقيت هو الصلاة القادمة، أو الصلاة الحالية أثناء انتظار الإقامة");
 }
+R.hilite = function(){ return hiCard(); };
 R.fonts = function(){
   return card("ضبط خطوط التطبيق",
     sel("خط النصوص", "look.fontText", window.FONTS) + sel("خط الأرقام والساعة", "look.fontNum", window.FONTS) + sel("خط الأذكار", "look.fontZekr", window.FONTS) +
@@ -915,7 +922,7 @@ R.fonts = function(){
 /* ===== خيارات العرض: كل خيارات الشاشة الأساسية في مكان واحد ومجموعات واضحة ===== */
 var DISP_REC = {"look.showCount":true, "look.bigCounter":true, "look.bigIqCnt":true, "red90":true, "lastMinBlack":true,
   "azanScreen":true, "iqNowOn":true, "iqNowSec":30, "look.iqClock":true, "look.ovGlass":true, "look.homeClock":false,
-  "look.shadow":true, "look.dimPast":true, "look.nightTimes":true, "look.netStar":true,
+  "look.shadow":true, "look.dimPast":true, "look.hiOn":true, "look.nightTimes":true, "look.netStar":true,
   "look.bigL":true, "look.centerL":true, "look.dateSide":true, "look.centerP":true,
   "look.h24":false, "look.zeroH":"all", "look.fullClock":false, "look.arabicDigits":true};
 function dispOri(){ var o = R.display.o; if (o) return o; try { return A.orient() === "P" ? "P" : "L"; } catch(e){ return "L"; } }

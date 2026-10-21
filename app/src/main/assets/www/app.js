@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.8"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.9"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -36,7 +36,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:false, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -443,7 +443,7 @@ function applyLook(){
   var hiTx = L.hiTextOn && L.hiTextColor ? L.hiTextColor : "";
   st.setProperty("--hi", hi); st.setProperty("--hifg", hiTx || "#fff");
   st.setProperty("--hiline", L.hiCustom ? L.hiColor : acc);
-  stage.classList.toggle("hitxt", !!hiTx); stage.classList.toggle("hiframe", !!L.hiFrame);
+  stage.classList.toggle("hitxt", !!hiTx); stage.classList.toggle("hiframe", !!L.hiFrame); stage.classList.toggle("hizoom", !!L.hiZoom);
   // علامة مائية شفافة خلف جدول المواقيت (الهلال والمسجد)
   stage.classList.toggle("wmon", L.wm !== false); st.setProperty("--wmop", +L.wmOp || .12); st.setProperty("--wmh", Math.round((+L.wmSize || .85) * 100) + "%");
   if (L.wmImg) { var wid = L.wmImg; mediaURL(wid).then(function(u){ if (S.look.wmImg === wid && u) stage.style.setProperty("--wmimg", 'url("' + u + '")'); }); } else st.removeProperty("--wmimg");
@@ -623,13 +623,13 @@ var lastRowKey = "", lastDay = "";
 function renderTimes(ph){
   var day = ph.today, rows = day.list.slice();
   if (day.eid) rows.push(day.eid);
-  var key = day.key + "|" + ph.hi + "|" + (S.look.dimPast ? Math.floor(Date.now()/60000) : "");
+  var key = day.key + "|" + ph.hi + "|" + (S.look.hiOn !== false) + "|" + (S.look.dimPast ? Math.floor(Date.now()/60000) : "");
   if (key === lastRowKey) return; lastRowKey = key;
   var now = Date.now();
   var html = rows.map(function(x){
     var past = S.look.dimPast && x.k !== ph.hi && x.k !== "sunrise" && now > x.I + 60000 && !(ph.inIqama && x.k === ph.cur.k);
     if (x.k === "sunrise") past = S.look.dimPast && now > x.I && ph.hi !== "sunrise";
-    var cls = (x.k === ph.hi ? " hi" : "") + (past ? " past" : "") + (x.k === "eid" ? " eid" : "");
+    var cls = (x.k === ph.hi && S.look.hiOn !== false ? " hi" : "") + (past ? " past" : "") + (x.k === "eid" ? " eid" : "");
     var off = x.k === "eid" ? "" : S.look.iqFmt === "time" ? fmtT(x.I) : num(Math.round((x.I - x.A)/60000)) + "’";
     if (ui.rows) return '<div class="row' + cls + '" data-k="' + x.k + '"><div class="c1">' + esc(x.name) + '</div><div class="c2">' + fmtT(x.A) + '</div>' +
       (S.look.homeClock ? "" : '<div class="c3">' + off + '</div>') + '</div>';
