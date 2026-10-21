@@ -832,7 +832,7 @@ R.fonts = function(){
 /* ===== خيارات العرض: كل خيارات الشاشة الأساسية في مكان واحد ومجموعات واضحة ===== */
 var DISP_REC = {"look.showCount":true, "look.bigCounter":true, "look.bigIqCnt":true, "red90":true, "lastMinBlack":true,
   "azanScreen":true, "iqNowOn":true, "iqNowSec":30, "look.iqClock":true, "look.ovGlass":true, "look.homeClock":false,
-  "look.shadow":true, "look.dimPast":true, "look.nightTimes":false, "look.netStar":true,
+  "look.shadow":true, "look.dimPast":true, "look.nightTimes":true, "look.netStar":true,
   "look.bigL":true, "look.centerL":true, "look.dateSide":true, "look.centerP":true,
   "look.h24":false, "look.zeroH":"all", "look.fullClock":false, "look.arabicDigits":true};
 function dispOri(){ var o = R.display.o; if (o) return o; try { return A.orient() === "P" ? "P" : "L"; } catch(e){ return "L"; } }
