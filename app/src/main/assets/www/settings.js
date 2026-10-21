@@ -851,7 +851,15 @@ R.look = function(){
   // الخلفيات الجديدة عالية الدقة (SVG) أولاً بصورتها الحقيقية، ثم خلفيات التطبيق من الصورة المصغرة المجمعة
   var bgBtn = function(b, i){ var svg = /\.svg$/.test(b[0]);
     return '<button type="button" class="bgt ' + tab + (svg ? " svg" : "") + (b[0] === curBg && !S.look.customBg ? " on" : "") + '" data-act="bg" data-x="' + tab + ":" + b[0] + '" style="' +
-      (svg ? "background-image:url(bg/" + b[0] + ")" : "background-position:0 " + (-(b[3] != null ? b[3] : i)*(tab === "P" ? 160 : 90)) + "px") + '" aria-label="خلفية ' + (i + 1) + '"></button>'; };
+      (svg ? "background-image:url(bg/" + b[0] + ")" : "background-position:0 " + (-(b[3] != null ? b[3] : i)*(tab === "P" ? 160 : 90)) + "px") + '" data-n="' + (i + 1) + '" aria-label="خلفية ' + (i + 1) + '"></button>'; };
+  // الخلفية المستخدمة الآن: صورتها ورقمها واسم ملفها ونوعها وطريقة تغييرها
+  var ci = -1; list.forEach(function(b, i){ if (b[0] === curBg) ci = i; });
+  var modes = {manual:"يدوي", prayer:"تتغير عند كل صلاة", day:"تتغير كل يوم", month:"تتغير كل شهر", random:"تتغير عشوائياً كل " + (S.look.bgEvery || 30) + " دقيقة"};
+  var curBox = '<div class="bgcur">' + (S.look.customBg ? "" :
+      ci >= 0 ? bgBtn(list[ci], ci).replace('<button type="button" class="bgt', '<span class="bgt cur').replace(/data-act="bg" /, "").replace("</button>", "</span>") : "") +
+    '<div class="bgci"><b>الخلفية المستخدمة الآن (' + (tab === "P" ? "رأسي" : "أفقي") + ')</b>' +
+    (S.look.customBg ? '<span>صورة مخصصة من الجهاز</span>' : ci >= 0 ? '<span>خلفية رقم <b class="bgno">' + (ci + 1) + '</b> من ' + list.length + '</span><small dir="ltr">' + esc(curBg) + '</small><small>' + (/^z.*\.svg$/.test(curBg) ? "نقش إسلامي شفاف" : /\.svg$/.test(curBg) ? "خلفية متجهة عالية الدقة" : "صورة") + " · " + (modes[S.look.bgMode || "manual"] || "") + '</small>' : '<span>غير محددة</span>') +
+    (ci >= 0 && !S.look.customBg ? '<span class="nb">' + btn("إظهارها في القائمة", "bgFind", "sm ghost") + '</span>' : "") + '</div></div>';
   var hid = S.look.bgHidden || [], showHid = R.look.showHid, del = R.look.delMode;
   var vis = function(b){ return showHid ? hid.indexOf(b[0]) >= 0 : hid.indexOf(b[0]) < 0; };
   var wrap = function(b, i){ if (!vis(b)) return ""; var x = bgBtn(b, i);
@@ -862,7 +870,7 @@ R.look = function(){
   var nHid = list.filter(function(b){ return hid.indexOf(b[0]) >= 0; }).length;
   var accents = ["#E7B65B","#F4D58D","#FFFFFF","#7FD1C7","#9CC7FF","#F2A07B","#C9E265"];
   return card("صورة الخلفية",
-    '<div class="seg"><button type="button" data-act="bgTab" data-x="P" class="' + (tab === "P" ? "on" : "") + '">رأسي</button><button type="button" data-act="bgTab" data-x="L" class="' + (tab === "L" ? "on" : "") + '">أفقي</button></div>' +
+    curBox + '<div class="seg"><button type="button" data-act="bgTab" data-x="P" class="' + (tab === "P" ? "on" : "") + '">رأسي</button><button type="button" data-act="bgTab" data-x="L" class="' + (tab === "L" ? "on" : "") + '">أفقي</button></div>' +
     (showHid ? '<p class="note">الخلفيات المحذوفة: اضغط ↺ لإعادتها إلى القائمة.</p>' : del ? '<p class="note">اضغط × على أي خلفية لحذفها من هذه الشاشة وذاكرة الجهاز. للحذف النهائي من التطبيق نفسه: لوحة ووردبريس ← إعدادات الربط ← حذف الخلفيات نهائياً، أو احذف ملفها من مجلد bg في النسخة المحلية.</p>' : "") +
     '<div class="bgs' + (del || showHid ? " bgdel" : "") + '">' + (bgs || '<p class="note">لا توجد خلفيات محذوفة.</p>') + '</div>' +
     '<div class="row-end">' + (showHid ? btn("رجوع", "bgHidView", "ghost") : btn(del ? "تم" : "حذف خلفيات", "bgDelMode", del ? "" : "ghost") + (nHid ? btn("المحذوفة (" + nHid + ")", "bgHidView", "ghost") : "")) + '</div>' +
@@ -1530,6 +1538,7 @@ function onClick(e){
       // تبديل خفيف وسريع: تُطبَّق الخلفية والألوان فقط بدون إعادة بناء الشاشة أو قائمة الإعدادات
       A.save(); A.applyLook(); $$(".bgt.on", body).forEach(function(z){ z.classList.remove("on"); }); b.classList.add("on");
       if (hadCustom) render(); break;
+    case "bgFind": (function(){ var o = document.querySelector(".bgs .bgt.on"); if (!o) return; try { o.scrollIntoView({block:"center", inline:"center", behavior:"smooth"}); } catch (e2) { o.scrollIntoView(); } o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); }, 2400); })(); break;
     case "bgTab": R.look.tab = x; render(); break;
     case "bgDelMode": R.look.delMode = !R.look.delMode; R.look.showHid = false; render(); break;
     case "bgHidView": R.look.showHid = !R.look.showHid; R.look.delMode = false; render(); break;

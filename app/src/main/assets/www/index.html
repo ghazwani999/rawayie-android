@@ -445,7 +445,9 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .bgt{border:3px solid transparent;border-radius:10px;cursor:pointer;padding:0;background-repeat:no-repeat;flex:none}
 .bgt.P{width:96px;height:166px;background-image:url(bg/thumbs-p2.jpg);background-size:90px auto;border-width:3px}
 .bgt.L{width:166px;height:96px;background-image:url(bg/thumbs-l2.jpg);background-size:160px auto}
-.bgt.on{border-color:var(--sacc)}
+.bgt.on{border-color:var(--sacc)}.bgt{position:relative}.bgt[data-n]::before{content:attr(data-n);position:absolute;bottom:4px;right:4px;font:700 11px "Cairo",sans-serif;color:#fff;background:rgba(0,0,0,.62);border-radius:6px;padding:0 6px;line-height:17px}
+.bgt.on{box-shadow:0 0 0 3px var(--sacc)}.bgt.on::before{background:var(--sacc);color:#1b1406}.bgt.flash{animation:bgflash .6s ease-in-out 4}@keyframes bgflash{50%{transform:scale(1.08);box-shadow:0 0 0 6px var(--sacc)}}
+.bgcur{display:flex;gap:14px;align-items:center;padding:12px;margin-bottom:12px;border:1px solid var(--sacc);border-radius:14px;background:rgba(231,182,91,.08)}.bgcur .bgt.cur{cursor:default;opacity:1;border-color:var(--sacc)}.bgci{display:flex;flex-direction:column;gap:4px;min-width:0}.bgci small{opacity:.75;word-break:break-all}.bgno{color:var(--sacc);font-size:1.25em}
 .sw{display:flex;gap:10px;flex-wrap:wrap;padding:6px 0}
 .sw button{width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer}
 .sw button.on{border-color:#fff;box-shadow:0 0 0 2px var(--son)}
@@ -815,15 +817,15 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610212318"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610212318"></script>
-<script charset="utf-8" src="data.js?v=2610212318"></script>
-<script charset="utf-8" src="i18n.js?v=2610212318"></script>
-<script charset="utf-8" src="version.js?v=2610212318"></script>
-<script charset="utf-8" src="app.js?v=2610212318"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610212318"></script>
-<script charset="utf-8" src="lic-key.js?v=2610212318"></script>
-<script charset="utf-8" src="license.js?v=2610212318"></script>
-<script charset="utf-8" src="remote.js?v=2610212318"></script>
-<script charset="utf-8" src="offline.js?v=2610212318"></script>
-<script charset="utf-8" src="settings.js?v=2610212318"></script>
+<script charset="utf-8" src="compat.js?v=2610212339"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610212339"></script>
+<script charset="utf-8" src="data.js?v=2610212339"></script>
+<script charset="utf-8" src="i18n.js?v=2610212339"></script>
+<script charset="utf-8" src="version.js?v=2610212339"></script>
+<script charset="utf-8" src="app.js?v=2610212339"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610212339"></script>
+<script charset="utf-8" src="lic-key.js?v=2610212339"></script>
+<script charset="utf-8" src="license.js?v=2610212339"></script>
+<script charset="utf-8" src="remote.js?v=2610212339"></script>
+<script charset="utf-8" src="offline.js?v=2610212339"></script>
+<script charset="utf-8" src="settings.js?v=2610212339"></script>
