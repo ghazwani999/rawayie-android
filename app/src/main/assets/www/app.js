@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.24"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.25"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1075,8 +1075,8 @@ function sleepMsg(ph){
   var k = ph.sleepKind === "sunrise" ? "sunrise" : "isha", custom = String((k === "sunrise" ? S.sleepMsgSunrise : S.sleepMsgIsha) || "").trim();
   var back = ph.wakeAt ? (fmtT(ph.wakeAt) + " " + ampm(ph.wakeAt)).replace(/\s+$/, "") : "";
   if (custom) return custom.replace(/\{العودة\}/g, back);
-  return (k === "sunrise" ? "الإخفاء الحالي: ضحى: من بعد الشروق بـ" + num(S.hideSunrise) + " دقيقة حتى قبل الظهر بـ" + num(S.wakeDhuhr) + " دقيقة"
-    : "الإخفاء الحالي: ليلاً: من بعد العشاء بـ" + num(S.hideIsha) + " دقيقة حتى قبل الفجر بـ" + num(S.wakeFajr) + " دقيقة") + (back ? "\nتعود الشاشة الساعة " + back : "");
+  return (k === "sunrise" ? "الإخفاء الحالي: ضحى، من بعد الشروق بـ " + num(S.hideSunrise) + " دقيقة حتى قبل الظهر بـ " + num(S.wakeDhuhr) + " دقيقة"
+    : "الإخفاء الحالي: ليلاً، من بعد العشاء بـ " + num(S.hideIsha) + " دقيقة حتى قبل الفجر بـ " + num(S.wakeFajr) + " دقيقة") + (back ? "\nتعود الشاشة الساعة " + back : "");
 }
 /* تبديل صنف يعمل مع عناصر SVG في المتصفحات القديمة التي لا تدعم classList عليها */
 function tcls(el, c, on){ if (!el) return; var cur = " " + (el.getAttribute("class") || "") + " ", has = cur.indexOf(" " + c + " ") >= 0;
