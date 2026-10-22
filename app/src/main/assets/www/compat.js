@@ -139,10 +139,12 @@ W.isFS = function(){ var d = D;
 var NOSLEEP = "data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAMsEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEnTbuMU6uEHFO7a1OsggMW7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjEuMS4xMDBXQYxMYXZmNjEuMS4xMDBEiYhAp3AAAAAAABZUrmvMrgEAAAAAAABD14EBc8WIPMJbl1jILaScgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QL68IA4JSwgRC6gRCagQJVsIhVt4ECVbiBAhJUw2f6c3OfY8CAZ8iZRaOHRU5DT0RFUkSHjExhdmY2MS4xLjEwMHNz1WPAi2PFiDzCW5dYyC2kZ8igRaOHRU5DT0RFUkSHk0xhdmM2MS4zLjEwMCBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAzLjAwMDAwMDAwMAAfQ7Z1QWrngQCjo4EAAIAQAgCdASoQABAAAEcIhYWIhYSIAgIADA1gAP7/q1CAo5WBAMgAsQEAARAQABgAGFgv9AAIAACjlYEBkACxAQABEBAAGAAYWC/0AAgAAKOVgQJYALEBAAEQEAAYABhYL/QACAAAo5WBAyAAsQEAARAQABgAGFgv9AAIAACjlYED6ACxAQABEBAAGAAYWC/0AAgAAKOVgQSwALEBAAEQEAAYABhYL/QACAAAo5WBBXgAsQEAARAQFGAAYWC/0AAgAACjlYEGQACxAQABEBAAGAAYWC/0AAgAAKOVgQcIALEBAAEQEAAYABhYL/QACAAAo5WBB9AAsQEAARAQABgAGFgv9AAIAACjlYEImACxAQABEBAAGAAYWC/0AAgAAKOVgQlgALEBAAEQEAAYABhYL/QACAAAo5WBCigAsQEAARAQABgAGFgv9AAIAACjlYEK8ACxAQABEBAAGAAYWC/0AAgAABxTu2uRu4+zgQC3iveBAfGCAabwgQM=";
 var AW = W.STAY_AWAKE = {method:"", lock:null, video:null};
 function videoAwake(){
+  // تطبيق أندرويد يبقي الشاشة تعمل من النظام نفسه: لا حاجة للفيديو (كان يجعل محتوى الشاشة يُرسم كطبقة منفصلة فيقل وضوحه في بعض الأجهزة)
+  if (W.RawayieAndroid) return;
   try {
     var v = AW.video;
     if (!v) { v = AW.video = D.createElement("video"); v.setAttribute("muted", ""); v.muted = true; v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", ""); v.loop = true;
-      v.setAttribute("aria-hidden", "true"); v.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1";
+      v.setAttribute("aria-hidden", "true"); v.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:2147483647";
       v.src = NOSLEEP; (D.body || H).appendChild(v); }
     var p = v.play(); if (p && p.then) p.then(function(){ if (AW.method !== "wakelock") AW.method = "video"; }, function(){ if (!AW.method) AW.method = "pending"; });
     else if (AW.method !== "wakelock") AW.method = "video";
