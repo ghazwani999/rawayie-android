@@ -1,0 +1,58 @@
+# بناء ملف APK لتطبيق MyMeds عند كل رفع لفرع mymeds، أو يدوياً من تبويب Actions
+name: Build MyMeds APK
+
+on:
+  push:
+    branches: [ mymeds ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        run: |
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          if [ -z "$SDK" ] || [ ! -d "$SDK" ]; then
+            SDK="$HOME/android-sdk"; mkdir -p "$SDK/cmdline-tools"
+            curl -sSL -o /tmp/ct.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q /tmp/ct.zip -d "$SDK/cmdline-tools" && mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"; echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          SM="$SDK/cmdline-tools/latest/bin/sdkmanager"; [ -x "$SM" ] || SM="$(ls -d $SDK/cmdline-tools/*/bin/sdkmanager | head -1)"
+          yes | "$SM" --licenses > /dev/null || true
+          "$SM" "platforms;android-35" "build-tools;35.0.0" "platform-tools" > /dev/null
+          echo "sdk.dir=$SDK" > local.properties
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleRelease
+          cp app/build/outputs/apk/release/*.apk MyMeds.apk
+          ls -la MyMeds.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyMeds-apk
+          path: MyMeds.apk
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mymeds-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" MyMeds.apk \
+            --target "$GITHUB_SHA" \
+            --title "MyMeds - بناء ${GITHUB_RUN_NUMBER}" \
+            --notes "تطبيق جدول الأدوية MyMeds لأجهزة أندرويد 5 فما فوق. نزّل ملف MyMeds.apk من الأسفل." \
+            --latest=false
