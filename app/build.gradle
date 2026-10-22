@@ -14,8 +14,8 @@ android {
         applicationId 'sa.rawayie.azan'
         minSdk 21
         targetSdk 35
-        versionCode 297
-        versionName '2.6.18'
+        versionCode 298
+        versionName '2.6.19'
     }
 
     signingConfigs {

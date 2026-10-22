@@ -29,7 +29,7 @@ if (+S.remote.poll === 60 && !S.remote.pollSet) { S.remote.poll = 30; S.remote.p
 (function(){ try {
   var q = new URLSearchParams(location.search), sv = q.get("server"), cd = q.get("code");
   // الرابط الجديد يحمل «مفتاح ربط» (pair) بدل رمز الشاشة، فيُستبدل بالرمز داخلياً ولا يظهر في أي رابط
-  if (sv && cd) { var pr = q.get("pair") || ""; if (pr || S.remote.code !== cd || S.remote.server !== sv) S.remote.key = "";
+  if (sv && cd) { var pr = q.get("pair") || ""; if (S.remote.code !== cd || S.remote.server !== sv) { S.remote.rev = 0; S.remote.media = {}; } if (pr || S.remote.code !== cd || S.remote.server !== sv) S.remote.key = "";
     S.remote.on = true; S.remote.server = sv; S.remote.code = cd; S.remote.pair = pr; S.remote.key = q.get("token") || S.remote.key || ""; A.save();
     if (history.replaceState) history.replaceState(null, "", location.pathname); }
 } catch(e){} })();
@@ -76,20 +76,45 @@ function exportCfg(){
   var c = JSON.parse(JSON.stringify(S));
   LOCAL_ONLY.forEach(function(k){ delete c[k]; });
   if (c.sup) delete c.sup.pass;
+  if (c.look) delete c.look.bgKey;
+  return c;
+}
+// ما بقي محلياً بعد رفع الوسائط (لم يُرفع) لا يُرسل في الحقول الرئيسية
+function stripLocal(c){
   var url = function(v){ return /^(https?:)?\/\//.test(String(v || "")); };
-  if (c.look) { if (!url(c.look.customBg)) delete c.look.customBg; if (!url(c.look.logoId)) delete c.look.logoId; if (!url(c.look.wmImg)) delete c.look.wmImg; delete c.look.bgKey; }
+  if (c.look) { if (!url(c.look.customBg)) delete c.look.customBg; if (!url(c.look.logoId)) delete c.look.logoId; if (!url(c.look.wmImg)) delete c.look.wmImg; }
   if (c.snd) { if (!url(c.snd.azanId)) delete c.snd.azanId; if (!url(c.snd.iqamaId)) delete c.snd.iqamaId; }
   return c;
+}
+/* الوسائط المحفوظة في الجهاز (صورة الخلفية والشعار والعلامة المائية والشرائح وصوت الأذان والإقامة):
+   تُرفع للموقع مرة واحدة، فتنتقل إعدادات الشاشة كما هي إلى الجهاز الثاني المرتبط بنفس الشاشة */
+var MID = /^m[0-9a-z]{6,16}$/;
+function walk(o, fn){ if (!o || typeof o !== "object") return;
+  for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) { var v = o[k]; if (typeof v === "string") { var n = fn(v); if (n !== v) o[k] = n; } else walk(v, fn); } }
+function mediaMap(){ if (!S.remote.media || typeof S.remote.media !== "object") S.remote.media = {}; return S.remote.media; }
+function uploadMedia(c){
+  if (!isWP(base()) || !S.remote.key) return Promise.resolve(c);
+  var map = mediaMap(), ids = [];
+  walk(c, function(v){ if (MID.test(v) && !map[v] && ids.indexOf(v) < 0) ids.push(v); return v; });
+  var chain = Promise.resolve();
+  ids.forEach(function(id){ chain = chain.then(function(){ return A.IDB.get(id).then(function(b){ if (!b || !b.size) return;
+    var u = base() + "/screens/" + encodeURIComponent(S.remote.code) + "/media?auth=" + encodeURIComponent(S.remote.key) + "&dev=" + encodeURIComponent(devId()) + "&id=" + encodeURIComponent(id);
+    return fetch(u, {method:"POST", cache:"no-store", headers:{"Content-Type":b.type || "application/octet-stream"}, body:b})
+      .then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ if (j && j.url) { map[id] = j.url; origSave(); } }); }).catch(function(){}); }); });
+  return chain.then(function(){ walk(c, function(v){ return MID.test(v) && map[v] ? map[v] : v; }); return c; });
 }
 function applyCfg(cfg){
   var keep = {pass:S.pass, remote:S.remote, lookV:S.lookV, supPass:(S.sup || {}).pass,
     customBg:S.look.customBg, logoId:S.look.logoId, wmImg:S.look.wmImg, azanId:S.snd.azanId, iqamaId:S.snd.iqamaId};
   var c = JSON.parse(JSON.stringify(cfg)); delete c.rev; delete c.by;
+  // الجهاز الذي رفع الوسائط يبقى يستخدم نسخته المحلية، والجهاز الآخر يأخذها من الموقع
+  var map = mediaMap(), back = {}; for (var mk in map) if (Object.prototype.hasOwnProperty.call(map, mk)) back[map[mk]] = mk;
+  walk(c, function(v){ return back[v] || v; });
   state.applying = true;
   A.setAll(c);
   S.pass = keep.pass; S.remote = keep.remote; S.lookV = keep.lookV; S.sup = S.sup || {}; S.sup.pass = keep.supPass || "";
   // الوسائط القادمة من الخادم (روابط) لها الأولوية، وإلا تبقى الوسائط المحلية
-  var L = cfg.look || {}, N = cfg.snd || {};
+  var L = c.look || {}, N = c.snd || {};
   var loc = function(v){ return v && !/^(https?:)?\/\//.test(String(v)) ? v : ""; };
   S.look.customBg = L.customBg || loc(keep.customBg); S.look.logoId = L.logoId || loc(keep.logoId); S.look.wmImg = L.wmImg || loc(keep.wmImg);
   S.snd.azanId = N.azanId || loc(keep.azanId); S.snd.iqamaId = N.iqamaId || loc(keep.iqamaId);
@@ -104,9 +129,10 @@ function push(){
   if (!S.remote.on || !base()) return Promise.resolve();
   // إذا عدّل المدير الإعدادات بعد آخر مزامنة، تُعتمد نسخة المدير ولا تُستبدل
   return req("GET", "/config").then(function(cur){
-    if (cur && cur.by === "admin" && (cur.rev || 0) !== (S.remote.rev || 0)) { applyCfg(cur); ok(); return; }
-    var c = exportCfg(); c.rev = Math.max(Date.now(), (cur && cur.rev || 0) + 1); c.by = "screen";
-    return req("PUT", "/config", c).then(function(res){ S.remote.rev = (res && res.rev) || c.rev; origSave(); ok(); }); // الخادم يرقّم بساعته
+    // جهاز جديد على شاشة لها إعدادات (الجهاز الثاني بنفس الكود): يأخذ إعدادات الشاشة كما هي ولا يستبدلها بإعداداته
+    if (cur && (cur.rev || 0) !== (S.remote.rev || 0) && (cur.by === "admin" || !S.remote.rev)) { applyCfg(cur); ok(); return; }
+    return uploadMedia(exportCfg()).then(function(c){ stripLocal(c); c.rev = Math.max(Date.now(), (cur && cur.rev || 0) + 1); c.by = "screen";
+      return req("PUT", "/config", c).then(function(res){ S.remote.rev = (res && res.rev) || c.rev; origSave(); ok(); }); }); // الخادم يرقّم بساعته
   }).catch(fail);
 }
 function schedulePush(){ if (!S.remote.on || state.applying || !S.remote.allowLocal) return; clearTimeout(state.pushT); state.pushT = setTimeout(push, 1500); }
@@ -197,7 +223,7 @@ function activate(site, act, legacy){
       function(){ if (i + 1 < urls.length) return tryAt(i + 1); throw new Error("تعذر الوصول للموقع. تأكد من العنوان والإنترنت"); });
   };
   return tryAt(0).then(function(j){
-    S.remote.on = true; S.remote.server = j.server; S.remote.code = j.code; S.remote.key = j.token || ""; S.remote.rev = 0; S.remote.site = urls[0].replace(/\/wp-json\/.*$/, "");
+    if (S.remote.code !== j.code) S.remote.media = {}; S.remote.on = true; S.remote.server = j.server; S.remote.code = j.code; S.remote.key = j.token || ""; S.remote.rev = 0; S.remote.site = urls[0].replace(/\/wp-json\/.*$/, "");
     if (j.name && (!S.mosque || S.mosque === A.DEF.mosque)) S.mosque = j.name;
     origSave(); start();
     try { if (window.LICENSE && window.LICENSE.check) window.LICENSE.check(); } catch(e){}
