@@ -192,22 +192,36 @@ function render(){
     if (!ov) {
       ovKey = key;
       ov = document.createElement("div"); ov.className = "licov";
-      ov.innerHTML = '<div class="licbox"><img class="liclogo" src="img/mark.png" alt="">' +
+      var oldOnly = st.oldCode && !site;
+      ov.innerHTML = '<div class="licbox"><div class="licinfo"><img class="liclogo" src="img/mark.png" alt="">' +
         '<div class="lict">' + esc(s.msg || (s.linked ? "هذه الشاشة غير مفعّلة" : "هذه الشاشة غير مرتبطة بموقع الإدارة")) + '</div>' +
-        '<div class="licm">' + (st.oldCode && !site ? "هذه الشاشة كانت مفعّلة سابقاً: اكتب عنوان موقع الإدارة واضغط «تفعيل» بدون كود" : "يرجى التواصل لتفعيل تطبيق روائع الأذان، ثم اكتب كود التفعيل (6 أرقام) الذي يصلك من الإدارة") + '</div>' +
+        '<div class="licm">' + (oldOnly ? "هذه الشاشة كانت مفعّلة سابقاً: اكتب عنوان موقع الإدارة واضغط «تفعيل» بدون كود" : "تواصل معنا لتفعيل تطبيق روائع الأذان، ثم أدخل كود التفعيل (6 أرقام) الذي يصلك") + '</div>' +
         '<a class="licwa" href="https://wa.me/' + WA_INTL + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +
-        '<div class="licid">رقم الجهاز: <b dir="ltr">' + esc(s.idText) + '</b><small>أرسل رقم الجهاز مع طلب التفعيل</small></div>' +
-        '<form class="licf">' + (site ? "" : '<input class="licsite" type="url" dir="ltr" autocomplete="url" placeholder="عنوان موقع الإدارة" aria-label="عنوان موقع الإدارة">') +
-        '<input class="liccode" inputmode="none" autocomplete="off" maxlength="6" placeholder="كود التفعيل" aria-label="كود التفعيل"><button type="submit">تفعيل</button></form>' +
-        '<div class="licnum">' + ["1","2","3","4","5","6","7","8","9","del","0"].map(function(k){ return '<button type="button" data-k="' + k + '">' + (k === "del" ? "⌫" : k) + '</button>'; }).join("") + '</div>' +
-        '<div class="licerr" hidden></div></div>';
+        '<div class="licid"><span>رقم الجهاز</span><b dir="ltr">' + esc(s.idText) + '</b><small>أرسله مع طلب التفعيل</small></div></div>' +
+        '<form class="licf" autocomplete="off">' + (site ? "" : '<input class="licsite" type="url" dir="ltr" autocomplete="url" placeholder="عنوان موقع الإدارة" aria-label="عنوان موقع الإدارة">') +
+        '<div class="licdl">كود التفعيل</div>' +
+        '<div class="licdig" dir="ltr">' + [0,1,2,3,4,5].map(function(){ return "<span></span>"; }).join("") +
+        '<input class="liccode" inputmode="none" autocomplete="off" maxlength="6" aria-label="كود التفعيل"></div>' +
+        '<div class="licnum">' + ["1","2","3","4","5","6","7","8","9","del","0","clr"].map(function(k){ return '<button type="button" data-k="' + k + '"' + (k === "del" || k === "clr" ? ' class="fn"' : "") + '>' + (k === "del" ? "⌫" : k === "clr" ? "مسح" : k) + '</button>'; }).join("") + '</div>' +
+        '<button type="submit" class="licgo">تفعيل الشاشة</button><div class="licerr" hidden></div></form></div>';
       sg.appendChild(ov);
-      var inp = ov.querySelector(".liccode"), er = ov.querySelector(".licerr");
-      ov.querySelector(".licnum").addEventListener("click", function(e){ var b = e.target.closest ? e.target.closest("[data-k]") : null; if (!b) return; var d = inp.value.replace(/\D/g, "");
-        d = b.getAttribute("data-k") === "del" ? d.slice(0, -1) : (d + b.getAttribute("data-k")).slice(0, 6); inp.value = d; });
-      ov.querySelector("form").addEventListener("submit", function(e){ e.preventDefault();
+      var inp = ov.querySelector(".liccode"), er = ov.querySelector(".licerr"), cells = ov.querySelectorAll(".licdig span"), frm = ov.querySelector("form");
+      // خانات الكود الست: كل رقم في خانة، والخانة التالية مميزة
+      var upd = function(){ var d = inp.value.replace(/\D/g, "").slice(0, 6); if (inp.value !== d) inp.value = d;
+        for (var i = 0; i < cells.length; i++) { cells[i].textContent = d.charAt(i); cells[i].className = (i < d.length ? "f" : "") + (i === Math.min(d.length, 5) ? " cur" : ""); }
+        ov.querySelector(".licgo").className = "licgo" + (d.length === 6 || (oldOnly && !d) ? " ready" : ""); };
+      var put = function(k){ var d = inp.value.replace(/\D/g, ""); d = k === "del" ? d.slice(0, -1) : k === "clr" ? "" : (d + k).slice(0, 6); inp.value = d; er.hidden = true; upd(); };
+      ov.querySelector(".licnum").addEventListener("click", function(e){ var b = e.target.closest ? e.target.closest("[data-k]") : null; if (b) put(b.getAttribute("data-k")); });
+      ov.querySelector(".licdig").addEventListener("click", function(){ try { inp.focus(); } catch (e2) {} });
+      inp.addEventListener("input", upd);
+      // أرقام لوحة المفاتيح أو الريموت تُكتب في الكود مباشرة، وEnter للتفعيل
+      ov.addEventListener("keydown", function(e){ var t = e.target; if (t && t.className === "licsite") return; var k = e.key || "";
+        if (/^[0-9]$/.test(k) && t !== inp) { e.preventDefault(); put(k); }
+        else if (k === "Backspace" && t !== inp) { e.preventDefault(); put("del"); } });
+      upd();
+      frm.addEventListener("submit", function(e){ e.preventDefault();
         var R = window.REMOTE, si = ov.querySelector(".licsite"), st0 = siteKnown() || (si ? si.value : "");
-        var show = function(t, bad){ er.hidden = false; er.textContent = t; er.style.color = bad ? "" : "#9be29b"; };
+        var show = function(t, bad){ er.hidden = false; er.textContent = t; er.className = "licerr" + (bad ? "" : " ok"); };
         if (!R || !R.activate) return show("تعذر الربط في هذه النسخة", true);
         if (!inp.value && st.oldCode && st0) { show("جارٍ التفعيل..."); migrate(st0).then(function(ok){ if (ok) { show("تمت إضافة الشاشة إلى لوحة الإدارة"); refresh(); } else show("تعذر التحقق من التفعيل السابق. تواصل مع الإدارة", true); }); return; }
         if (inp.value.replace(/\D/g, "").length !== 6) return show("كود التفعيل 6 أرقام", true);
@@ -216,6 +230,7 @@ function render(){
           .then(function(ok){ if (ok) { show("تم تفعيل الشاشة، شكراً لكم"); refresh(); } else show(status().msg || "تم الربط، لكن الشاشة غير مفعّلة بعد من الإدارة", true); },
             function(err){ show(err && err.message || String(err), true); });
       });
+      setTimeout(function(){ try { var f0 = ov && ov.querySelector(".licnum button"); if (f0 && !(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) f0.focus(); } catch (e3) {} }, 400);
     }
   } else if (ov) { ov.parentNode.removeChild(ov); ov = null; }
 }
