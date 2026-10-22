@@ -238,7 +238,7 @@ R.hide = function(){
     tog("تفعيل إخفاء الشاشة أثناء الصلاة", "hidePrayer") +
     '<div class="grid2">' + ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return numIn("مدة صلاة " + PN[k], "pd." + k, 3, 40, 1, "دقيقة"); }).join("") + '</div>' +
     '<h4 class="subh">خلفية شاشة الإخفاء</h4>' + bgSpecUI({style:"blackStyle", color:"blackColor", light:"blackLight", img:"blackImg"}, false) +
-    '<div class="row-end">' + btn("معاينة شاشة الإخفاء 10 ثوانٍ", "blkPrev", "ghost") + '</div>' + tog("إظهار الوقت على الشاشة السوداء", "blackTime") + tog("إظهار التاريخ على الشاشة السوداء", "blackDate") +
+    '<div class="row-end">' + btn("معاينة شاشة الإخفاء 10 ثوانٍ", "blkPrev", "ghost") + '</div>' + tog("إظهار الوقت على الشاشة السوداء", "blackTime") + tog("إظهار التاريخ على الشاشة السوداء", "blackDate") + rangeIn("حجم النصوص في شاشة الإخفاء", "blackSize", 0.5, 2.2, 0.05, "%", "الوقت والتاريخ وعبارة «الصلاة قائمة»") +
     "") +
   card("إخفاء الشاشة في أوقات الفراغ (وضع السكون)",
     tog("إخفاء الشاشة بعد العشاء", "sleepIsha", "تختفي الشاشة ليلاً وتعود وحدها قبل أذان الفجر") +

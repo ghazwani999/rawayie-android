@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.14"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.15"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -12,7 +12,7 @@ var DEF = {
   adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, shift:0, summer:false, ramadan30:false, hijriAdj:0,
   iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
-  hidePrayer:true, blackTime:true, blackDate:false, hideSunrise:20, hideIsha:30, wakeBefore:20,
+  hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
   sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
@@ -928,7 +928,11 @@ function overlay(now, ph){
   // إضاءة خافتة للشاشة السوداء حتى لا يزعج الضوء المصلين
   if (ph.mode === "black") {
     var sty = blackBg(ph), lv = sty.lv; sty = sty.css;
-    if (ovEl.dataset.bl !== sty) { ovEl.dataset.bl = sty; ovEl.style.background = sty; ovEl.style.setProperty("--blk", String(.16 + lv)); }
+    if (ovEl.dataset.bl !== sty) { ovEl.dataset.bl = sty; ovEl.style.background = sty; ovEl.style.setProperty("--blk", String(.16 + lv));
+      // لون نصوص شاشة الإخفاء معتم (رمادي) بدل الشفاف: الشفافية تُظهر تداخل حروف الخط العربي كتشوهات
+      var bv = Math.round(255 * Math.min(.82, .36 + lv)), dv = Math.round(bv * .86);
+      ovEl.style.setProperty("--blkc", "rgb(" + bv + "," + bv + "," + bv + ")"); ovEl.style.setProperty("--blkd", "rgb(" + dv + "," + dv + "," + dv + ")"); }
+    ovEl.style.setProperty("--blks", String(Math.max(.5, Math.min(2.2, +S.blackSize || 1))));
   } else if (ovEl.dataset.bl) { ovEl.dataset.bl = ""; ovEl.style.background = ""; }
   // الساعة كاملة أعلى الشاشات الكاملة
   if (!ph.mode || ph.mode === "black") return;
@@ -952,8 +956,8 @@ function overlayInner(now, ph){
         (S.blackTime ? '<div class="o-clock"></div>' : "") + (S.blackDate ? '<div class="o-date"></div>' : "") +
         (ph.sleep ? "" : '<div class="o-sub">' + esc(t("prayer_is_currently_being_performed")) + '</div>') + (ph.sleep ? "" : ver)) +
         (smsg ? '<div class="o-sleepmsg">' + esc(smsg).replace(/\n/g, "<br>") + '</div>' : ""); }
-    var c = $(".o-clock", ovEl); if (c) digits(c, fmtT(now, S.look.seconds, 1));
-    var d = $(".o-date", ovEl); if (d) d.textContent = dayName(z.Y, z.M, z.D) + " · " + hijriText(z.Y, z.M, z.D);
+    var c = $(".o-clock", ovEl); if (c) { digits(c, fmtT(now, S.look.seconds, 1)); if (c.scrollWidth > c.clientWidth + 1 || c.style.fontSize) fitText(c, .4); }
+    var d = $(".o-date", ovEl); if (d) { var dt = dayName(z.Y, z.M, z.D) + " · " + hijriText(z.Y, z.M, z.D); if (d.textContent !== dt) d.textContent = dt; if (d.scrollWidth > d.clientWidth + 1) fitText(d, .5); }
     return;
   }
   if (m.indexOf("zk-") === 0) {

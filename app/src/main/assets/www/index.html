@@ -262,6 +262,13 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .o-clock{font-size:130px;direction:ltr;line-height:1}
 .o-clock.sm{font-size:56px;color:var(--fg2)}
 #ov.black .o-clock.sleepclk{font-size:90px;color:rgba(255,255,255,.12)}
+/* شاشة الإخفاء: خط أكبر، ولون معتم بدون ظل حتى لا تتشوه الحروف */
+#ov.black,#ov.black *{text-shadow:none!important}
+#ov.black .o-clock,#ov.black .o-date{white-space:nowrap;max-width:100%}#ov.black .o-clock{color:var(--blkc,#5c5c5c);font-size:calc(230px*var(--blks,1));font-weight:700;letter-spacing:2px}
+#ov.black .o-date{color:var(--blkd,#4f4f4f);font-size:calc(58px*var(--blks,1));margin-top:18px}
+#ov.black .o-sub{color:var(--blkc,#5c5c5c);font-size:calc(92px*var(--blks,1));margin-top:26px}
+.L #ov.black .o-clock{font-size:calc(210px*var(--blks,1))}
+#ov.black .o-clock.sleepclk{font-size:calc(150px*var(--blks,1));color:var(--blkd,#3a3a3a)}
 /* رسالة شاشة السكون: خافتة وتتحرك ببطء لحماية الشاشة من ثبات الصورة */
 .o-sleepmsg{font-size:40px;line-height:1.7;max-width:86%;color:rgba(255,255,255,.32);white-space:normal;animation:sdrift 240s ease-in-out infinite alternate}
 .L .o-sleepmsg{font-size:34px}
@@ -316,7 +323,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 /* آخر دقيقة: عداد كبير على شاشة سوداء */
 #ov.lastblk{background:#000!important;padding:60px!important;gap:30px}
 #ov.lastblk .o-top{display:none}
-#ov.lastblk .o-sub{font-size:56px;color:rgba(255,255,255,.55)}
+#ov.lastblk .o-sub{font-size:56px;color:#8c8c8c;text-shadow:none}
 #ov.lastblk .o-cnt.huge{font-size:420px;line-height:1;color:#fff}
 .L #ov.lastblk .o-cnt.huge{font-size:380px}
 #ov.lastblk .o-msg{font-size:44px;color:rgba(255,217,160,.8)}
@@ -820,15 +827,15 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610220039"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610220039"></script>
-<script charset="utf-8" src="data.js?v=2610220039"></script>
-<script charset="utf-8" src="i18n.js?v=2610220039"></script>
-<script charset="utf-8" src="version.js?v=2610220039"></script>
-<script charset="utf-8" src="app.js?v=2610220039"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610220039"></script>
-<script charset="utf-8" src="lic-key.js?v=2610220039"></script>
-<script charset="utf-8" src="license.js?v=2610220039"></script>
-<script charset="utf-8" src="remote.js?v=2610220039"></script>
-<script charset="utf-8" src="offline.js?v=2610220039"></script>
-<script charset="utf-8" src="settings.js?v=2610220039"></script>
+<script charset="utf-8" src="compat.js?v=2610221200"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610221200"></script>
+<script charset="utf-8" src="data.js?v=2610221200"></script>
+<script charset="utf-8" src="i18n.js?v=2610221200"></script>
+<script charset="utf-8" src="version.js?v=2610221200"></script>
+<script charset="utf-8" src="app.js?v=2610221200"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610221200"></script>
+<script charset="utf-8" src="lic-key.js?v=2610221200"></script>
+<script charset="utf-8" src="license.js?v=2610221200"></script>
+<script charset="utf-8" src="remote.js?v=2610221200"></script>
+<script charset="utf-8" src="offline.js?v=2610221200"></script>
+<script charset="utf-8" src="settings.js?v=2610221200"></script>
