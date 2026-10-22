@@ -1103,7 +1103,9 @@ R.remote = function(){
     '<div class="code"><small>رمز هذه الشاشة</small><b dir="ltr">' + esc(r.code) + '</b><span>أضف هذا الرمز في لوحة المدير العام</span></div>' +
     tog("تفعيل الإدارة عن بعد", "remote.on") +
     txt("رابط قاعدة البيانات", "remote.server", "مثال: https://اسم-المشروع-default-rtdb.firebaseio.com") +
-    '<label class="fld" for="rkey"><span><b>مفتاح الوصول</b><small>اختياري، حسب إعدادات الحماية في قاعدة البيانات</small></span><input type="password" id="rkey" data-p="remote.key" data-t="str" value="' + esc(r.key) + '" autocomplete="off"></label>' +
+    // رمز الشاشة المرتبطة بموقع ووردبريس محجوب: لا يُعرض ولا يُنسخ
+    (/\/wp-json\/|[?&]rest_route=/.test(r.server || "") ? '<div class="fld"><span><b>رمز الشاشة</b><small>' + (r.key ? "محجوب ومحفوظ داخل هذا الجهاز فقط" : r.pair ? "جارٍ الربط من الرابط..." : "غير مرتبطة بعد") + '</small></span><span dir="ltr">' + (r.key ? "••••••••" : "") + '</span></div>' :
+    '<label class="fld" for="rkey"><span><b>مفتاح الوصول</b><small>اختياري، حسب إعدادات الحماية في قاعدة البيانات</small></span><input type="password" id="rkey" data-p="remote.key" data-t="str" value="' + esc(r.key) + '" autocomplete="off"></label>') +
     numIn("التحقق من التحديثات كل", "remote.poll", 15, 600, 15, "ثانية") +
     tog("إرسال التعديلات المحلية إلى اللوحة", "remote.allowLocal", "عند إيقافه تبقى اللوحة هي المصدر الوحيد، وتُستبدل أي تعديلات محلية عند التحديث التالي") +
     '<div class="fld"><span><b>الحالة</b><small>' + esc(msg) + '</small></span><span class="nb">' + btn("مزامنة الآن", "rSync", "sm ghost") + btn("رفع إعدادات الشاشة", "rPush", "sm ghost") + '</span></div>',
@@ -1391,7 +1393,7 @@ function saveAll(){
 function mediaIds(){ var ids = {}; (function walk(o){ if (!o || typeof o !== "object") return; for (var k in o) { var v = o[k]; if (typeof v === "string" && /^m[0-9a-z]{8,16}$/.test(v)) ids[v] = 1; else walk(v); } })(S); return Object.keys(ids); }
 function blobToData(b){ return new Promise(function(res){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ res(""); }; r.readAsDataURL(b); }); }
 function saveFile(){
-  var c = JSON.parse(JSON.stringify(S)); delete c.pass; if (c.sup) delete c.sup.pass; if (c.remote) delete c.remote.key;
+  var c = JSON.parse(JSON.stringify(S)); delete c.pass; if (c.sup) delete c.sup.pass; if (c.remote) { delete c.remote.key; delete c.remote.pair; }
   c._file = "rawayie-settings"; c._media = {};
   toast("جارٍ تجهيز الملف...");
   Promise.all(mediaIds().map(function(id){ return A.IDB.get(id).then(function(b){ return b ? blobToData(b).then(function(d){ if (d) c._media[id] = d; }) : null; }).catch(function(){}); })).then(function(){
@@ -1570,7 +1572,7 @@ function onClick(e){
     case "permAll": S.sup.sections = SECTIONS.filter(function(s){ return !ADMIN_ONLY[s[0]] && !PERM_OF[s[0]]; }).map(function(s){ return s[0]; }); A.save(); render(); break;
     case "permNone": S.sup.sections = []; A.save(); render(); break;
     case "permContent": S.sup.sections = ["news","texts","slides","boards","adhkar"]; A.save(); render(); break;
-    case "bkOut": var c = JSON.parse(JSON.stringify(S)); delete c.pass; if (c.sup) delete c.sup.pass; if (c.remote) delete c.remote.key; $("#bk").value = JSON.stringify(c); break;
+    case "bkOut": var c = JSON.parse(JSON.stringify(S)); delete c.pass; if (c.sup) delete c.sup.pass; if (c.remote) { delete c.remote.key; delete c.remote.pair; } $("#bk").value = JSON.stringify(c); break;
     case "bkCopy": var ta = $("#bk"); if (!ta.value) { var c2 = JSON.parse(JSON.stringify(S)); delete c2.pass; if (c2.sup) delete c2.sup.pass; ta.value = JSON.stringify(c2); }
       try { navigator.clipboard.writeText(ta.value).then(function(){ toast("تم النسخ"); }, function(){ ta.select(); toast("حدد النص وانسخه"); }); } catch(err){ ta.select(); } break;
     case "bkIn": try { var obj = JSON.parse($("#bk").value); obj.pass = S.pass; obj.sup = obj.sup || {}; obj.sup.pass = S.sup.pass; A.setAll(obj); render(); toast("تم الاستيراد"); } catch(err){ toast("النص غير صالح، تأكد من نسخه كاملاً"); } break;

@@ -28,7 +28,9 @@ if (+S.remote.poll === 60 && !S.remote.pollSet) { S.remote.poll = 30; S.remote.p
 // الربط التلقائي من رابط التشغيل: index.html?server=...&code=...&token=...
 (function(){ try {
   var q = new URLSearchParams(location.search), sv = q.get("server"), cd = q.get("code");
-  if (sv && cd) { S.remote.on = true; S.remote.server = sv; S.remote.code = cd; S.remote.key = q.get("token") || S.remote.key || ""; A.save();
+  // الرابط الجديد يحمل «مفتاح ربط» (pair) بدل رمز الشاشة، فيُستبدل بالرمز داخلياً ولا يظهر في أي رابط
+  if (sv && cd) { var pr = q.get("pair") || ""; if (pr || S.remote.code !== cd || S.remote.server !== sv) S.remote.key = "";
+    S.remote.on = true; S.remote.server = sv; S.remote.code = cd; S.remote.pair = pr; S.remote.key = q.get("token") || S.remote.key || ""; A.save();
     if (history.replaceState) history.replaceState(null, "", location.pathname); }
 } catch(e){} })();
 if (!S.remote.code) { S.remote.code = "MSJ-" + Math.random().toString(36).slice(2, 8).toUpperCase(); A.save(); }
@@ -38,8 +40,23 @@ var state = {status:"off", at:0, err:"", applying:false, pushT:null, timer:null}
 
 function base(){ return String(S.remote.server || "").trim().replace(/\/+$/, ""); }
 function isWP(b){ return /\/wp-json\/|[?&]rest_route=/.test(b); }
+function devId(){ try { return window.LICENSE ? window.LICENSE.status().id || "" : ""; } catch(e){ return ""; } }
 function url(path){ var b = base(), u = b + "/screens/" + encodeURIComponent(S.remote.code) + path + (isWP(b) ? "" : ".json"); /* ووردبريس بدون .json */
-  return S.remote.key ? u + (u.indexOf("?") >= 0 ? "&" : "?") + "auth=" + encodeURIComponent(S.remote.key) : u; }
+  // رقم الجهاز مع كل طلب: الموقع يسمح لكل شاشة بجهازين فقط
+  return S.remote.key ? u + (u.indexOf("?") >= 0 ? "&" : "?") + "auth=" + encodeURIComponent(S.remote.key) + (isWP(b) ? "&dev=" + encodeURIComponent(devId()) : "") : u; }
+// تبديل مفتاح الربط من الرابط برمز الشاشة (مرة واحدة)
+var pairing = null;
+function pairNow(){
+  if (pairing) return pairing;
+  var b = base(); if (!S.remote.pair || !isWP(b)) return Promise.resolve(false);
+  pairing = fetch(b + "/screens/" + encodeURIComponent(S.remote.code) + "/pair", {method:"POST", cache:"no-store", headers:{"Content-Type":"application/json"}, body:JSON.stringify({pair:S.remote.pair, dev:devId()})})
+    .then(function(r){ return r.text().then(function(t){ var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
+      if (r.ok && j && j.token) { S.remote.key = j.token; S.remote.pair = ""; if (j.name && (!S.mosque || S.mosque === A.DEF.mosque)) S.mosque = j.name; origSave();
+        try { if (window.LICENSE && window.LICENSE.check) window.LICENSE.check(); } catch(e2){} return true; }
+      throw new Error(j && j.message || "تعذر ربط الشاشة (" + r.status + ")"); }); })
+    .then(function(v){ pairing = null; return v; }, function(e){ pairing = null; throw e; });
+  return pairing;
+}
 function req(method, path, body){
   var u = url(path), m = method;
   if (isWP(base())) {
@@ -48,7 +65,11 @@ function req(method, path, body){
     if (m === "GET") u += (u.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now(); // تجاوز الكاش
   }
   return fetch(u, {method:m, cache:"no-store", headers: body ? {"Content-Type":"application/json"} : {}, body: body ? JSON.stringify(body) : undefined})
-    .then(function(r){ if (!r.ok) throw new Error((m === "GET" ? "القراءة" : "الإرسال") + " HTTP " + r.status + (r.status === 401 ? " (رمز الشاشة غير صحيح، فعّلها بكود جديد)" : r.status === 403 || r.status === 405 ? " (منعه جدار الحماية في الاستضافة)" : "")); return r.text(); }).then(function(t){ return t ? JSON.parse(t) : null; });
+    .then(function(r){ return r.text().then(function(t){
+      if (!r.ok) { var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
+        if (j && j.code && /^rws_/.test(j.code) && j.code !== "rws_denied" && j.message) throw new Error(j.message); // رسالة الموقع (مثل حد الجهازين)
+        throw new Error((m === "GET" ? "القراءة" : "الإرسال") + " HTTP " + r.status + (r.status === 401 ? " (رمز الشاشة غير صحيح، فعّلها بكود جديد)" : r.status === 403 || r.status === 405 ? " (منعه جدار الحماية في الاستضافة)" : "")); }
+      return t ? JSON.parse(t) : null; }); });
 }
 // نسخة الإعدادات التي تُرسل: بدون كلمات السر وبدون معرفات الصور المحفوظة في الجهاز
 function exportCfg(){
@@ -139,6 +160,7 @@ function hideMsg(){ var el = document.getElementById("rmsg"); if (el) el.hidden 
 
 function start(){
   clearInterval(state.timer);
+  if (S.remote.on && base() && S.remote.pair && !S.remote.key) { state.status = "wait"; pairNow().then(function(){ start(); }, function(e){ fail(e); state.timer = setTimeout(start, 60000); }); return; }
   if (S.remote.on && base()) { poll(); state.timer = setInterval(poll, Math.max(15, +S.remote.poll || 60)*1000); }
   else state.status = "off";
 }
