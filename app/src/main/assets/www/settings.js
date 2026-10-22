@@ -953,6 +953,8 @@ R.display = function(){
     tog("عرض شاشة الإقامة قبل الشاشة السوداء", "iqNowOn", "رسالة «حان الآن موعد الإقامة» ثم تُخفى الشاشة أثناء الصلاة") +
     (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "") +
     tog("عرض الإقامة مع الساعة", "look.iqClock", "وقت إقامة الصلاة القادمة تحت الساعة") +
+    tog("الساعة أعلى شاشات الأذان والإقامة والأذكار", "look.ovClock", "الوقت الحالي أعلى الشاشة أثناء الأذان وانتظار الإقامة والأذكار") +
+    (S.look.ovClock !== false ? tog("إظهار الثواني في هذه الساعة", "look.ovSec") + rangeIn("حجم هذه الساعة", "look.ovClkSize", 0.5, 2, 0.05, "%") : "") +
     tog("شاشات شبه شفافة للأذان والإقامة والأذكار", "look.ovGlass", "تظهر الخلفية خلفها. عند الإيقاف تكون بلون ثابت") +
     tog("ساعة المنزل: إخفاء أوقات الإقامة", "look.homeClock", "للبيوت فقط. لا يناسب المساجد لأنه يخفي الإقامة عن المصلين") +
     (S.look.homeClock ? '<p class="note warn">⚠ ساعة المنزل مفعّلة: أوقات الإقامة مخفية عن المصلين.</p>' : "")) +
@@ -1356,7 +1358,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
