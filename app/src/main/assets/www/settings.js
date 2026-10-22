@@ -529,13 +529,23 @@ var VK_L = {
 };
 // الضغط المطوّل (أو تكرار زر OK في الريموت) يعرض الحروف البديلة
 var VK_ALT = {"ا":["أ","إ","آ","ٱ"],"ى":["ئ"],"ي":["ئ"],"و":["ؤ"],"ه":["ة"],".":["َ","ُ","ِ","ّ","ْ","ً","ٌ","ٍ"],"،":["؛","؟","!",":"],",":[";","?","!",":"],"e":["é","è"],"a":["à","á"]};
-function vkOn(){
+function vkOn(){ var v = vkOn0(); imeSync(v); return v; }
+function vkOn0(){
   var m = S.vkb || "auto"; if (m === "on") return true; if (m === "off") return false;
   var AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
   if (rot) return true; // الشاشة مدوّرة: لوحة النظام تظهر بالعرض فتغطيها
   if (AN) return true; // تطبيق أندرويد (تلفاز أو جوال): لوحة التطبيق والمحرر الخاص في كل الحقول ومنها البحث
   return false;
 }
+// تطبيق أندرويد: عند تفعيل لوحة التطبيق تُمنع لوحة مفاتيح النظام من الظهور معها
+var imeLast = null;
+function imeSync(v){
+  var AN = window.RawayieAndroid; if (!AN || v === imeLast) return; imeLast = v;
+  try { if (AN.setImeBlock) AN.setImeBlock(!!v); } catch(e){}
+}
+function imeHide(){ var AN = window.RawayieAndroid; try { if (AN && AN.hideKeyboard) AN.hideKeyboard(); } catch(e){} }
+setTimeout(function(){ try { vkOn(); } catch(e){} }, 0);
+document.addEventListener("change", function(){ setTimeout(function(){ try { vkOn(); } catch(e){} }, 50); }, true);
 function vkTyping(el){
   if (!el || el.disabled || el.readOnly) return false;
   if (el.tagName === "TEXTAREA") return true;
@@ -563,6 +573,7 @@ function vkOpen(t, host, docked){
   if (VK.t && VK.t !== t && VK.docked) vkCommit();
   VK.t = t; VK.docked = !!docked;
   try { t.setAttribute("inputmode", "none"); } catch(e){}
+  imeHide();
   VK.lang = t.getAttribute("dir") === "ltr" || /url|email|number|password|tel/.test(t.type) ? "en" : "ar";
   VK.mode = t.type === "number" || t.type === "tel" ? "sym" : ""; VK.shift = false;
   if (!VK.el) { VK.el = document.createElement("div"); VK.el.className = "vkwrap";

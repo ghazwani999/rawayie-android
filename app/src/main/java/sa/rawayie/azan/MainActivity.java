@@ -57,6 +57,14 @@ public class MainActivity extends Activity {
     static final int REQ_OVERLAY = 12;
 
     private WebView web;
+    private volatile boolean imeBlock = true;
+
+    private void hideIme() {
+        try {
+            android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (im != null && web != null) im.hideSoftInputFromWindow(web.getWindowToken(), 0);
+        } catch (Exception ignored) { }
+    }
     private ValueCallback<Uri[]> fileCb;
     private long lastBack = 0;
 
@@ -83,10 +91,19 @@ public class MainActivity extends Activity {
         }
         statusBar = isPhone() && getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("statusBar", true);
         if (statusBar) w.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        imeBlock = getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("imeBlock", true);
+        if (imeBlock) w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         // بعض الأجهزة يكون فيها «Android System WebView» معطلاً أو قيد التحديث: بدل أن يُغلق التطبيق تظهر رسالة وإعادة محاولة
         try {
-            web = new WebView(this);
+            web = new WebView(this) {
+                // لوحة مفاتيح التطبيق مفعّلة: لا يُسمح للوحة النظام بالظهور فوقها (التلفاز المدوّر خاصة)
+                @Override public boolean onCheckIsTextEditor() { return !imeBlock && super.onCheckIsTextEditor(); }
+                @Override public android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo o) {
+                    if (imeBlock) { hideIme(); return null; }
+                    return super.onCreateInputConnection(o);
+                }
+            };
         } catch (Throwable t) {
             web = null;
             showWebViewError();
@@ -602,6 +619,17 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public String licGet() { return getSharedPreferences("rawayie", MODE_PRIVATE).getString("lic", ""); }
         @JavascriptInterface public void licSet(String v) { getSharedPreferences("rawayie", MODE_PRIVATE).edit().putString("lic", v).apply(); }
+        // الصفحة تخبر التطبيق هل لوحة مفاتيح التطبيق مفعّلة: عندها تُمنع لوحة النظام تماماً
+        @JavascriptInterface public void setImeBlock(boolean on) {
+            getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("imeBlock", on).apply();
+            runOnUiThread(() -> {
+                boolean ch = imeBlock != on; imeBlock = on;
+                getWindow().setSoftInputMode(on ? WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN : WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+                if (on) hideIme();
+                if (ch && web != null) { try { android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE); if (im != null) im.restartInput(web); } catch (Exception ignored) { } }
+            });
+        }
+        @JavascriptInterface public void hideKeyboard() { runOnUiThread(MainActivity.this::hideIme); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
         // مساحة الكاميرا الأمامية (النوتش) بوحدات الصفحة: حتى لا يغطيها اسم المسجد أو أي نص
