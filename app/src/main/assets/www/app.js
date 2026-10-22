@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "2.6.26"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "2.6.27"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1223,6 +1223,9 @@ function start(){
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ tickerKey = ""; fitAll(); });
   addEventListener("resize", function(){ setTimeout(fitAll, 100); });
   splash();
+  // تطبيق أندرويد: بعد رسم أول إطار تُخفى شاشة البداية الأصلية
+  var rq = window.requestAnimationFrame || function(f){ setTimeout(f, 16); };
+  rq(function(){ rq(function(){ try { if (window.RawayieAndroid && RawayieAndroid.ready) RawayieAndroid.ready(); } catch(e){} }); });
 }
 /* ===== رسالة بداية التشغيل: البسملة والشعار واسم المسجد ===== */
 function splash(preview){

@@ -59,6 +59,15 @@ public class MainActivity extends Activity {
     private WebView web;
     private volatile boolean imeBlock = true;
 
+    private View splashView;
+    private void hideSplash() {
+        final View v = splashView; if (v == null) return; splashView = null;
+        v.animate().alpha(0f).setDuration(250).withEndAction(() -> {
+            try { ((android.view.ViewGroup) v.getParent()).removeView(v); } catch (Exception ignored) { }
+            try { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.BLACK)); } catch (Exception ignored) { }
+        }).start();
+    }
+
     private void hideIme() {
         try {
             android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -117,6 +126,18 @@ public class MainActivity extends Activity {
         cursor.setVisibility(View.GONE);
         int cs = Math.round(26 * getResources().getDisplayMetrics().density);
         root.addView(cursor, new FrameLayout.LayoutParams(cs, cs));
+        // شاشة البداية (الشعار ومؤشر تحميل) فوق الصفحة حتى ترسم الصفحة أول إطار: لا شاشة سوداء عند التشغيل
+        splashView = new FrameLayout(this);
+        splashView.setBackgroundResource(R.drawable.splash);
+        splashView.setClickable(true);
+        android.widget.ProgressBar pb = new android.widget.ProgressBar(this);
+        pb.setIndeterminate(true);
+        int ps = Math.round(34 * getResources().getDisplayMetrics().density);
+        FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(ps, ps, android.view.Gravity.CENTER_HORIZONTAL | android.view.Gravity.BOTTOM);
+        plp.bottomMargin = Math.round(56 * getResources().getDisplayMetrics().density);
+        splashView.addView(pb, plp);
+        root.addView(splashView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        ui.postDelayed(this::hideSplash, 12000); // احتياط: لا تبقى شاشة البداية أبداً
         setContentView(root);
         if (Build.VERSION.SDK_INT >= 26) web.setOnCapturedPointerListener((v, ev) -> onVMouse(ev));
 
@@ -140,6 +161,7 @@ public class MainActivity extends Activity {
 
         web.addJavascriptInterface(new Bridge(), "RawayieAndroid");
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView v, String url) { ui.postDelayed(MainActivity.this::hideSplash, 2500); }
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
                 return serve(req.getUrl());
@@ -629,6 +651,8 @@ public class MainActivity extends Activity {
                 if (ch && web != null) { try { android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE); if (im != null) im.restartInput(web); } catch (Exception ignored) { } }
             });
         }
+        // الصفحة رسمت أول إطار: تُخفى شاشة البداية
+        @JavascriptInterface public void ready() { runOnUiThread(MainActivity.this::hideSplash); }
         @JavascriptInterface public void hideKeyboard() { runOnUiThread(MainActivity.this::hideIme); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
