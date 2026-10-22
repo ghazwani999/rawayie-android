@@ -59,7 +59,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private volatile boolean imeBlock = true;
 
-    private View splashView;
+    private FrameLayout splashView;
     private void hideSplash() {
         final View v = splashView; if (v == null) return; splashView = null;
         v.animate().alpha(0f).setDuration(250).withEndAction(() -> {
