@@ -22,9 +22,9 @@ if (window.RAWAYIE_PREVIEW) { (function(){
   load(); setInterval(load, 20000);
   window.REMOTE = {start:function(){}, poll:load, push:function(){ return Promise.resolve(); }, state:{status:"off"}, url:function(){ return ""; }, activate:function(){ return Promise.reject(new Error("معاينة")); }, wpSite:function(){ return ""; }, test:function(){ return Promise.resolve(); }};
 })(); return; }
-var DEF_R = {on:false, server:"", key:"", code:"", poll:30, lastCmd:0, rev:0, allowLocal:true};
+var DEF_R = {on:false, server:"", key:"", code:"", poll:60, lastCmd:0, rev:0, allowLocal:true};
 S.remote = Object.assign({}, DEF_R, S.remote || {});
-if (+S.remote.poll === 60 && !S.remote.pollSet) { S.remote.poll = 30; S.remote.pollSet = 1; } // الرسائل العاجلة تصل خلال نصف دقيقة
+if (!S.remote.pollV2) { if (+S.remote.poll < 60) S.remote.poll = 60; S.remote.pollV2 = 1; } // مزامنة خفيفة كل دقيقة: أقل ضغطاً على الموقع، والرسائل العاجلة تصل خلال دقيقة
 // الربط التلقائي من رابط التشغيل: index.html?server=...&code=...&token=...
 (function(){ try {
   var q = new URLSearchParams(location.search), sv = q.get("server"), cd = q.get("code");
@@ -68,6 +68,7 @@ function req(method, path, body){
     .then(function(r){ return r.text().then(function(t){
       if (!r.ok) { var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
         if (j && j.code && /^rws_/.test(j.code) && j.code !== "rws_denied" && j.message) throw new Error(j.message); // رسالة الموقع (مثل حد الجهازين)
+        if (r.status === 404 && j && j.code === "rest_no_route") { var e404 = new Error("no route"); e404.noRoute = true; throw e404; }
         throw new Error((m === "GET" ? "القراءة" : "الإرسال") + " HTTP " + r.status + (r.status === 401 ? " (رمز الشاشة غير صحيح، فعّلها بكود جديد)" : r.status === 403 || r.status === 405 ? " (منعه جدار الحماية في الاستضافة)" : "")); }
       return t ? JSON.parse(t) : null; }); });
 }
@@ -150,16 +151,38 @@ function sendStatus(){
 }
 function poll(){
   if (!S.remote.on || !base()) { state.status = "off"; return; }
+  if (isWP(base()) && !state.noSync) return pollSync();
   req("GET", "/config").then(function(cfg){
     if (!cfg) return push();                                   // أول ربط: ارفع إعدادات الشاشة الحالية
     if ((cfg.rev || 0) !== (S.remote.rev || 0)) applyCfg(cfg); // نسخة مختلفة عما طبّقته الشاشة: من المدير (لا تعتمد على ساعة الجهاز)
-  }).then(function(){ return req("GET", "/cmd"); }).then(function(cmd){
+  }).then(function(){ return req("GET", "/cmd"); }).then(handleCmd).then(sendStatus).then(ok).catch(fail);
+}
+/* ووردبريس: طلب واحد للمزامنة (الإعدادات عند تغيّرها فقط، والأوامر، والحالة كل 5 دقائق) */
+function statusBody(){
+  var ci = A.cityInfo(), z = A.zp(Date.now());
+  return {name:S.mosque, city:ci.name, code:S.remote.code, lastSeen:Date.now(),
+    version:A.VERSION, rev:S.remote.rev, orient:A.orient() === "P" ? "رأسي" : "أفقي", rot:+(S.look.rot || 0),
+    screen:innerWidth + "×" + innerHeight, time:A.two(z.h) + ":" + A.two(z.m), dev:devId(),
+    err:(A.lastErr ? A.lastErr() : "").slice(0, 200), lic:(window.LICENSE ? window.LICENSE.info() : null), ua:navigator.userAgent.slice(0, 160)};
+}
+function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left].join("|"); }
+function pollSync(){
+  var b = statusBody(), now = Date.now(), sendSt = !state.stAt || now - state.stAt > 5*60000 || statusSig(b) !== state.stSig;
+  var body = {rev:S.remote.rev || 0, cmdAt:S.remote.lastCmd || 0}; if (sendSt) body.status = b;
+  return req("POST", "/sync", body).then(function(j){
+    if (!j) return;
+    if (sendSt) { state.stAt = now; state.stSig = statusSig(b); }
+    if (!j.has) return push();                                             // أول ربط: ترفع الشاشة إعداداتها
+    if (j.config && (j.config.rev || 0) !== (S.remote.rev || 0)) applyCfg(j.config);
+    return handleCmd(j.cmd);
+  }).then(ok).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); }); // موقع بإضافة قديمة: الطريقة السابقة
+}
+function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
     // المدة المتبقية بساعة الخادم إن توفرت، فلا تتأثر بساعة جهاز الشاشة
     var left = cmd.exp && cmd.now ? cmd.exp - cmd.now : (cmd.until ? cmd.until - Date.now() : 0), age = cmd.now ? cmd.now - cmd.at : Date.now() - cmd.at;
     if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
-  }).then(sendStatus).then(ok).catch(fail);
 }
 function runCmd(c, left){
   if (c.type === "reload") {
