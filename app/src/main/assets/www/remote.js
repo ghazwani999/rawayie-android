@@ -63,7 +63,11 @@ if (window.RAWAYIE_PREVIEW) { (function(){
     try { parent.postMessage({rws:"manage", code:cd}, location.origin); } catch(e){}
   }
   load(); setInterval(load, MG ? 30000 : 20000);
-  window.REMOTE = {start:function(){}, poll:load, push:push, state:{status:"off"}, url:function(){ return ""; }, activate:function(){ return Promise.reject(new Error("معاينة")); }, wpSite:function(){ return ""; }, test:function(){ return Promise.resolve(true); }, dirty:function(){ return dirty || !!saving; }};
+  // أمر للشاشة من صفحة الإدارة (مثل ضبط كلمات سر الإعدادات)
+  var cmdSend = function(c){ c.at = Date.now(); var u = sv + "/screens/" + encodeURIComponent(cd) + "/cmd";
+    return fetch(u, {method:"POST", credentials:"same-origin", cache:"no-store", headers:{"Content-Type":"application/json", "X-WP-Nonce":nonce, "X-HTTP-Method-Override":"PUT"}, body:JSON.stringify(c)})
+      .then(function(r){ if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "لا تملك صلاحية هذا الإجراء" : "تعذر الإرسال (" + r.status + ")"); }); };
+  window.REMOTE = {cmd:cmdSend, start:function(){}, poll:load, push:push, state:{status:"off"}, url:function(){ return ""; }, activate:function(){ return Promise.reject(new Error("معاينة")); }, wpSite:function(){ return ""; }, test:function(){ return Promise.resolve(true); }, dirty:function(){ return dirty || !!saving; }};
 })(); return; }
 var DEF_R = {on:false, server:"", key:"", code:"", poll:60, lastCmd:0, rev:0, allowLocal:true};
 S.remote = Object.assign({}, DEF_R, S.remote || {});
@@ -224,7 +228,7 @@ function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
     // المدة المتبقية بساعة الخادم إن توفرت، فلا تتأثر بساعة جهاز الشاشة
     var left = cmd.exp && cmd.now ? cmd.exp - cmd.now : (cmd.until ? cmd.until - Date.now() : 0), age = cmd.now ? cmd.now - cmd.at : Date.now() - cmd.at;
-    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || age < 180000) runCmd(cmd, left); }
+    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || cmd.type === "setpass" || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
 }
 function runCmd(c, left){
@@ -234,6 +238,8 @@ function runCmd(c, left){
     setTimeout(function(){ location.reload(); }, 500); return; }
   if (c.type === "msg") showMsg(c, left);
   // من لوحة الإدارة: إلغاء كلمة سر الإعدادات المنسية (المدير والمشرف) فيضبط المسؤول كلمة جديدة
+  // من صفحة الإدارة: كلمات سر جديدة للإعدادات (الفارغ لا يغيّر)
+  if (c.type === "setpass") { if (c.p) S.pass = String(c.p); if (c.sp && S.sup && c.sp !== S.pass) S.sup.pass = String(c.sp); origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} }
   if (c.type === "resetpass") { S.pass = ""; if (S.sup) S.sup.pass = ""; origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} }
   if (c.type === "clear") hideMsg();
 }

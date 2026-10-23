@@ -91,7 +91,7 @@ function groupName(g){ for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][0] 
 var R = {};
 var ADMIN_ONLY = {perms:1, general:1, remote:1};
 /* وضع الإدارة من الموقع: أقسام الجهاز نفسه لا تظهر (الربط وكلمة السر والتشغيل)، ومشرف الموقع يرى أقسامه المسموحة فقط */
-var MANAGE_HIDE = {remote:1, perms:1, general:1};
+var MANAGE_HIDE = {}; // كل أقسام التطبيق تظهر في الموقع، وما يخص الجهاز نفسه يظهر كبطاقة توضيح
 var WP_SEC = {mosque:"mosque", times:"times", calendar:"times", friday:"times", screens:"screens", hide:"screens", sounds:"screens", adhkar:"adhkar", news:"news", texts:"texts", slides:"slides", boards:"slides",
   display:"look", look:"look", hilite:"look", fonts:"look", layout:"look", shadow:"look", weather:"look", rotate:"rotate"};
 function manageSecs(){ var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
@@ -242,7 +242,12 @@ R.screens = function(){
 };
 /* إطفاء الشاشة فعلياً (تطبيق أندرويد): بدل الشاشة السوداء تنطفئ الشاشة تماماً وتعود وحدها بعد الصلاة */
 function offCard(){
-  var AN = window.RawayieAndroid; if (!AN || !AN.screenOff) return "";
+  var AN = window.RawayieAndroid;
+  if (window.RAWAYIE_MANAGE) return card("إطفاء الشاشة فعلياً (تطبيق أندرويد)",
+    tog("إطفاء الشاشة أثناء الصلاة", "offPrayer", "بدل الشاشة السوداء: تنطفئ الشاشة وتعود وحدها قبل نهاية مدة الصلاة بـ 15 ثانية") +
+    tog("إطفاء الشاشة في وضع السكون", "offSleep", "بعد العشاء وبعد الشروق إن كان وضع السكون مفعّلاً") +
+    '<p class="note">يحتاج منح «صلاحية إطفاء الشاشة» وتجربتها مرة واحدة من جهاز المسجد نفسه.</p>');
+  if (!AN || !AN.screenOff) return "";
   var inf = {}; try { inf = JSON.parse(AN.offInfo()); } catch(e){}
   return card("إطفاء الشاشة فعلياً",
     tog("إطفاء الشاشة أثناء الصلاة", "offPrayer", "بدل الشاشة السوداء: تنطفئ الشاشة عند بدء الإخفاء وتعود وحدها قبل نهاية مدة الصلاة بـ 15 ثانية") +
@@ -281,7 +286,10 @@ R.hide = function(){
     '<p class="note">يمنع التطبيق المتصفح والجهاز من إطفاء الشاشة أو الدخول في السكون طوال الوقت. في بعض أجهزة التلفاز أوقف أيضاً من إعداداتها: «توفير الطاقة» و«الإيقاف التلقائي» و«مؤقت النوم»، وفي الكمبيوتر: إعدادات الطاقة ← عدم إيقاف الشاشة أبداً.</p>');
 };
 /* ترخيص الشاشة: يصدر من موقع الإدارة فقط ويتجدد تلقائياً */
+/* بطاقة توضيح في الموقع: إعداد يخص الجهاز نفسه (يُضبط من شاشة المسجد) */
+function devOnly(title, txt0){ return card(title, '<p class="note">' + esc(txt0) + '</p>'); }
 function licCard(){
+  if (window.RAWAYIE_MANAGE) return devOnly("ترخيص الشاشة", "يُدار من بطاقة الشاشة في لوحة الإدارة: التفعيل ومدته والأجهزة المرتبطة (جهازان لكل شاشة).");
   var L = window.LICENSE; if (!L) return "";
   var s = L.status(), d = function(n){ return n <= 1 ? "يوم واحد" : n === 2 ? "يومان" : n + " أيام"; };
   var stt = s.active ? (s.until ? "مفعّل حتى " + new Date(s.until).toLocaleDateString("ar-SA-u-ca-gregory") : "مفعّل ✓ شكراً لكم") : s.trial ? "فترة تجريبية: متبقي " + d(s.leftDays) : s.pending ? "جارٍ التحقق من موقع الإدارة" : (s.msg || (s.linked ? "غير مفعّلة" : "غير مرتبطة بموقع الإدارة"));
@@ -295,6 +303,7 @@ function licCard(){
 }
 /* دقة العرض على التلفاز (تطبيق أندرويد فقط) */
 function hdmiCard(){
+  if (window.RAWAYIE_MANAGE) return devOnly("دقة العرض على التلفاز (HDMI)", "تظهر دقة العرض وخيار مخرج HDMI في تطبيق أندرويد على جهاز المسجد نفسه، لأنها تخص الجهاز وليست من إعدادات الشاشة.");
   var AN = window.RawayieAndroid; if (!AN || !AN.displayInfo) return "";
   var d = {}; try { d = JSON.parse(AN.displayInfo()); } catch(e){}
   var ui = d.uiW ? Math.max(d.uiW, d.uiH) + "×" + Math.min(d.uiW, d.uiH) : "؟", out = d.outW ? Math.max(d.outW, d.outH) + "×" + Math.min(d.outW, d.outH) + (d.hz ? " @" + d.hz + "Hz" : "") : "غير معروف";
@@ -1136,6 +1145,7 @@ var CK = window.RWS_CLOCK, clkEl = null, clkBadge = null;
 function two(n){ return (n < 10 ? "0" : "") + n; }
 function clkSrc(s){ return s.suspect ? "تقديري (رجعت ساعة الجهاز بعد انقطاع الكهرباء)" : s.src === "net" ? "مصحّح من الإنترنت" : s.src === "manual" ? "مضبوط يدوياً" : "ساعة الجهاز"; }
 function clkCard(){
+  if (window.RAWAYIE_MANAGE) return devOnly("ساعة الجهاز (بديل RTC)", "تُضبط ساعة الجهاز من شاشة المسجد نفسها، وتصحح نفسها تلقائياً من الإنترنت عند اتصال الجهاز.");
   if (!CK) return "";
   var s = CK.state(), d = new Date(s.now);
   return card("ساعة الجهاز (بديل RTC)",
@@ -1196,6 +1206,9 @@ setTimeout(function(){
 }, (S.splash && S.splash.on !== false ? (+S.splash.sec || 6) * 1000 + 600 : 800));
 
 R.remote = function(){
+  if (window.RAWAYIE_MANAGE) { var cd0 = (/[?&]code=([^&]+)/.exec(location.search) || [])[1] || "";
+    return card("ربط الشاشة بالموقع", '<div class="fld"><span><b>هذه الشاشة مرتبطة بالموقع</b><small dir="ltr">' + esc(decodeURIComponent(cd0)) + '</small></span><span class="pill ok">مرتبطة</span></div>' +
+      '<p class="note">كل تعديل هنا يصل لأجهزة هذه الشاشة خلال دقيقة. لربط جهاز جديد: زر «ربط جهاز» في لوحة الإدارة ثم امسح رمز QR الظاهر على الجهاز. لفك ربط جهاز: من بطاقة الشاشة في لوحة الإدارة.</p>'); }
   var R0 = window.REMOTE, st = R0 ? R0.state : {status:"off"}, r = S.remote || {};
   var msg = !r.on ? "غير مفعلة" : st.status === "ok" ? "متصلة. آخر مزامنة " + A.fmtT(st.at, true) : st.status === "fail" ? "تعذر الاتصال: " + st.err : "جارٍ الاتصال...";
   return card("تفعيل الشاشة بكود",
@@ -1215,6 +1228,15 @@ R.remote = function(){
 };
 R.perms = function(){
   var secs = SECTIONS.filter(function(s){ return !ADMIN_ONLY[s[0]] && !PERM_OF[s[0]]; });
+  var pwCards = window.RAWAYIE_MANAGE ? card("كلمات سر الإعدادات في الشاشة",
+    '<p class="note">كلمات السر محفوظة في جهاز المسجد فقط ولا تظهر هنا. يمكنك ضبط كلمات جديدة أو إلغاءها، فتصل للشاشة خلال دقيقة.</p>' +
+    '<label class="fld" for="mpw"><span><b>كلمة سر المدير الجديدة</b><small>اتركها فارغة لعدم التغيير</small></span><input type="password" id="mpw" autocomplete="new-password"></label>' +
+    '<label class="fld" for="mspw"><span><b>كلمة سر المشرف الجديدة</b><small>اتركها فارغة لعدم التغيير. يجب أن تختلف عن كلمة سر المدير</small></span><input type="password" id="mspw" autocomplete="new-password"></label>' +
+    '<div class="row-end">' + btn("إلغاء كلمات السر", "mpwClear", "ghost") + btn("إرسال للشاشة", "mpwSend") + '</div>') : "";
+  if (window.RAWAYIE_MANAGE) return pwCards + card("بقاء الدخول مفتوحاً",
+    tog("تذكّر الدخول في جهاز المسجد", "keepUnlock", "تُدخل كلمة السر في الشاشة مرة واحدة فقط ولا تُطلب بعدها حتى القفل يدوياً أو تغيير كلمة السر") +
+    (S.keepUnlock ? "" : numIn("طلب كلمة السر مرة أخرى بعد عدم الاستخدام", "lockMin", 0, 720, 5, "دقيقة", "0 = تُطلب عند كل فتح للإعدادات"))) +
+    card("حساب مشرف المسجد", txt("اسم المشرف", "sup.name")) + permsCard(secs) + ctlCard();
   return card("كلمة سر المدير",
     '<label class="fld" for="pw"><span><b>كلمة سر مدير الشاشة</b><small>' + (S.pass ? "مفعلة. المدير يملك كل الصلاحيات" : "غير مفعلة: الإعدادات مفتوحة للجميع") + '</small></span><input type="password" id="pw" placeholder="' + (S.pass ? "اكتب كلمة جديدة أو اتركها فارغة للإلغاء" : "اكتب كلمة السر") + '" autocomplete="new-password"></label>' +
     '<div class="row-end">' + btn("حفظ كلمة سر المدير", "pwSave") + '</div>',
@@ -1227,16 +1249,19 @@ R.perms = function(){
     txt("اسم المشرف", "sup.name") +
     '<label class="fld" for="spw"><span><b>كلمة سر المشرف</b><small>' + (S.sup.pass ? "مفعلة" : "غير مفعلة") + '. يجب أن تختلف عن كلمة سر المدير</small></span><input type="password" id="spw" placeholder="' + (S.sup.pass ? "كلمة جديدة أو فارغة للإلغاء" : "اكتب كلمة سر المشرف") + '" autocomplete="new-password"></label>' +
     '<div class="row-end">' + btn("حفظ كلمة سر المشرف", "spwSave") + '</div>') +
-  card("الأقسام المسموح للمشرف بتعديلها",
+  permsCard(secs) + ctlCard();
+};
+function permsCard(secs){ return card("الأقسام المسموح للمشرف بتعديلها",
     '<div class="perms">' + secs.map(function(s){ var on = (S.sup.sections || []).indexOf(s[0]) >= 0;
       return '<label class="pchk"><input type="checkbox" data-perm="' + s[0] + '"' + (on ? " checked" : "") + '><span>' + esc(PERM_LABEL[s[0]] || s[1]) + '</span></label>'; }).join("") + '</div>' +
     '<div class="row-end">' + btn("تحديد الكل", "permAll", "sm ghost") + btn("إلغاء الكل", "permNone", "sm ghost") + btn("الإعلانات والمحتوى فقط", "permContent", "sm ghost") + '</div>',
-    "قسما «الصلاحيات» و«عام» للمدير فقط دائماً، وفيهما كلمات السر والنسخ الاحتياطي وإعادة الضبط") +
-  card("التحكم من الشاشة مباشرة",
+    "قسما «الصلاحيات» و«عام» للمدير فقط دائماً، وفيهما كلمات السر والنسخ الاحتياطي وإعادة الضبط");
+}
+function ctlCard(){ return card("التحكم من الشاشة مباشرة",
     tog("تغيير الخلفية بالضغط على صلاة الفجر", "sup.fajrBg", "عند إيقافه لا يستطيع أحد تغيير الخلفية من الشاشة") +
     tog("زر تدوير الشاشة في الاختصارات", "sup.rotate"),
     "تنطبق على أي شخص أمام الشاشة عند تفعيل كلمة سر المدير");
-};
+}
 /* المتصفح الحالي: هل يدعم استمرار الشاشة بدون إنترنت، وما المتصفح الموصى به */
 var BROWSER_TIPS = {
   android: "Google Chrome أو Fully Kiosk Browser (من متجر Google Play). بعد فتح الشاشة اضغط «تثبيت التطبيق» لتعمل كتطبيق مستقل بدون إنترنت.",
@@ -1311,6 +1336,7 @@ function dl(name, text, type){
   document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 function autoCard(){
+  if (window.RAWAYIE_MANAGE) return devOnly("التشغيل التلقائي بعد إعادة تشغيل الجهاز", "يُفعّل من جهاز المسجد نفسه (صلاحية من نظام أندرويد): الإعدادات ← التشغيل والنسخ الاحتياطي ← التشغيل التلقائي.");
   var AN = window.RawayieAndroid;
   if (AN) { var ok = false; try { ok = AN.canAutostart(); } catch(e){}
     return card("التشغيل التلقائي بعد إعادة تشغيل الجهاز",
@@ -1607,6 +1633,12 @@ function onClick(e){
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
+    case "mpwSend": case "mpwClear":
+      var p1 = a === "mpwClear" ? "" : $("#mpw").value, p2 = a === "mpwClear" ? "" : $("#mspw").value;
+      if (a === "mpwSend" && !p1 && !p2) { toast("اكتب كلمة سر جديدة أولاً"); return; }
+      if (p1 && p2 && p1 === p2) { toast("كلمة سر المشرف يجب أن تختلف عن كلمة سر المدير"); return; }
+      if (window.REMOTE && window.REMOTE.cmd) window.REMOTE.cmd(a === "mpwClear" ? {type:"resetpass"} : {type:"setpass", p:p1, sp:p2}).then(function(){ toast("تم الإرسال، يصل للشاشة خلال دقيقة"); $("#mpw").value = ""; $("#mspw").value = ""; }, function(e){ toast(e.message || "تعذر الإرسال"); });
+      break;
     case "lockNow": unlocked = false; lockSave(); keepSave(); close(); toast("تم قفل الإعدادات"); break;
     case "offAdmin": try { window.RawayieAndroid.requestAdmin(); } catch(e){} setTimeout(render, 4000); break;
     case "offTest": try { if (window.RawayieAndroid.screenOff(Date.now() - (window.RWS_CLOCK ? window.RWS_CLOCK.state().off : 0) + 30000)) toast("تنطفئ الشاشة الآن وتعود بعد 30 ثانية"); else toast("تعذر الإطفاء في هذا الجهاز"); } catch(e){ toast("تعذر الإطفاء في هذا الجهاز"); } break;
@@ -1686,8 +1718,8 @@ function onClick(e){
     case "bkOut": var c = JSON.parse(JSON.stringify(S)); delete c.pass; if (c.sup) delete c.sup.pass; if (c.remote) { delete c.remote.key; delete c.remote.pair; } $("#bk").value = JSON.stringify(c); break;
     case "bkCopy": var ta = $("#bk"); if (!ta.value) { var c2 = JSON.parse(JSON.stringify(S)); delete c2.pass; if (c2.sup) delete c2.sup.pass; ta.value = JSON.stringify(c2); }
       try { navigator.clipboard.writeText(ta.value).then(function(){ toast("تم النسخ"); }, function(){ ta.select(); toast("حدد النص وانسخه"); }); } catch(err){ ta.select(); } break;
-    case "bkIn": try { var obj = JSON.parse($("#bk").value); obj.pass = S.pass; obj.sup = obj.sup || {}; obj.sup.pass = S.sup.pass; A.setAll(obj); render(); toast("تم الاستيراد"); } catch(err){ toast("النص غير صالح، تأكد من نسخه كاملاً"); } break;
-    case "reset": A.resetAll(); break;
+    case "bkIn": try { var obj = JSON.parse($("#bk").value); obj.pass = S.pass; obj.sup = obj.sup || {}; obj.sup.pass = S.sup.pass; A.setAll(obj); if (window.RAWAYIE_MANAGE) A.save(); render(); toast("تم الاستيراد"); } catch(err){ toast("النص غير صالح، تأكد من نسخه كاملاً"); } break;
+    case "reset": if (window.RAWAYIE_MANAGE) { var keep0 = {mosque:S.mosque, city:S.city}; A.setAll(keep0); A.save(); render(); toast("أُعيدت إعدادات الشاشة للوضع الافتراضي (مع بقاء اسم المسجد والمدينة)"); break; } A.resetAll(); break;
     case "reload": location.reload(); break;
     case "close": close(); break;
   }
