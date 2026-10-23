@@ -1,0 +1,28 @@
+name: Stable APK release
+
+# عند تحديث النسخة الموقّعة في dist/ تُنشر في إصدار ثابت «stable» برابط تحميل مباشر
+# (يرسل GitHub الملف بنوع APK وكمرفق، فيتم التنزيل في المتصفحات والمتصفحات داخل التطبيقات بشكل صحيح)
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'dist/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stable:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Publish stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(cat dist/VERSION.txt | tr -d '\r\n ')
+          if ! gh release view stable >/dev/null 2>&1; then
+            gh release create stable --title "روائع الأذان - النسخة المعتمدة" --notes "النسخة الموقّعة المعتمدة لأجهزة أندرويد والتلفاز." --latest=false
+          fi
+          gh release upload stable dist/rawayie-azan.apk dist/VERSION.txt --clobber
+          gh release edit stable --title "روائع الأذان - النسخة المعتمدة $V" --notes "النسخة الموقّعة المعتمدة $V لأجهزة أندرويد (5 فما فوق) وأجهزة التلفاز." --latest=false
