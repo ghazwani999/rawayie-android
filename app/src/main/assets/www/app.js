@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "7.8"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "7.9"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
