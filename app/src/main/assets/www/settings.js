@@ -1220,7 +1220,8 @@ R.perms = function(){
     '<div class="row-end">' + btn("حفظ كلمة سر المدير", "pwSave") + '</div>',
     "يجب تفعيل كلمة سر المدير أولاً حتى تعمل صلاحيات المشرف") +
   (S.pass ? card("بقاء الدخول مفتوحاً",
-    numIn("طلب كلمة السر مرة أخرى بعد عدم الاستخدام", "lockMin", 0, 720, 5, "دقيقة", "بعد إدخال كلمة السر يبقى المدير أو المشرف داخل الإعدادات بدون طلبها في كل مرة، حتى يمر هذا الوقت بدون أي استخدام. 0 = تُطلب عند كل فتح للإعدادات") +
+    tog("تذكّر الدخول في هذا الجهاز", "keepUnlock", "تُدخل كلمة السر مرة واحدة فقط، ولا تُطلب بعدها أبداً في هذا الجهاز (حتى بعد إعادة التشغيل)، إلى أن تضغط «قفل الإعدادات الآن» أو تتغيّر كلمة السر") +
+    (S.keepUnlock ? "" : numIn("طلب كلمة السر مرة أخرى بعد عدم الاستخدام", "lockMin", 0, 720, 5, "دقيقة", "بعد إدخال كلمة السر يبقى المدير أو المشرف داخل الإعدادات بدون طلبها في كل مرة، حتى يمر هذا الوقت بدون أي استخدام. 0 = تُطلب عند كل فتح للإعدادات")) +
     '<div class="row-end">' + btn("قفل الإعدادات الآن", "lockNow", "ghost") + '</div>') : "") +
   card("حساب مشرف المسجد",
     txt("اسم المشرف", "sup.name") +
@@ -1443,6 +1444,7 @@ function render(){
 function onChange(e){
   var el = e.target;
   if (el.id === "calm") { calMonth = el.value; render(); return; }
+  if (el.dataset.p === "keepUnlock") setTimeout(function(){ keepSave(); lockSave(); render(); }, 0);
   if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
   if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
   if (el.dataset.sp) { onSlInput(e); return; }
@@ -1605,7 +1607,7 @@ function onClick(e){
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
-    case "lockNow": unlocked = false; lockSave(); close(); toast("تم قفل الإعدادات"); break;
+    case "lockNow": unlocked = false; lockSave(); keepSave(); close(); toast("تم قفل الإعدادات"); break;
     case "offAdmin": try { window.RawayieAndroid.requestAdmin(); } catch(e){} setTimeout(render, 4000); break;
     case "offTest": try { if (window.RawayieAndroid.screenOff(Date.now() - (window.RWS_CLOCK ? window.RWS_CLOCK.state().off : 0) + 30000)) toast("تنطفئ الشاشة الآن وتعود بعد 30 ثانية"); else toast("تعذر الإطفاء في هذا الجهاز"); } catch(e){ toast("تعذر الإطفاء في هذا الجهاز"); } break;
     case "annReset": S.ann.azan = A.DEF.ann.azan; S.ann.iqama = A.DEF.ann.iqama; commit(); render(); toast("تمت استعادة النص الافتراضي"); break;
@@ -1674,7 +1676,7 @@ function onClick(e){
     case "hiSw": S.look.hiCustom = true; S.look.hiColor = x; commit(); render(); break;
     case "hiTx": S.look.hiTextOn = true; S.look.hiTextColor = x; commit(); render(); break;
     case "pwSave": var np = $("#pw").value; if (np && np === S.sup.pass) { toast("كلمة سر المدير يجب أن تختلف عن كلمة سر المشرف"); return; }
-      S.pass = np; role = "admin"; unlocked = true; A.save(); toast(S.pass ? "تم حفظ كلمة سر المدير" : "تم إلغاء كلمة السر"); render(); break;
+      S.pass = np; role = "admin"; unlocked = true; A.save(); lastAct = Date.now(); lockSave(); keepSave(); toast(S.pass ? "تم حفظ كلمة سر المدير" : "تم إلغاء كلمة السر"); render(); break;
     case "spwSave": var sp = $("#spw").value; if (sp && sp === S.pass) { toast("كلمة سر المشرف يجب أن تختلف عن كلمة سر المدير"); return; }
       if (sp && !S.pass) { toast("فعّل كلمة سر المدير أولاً"); return; }
       S.sup.pass = sp; A.save(); toast(sp ? "تم حفظ كلمة سر المشرف" : "تم إلغاء حساب المشرف"); render(); break;
@@ -1707,23 +1709,30 @@ function open(){
   if (!panel) build();
   sIndex = null;
   panel.hidden = false; document.body.classList.add("setopen");
+  if (S.pass && !unlocked) keepLoad();
   if (S.pass && unlocked && !lockValid()) unlocked = false;
   if (S.pass && unlocked) lastAct = Date.now();
   if (S.pass && !unlocked) { $("#lock").hidden = false; $("#setwrap").hidden = true; setTimeout(function(){ $("#lockpw").focus(); }, 50); }
   else { $("#lock").hidden = true; $("#setwrap").hidden = false; render(); }
 }
 /* بقاء الدخول: بعد كلمة السر لا تُطلب مرة أخرى حتى يمر وقت عدم الاستخدام (يبقى بعد إعادة تحميل الصفحة في نفس التشغيل) */
-var lastAct = 0, LKS = "rws-unlock";
+var lastAct = 0, LKS = "rws-unlock", LKK = "rws-unlock-keep";
+// «تذكّر الدخول في هذا الجهاز»: يُحفظ مع بصمة كلمة السر، فإذا تغيّرت كلمة السر يُطلب الدخول من جديد
+function pwSig(pw){ var h = 2166136261; pw = "rws|" + String(pw || ""); for (var i = 0; i < pw.length; i++) { h ^= pw.charCodeAt(i); h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0; } return h.toString(36); }
+function keepSave(){ try { if (unlocked && S.pass && S.keepUnlock) localStorage.setItem(LKK, JSON.stringify({role:role, h:pwSig(role === "sup" ? S.sup.pass : S.pass)})); else localStorage.removeItem(LKK); } catch(e){} }
+function keepLoad(){ try { var o = JSON.parse(localStorage.getItem(LKK) || "null"); if (!o || !S.pass || !S.keepUnlock) return false;
+  var pw = o.role === "sup" ? S.sup.pass : S.pass; if (!pw || o.h !== pwSig(pw)) { localStorage.removeItem(LKK); return false; }
+  unlocked = true; role = o.role; lastAct = Date.now(); return true; } catch(e){ return false; } }
 function lockMin(){ var m = S.lockMin; return m === undefined || m === null || m === "" ? 15 : Math.max(0, +m || 0); }
 function lockSave(){ try { if (unlocked && S.pass && lockMin() > 0) sessionStorage.setItem(LKS, JSON.stringify({role:role, at:lastAct || Date.now()})); else sessionStorage.removeItem(LKS); } catch(e){} }
-function lockValid(){ if (!S.pass || !unlocked) return unlocked; var m = lockMin(); if (!m) return false; if (Date.now() - (lastAct || 0) > m*60000) { unlocked = false; lockSave(); return false; } return true; }
-(function(){ try { var o = JSON.parse(sessionStorage.getItem(LKS) || "null"); if (o && S.pass && Date.now() - o.at < lockMin()*60000 && (o.role === "admin" || (o.role === "sup" && S.sup.pass))) { unlocked = true; role = o.role; lastAct = o.at; } } catch(e){} })();
+function lockValid(){ if (!S.pass || !unlocked) return unlocked; if (S.keepUnlock) return true; var m = lockMin(); if (!m) return false; if (Date.now() - (lastAct || 0) > m*60000) { unlocked = false; lockSave(); return false; } return true; }
+(function(){ if (keepLoad()) return; try { var o = JSON.parse(sessionStorage.getItem(LKS) || "null"); if (o && S.pass && Date.now() - o.at < lockMin()*60000 && (o.role === "admin" || (o.role === "sup" && S.sup.pass))) { unlocked = true; role = o.role; lastAct = o.at; } } catch(e){} })();
 ["keydown", "pointerdown", "touchstart", "wheel"].forEach(function(ev){ document.addEventListener(ev, function(){ if (unlocked && S.pass && panel && !panel.hidden) { var n = Date.now(); if (n - lastAct > 20000) { lastAct = n; lockSave(); } else lastAct = n; } }, {capture:true, passive:true}); });
-function close(){ if (S.pass) { if (lockMin() > 0 && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
+function close(){ if (S.pass) { if ((S.keepUnlock || lockMin() > 0) && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
   panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
-    '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button></form>' +
+    '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button><button type="button" class="lkforgot" id="lkforgot">نسيت كلمة السر؟</button><p class="note" id="lkhelp" hidden></p></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
   nav = $(".snav", panel); body = $("#sbody");
@@ -1758,10 +1767,15 @@ function build(){
     vkOpen(el, panel, true);
   });
   panel.addEventListener("keydown", function(e){ if (e.key === "Escape" && VK.el && !VK.el.hidden && VK.docked) { e.stopPropagation(); var tt = VK.t; vkClose(); if (tt) tt.focus(); } }, true);
+  // نسيت كلمة السر: الشاشة المرتبطة بالموقع يعيد المدير تعيينها من لوحة الإدارة، وغيرها برقم الجهاز عبر الدعم
+  $("#lkforgot").addEventListener("click", function(){ var h = $("#lkhelp"), linked = S.remote && S.remote.on && S.remote.server, L = window.LICENSE ? window.LICENSE.status() : {};
+    h.hidden = false;
+    h.textContent = linked ? "هذه الشاشة مرتبطة بموقع الإدارة: اطلب من مدير الموقع فتح بطاقة الشاشة والضغط على «إعادة تعيين كلمة السر»، فتُلغى كلمة السر خلال دقيقة وتضبط كلمة جديدة."
+      : "هذه الشاشة غير مرتبطة بموقع الإدارة، فلا يمكن إلغاء كلمة السر عن بعد. الحل الوحيد: إعدادات الجهاز ← التطبيقات ← روائع الأذان ← مسح البيانات، وتُحذف معها كل إعدادات الشاشة. للمساعدة: واتساب " + (L.wa || "") + " مع رقم الجهاز " + (L.idText || "") + "."; });
   $("#lock").addEventListener("submit", function(e){ e.preventDefault();
     var v = $("#lockpw").value;
-    if (v === S.pass) { unlocked = true; role = "admin"; lastAct = Date.now(); lockSave(); }
-    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; lastAct = Date.now(); lockSave(); }
+    if (v === S.pass) { unlocked = true; role = "admin"; lastAct = Date.now(); lockSave(); keepSave(); }
+    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; lastAct = Date.now(); lockSave(); keepSave(); }
     else { $("#lockerr").hidden = false; return; }
     $("#lockpw").value = ""; $("#lockerr").hidden = true; open(); });
 }

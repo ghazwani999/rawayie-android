@@ -224,7 +224,7 @@ function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
     // المدة المتبقية بساعة الخادم إن توفرت، فلا تتأثر بساعة جهاز الشاشة
     var left = cmd.exp && cmd.now ? cmd.exp - cmd.now : (cmd.until ? cmd.until - Date.now() : 0), age = cmd.now ? cmd.now - cmd.at : Date.now() - cmd.at;
-    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || age < 180000) runCmd(cmd, left); }
+    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
 }
 function runCmd(c, left){
@@ -233,6 +233,8 @@ function runCmd(c, left){
     if (window.isFS && window.isFS()) { A.rebuild(); setTimeout(poll, 1500); return; }
     setTimeout(function(){ location.reload(); }, 500); return; }
   if (c.type === "msg") showMsg(c, left);
+  // من لوحة الإدارة: إلغاء كلمة سر الإعدادات المنسية (المدير والمشرف) فيضبط المسؤول كلمة جديدة
+  if (c.type === "resetpass") { S.pass = ""; if (S.sup) S.sup.pass = ""; origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} }
   if (c.type === "clear") hideMsg();
 }
 
