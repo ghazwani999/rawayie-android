@@ -68,6 +68,25 @@ public class MainActivity extends Activity {
         }).start();
     }
 
+    /* عميل SNTP بسيط: يرجع الوقت بالملّي ثانية أو 0 */
+    static long sntp(String host) {
+        java.net.DatagramSocket sock = null;
+        try {
+            sock = new java.net.DatagramSocket(); sock.setSoTimeout(3000);
+            java.net.InetAddress addr = java.net.InetAddress.getByName(host);
+            byte[] b = new byte[48]; b[0] = 0x1B; // LI=0, VN=3, Mode=3 (client)
+            long t0 = SystemClock.elapsedRealtime();
+            sock.send(new java.net.DatagramPacket(b, b.length, addr, 123));
+            java.net.DatagramPacket resp = new java.net.DatagramPacket(b, b.length); sock.receive(resp);
+            long rtt = SystemClock.elapsedRealtime() - t0;
+            long sec = 0, frac = 0; for (int i = 40; i < 44; i++) sec = (sec << 8) | (b[i] & 0xff); for (int i = 44; i < 48; i++) frac = (frac << 8) | (b[i] & 0xff);
+            if (sec == 0) return 0;
+            long ms = (sec - 2208988800L) * 1000L + (frac * 1000L >>> 32);
+            return ms + rtt / 2;
+        } catch (Exception e) { return 0; }
+        finally { if (sock != null) sock.close(); }
+    }
+
     private boolean imeVisible() {
         try {
             View d = getWindow().getDecorView();
@@ -664,6 +683,20 @@ public class MainActivity extends Activity {
         }
         // الصفحة رسمت أول إطار: تُخفى شاشة البداية
         @JavascriptInterface public void ready() { runOnUiThread(MainActivity.this::hideSplash); }
+        // ساعة احتياطية: مدة التشغيل منذ الإقلاع (لا تتأثر بضياع الساعة عند انقطاع الكهرباء)
+        @JavascriptInterface public long uptime() { return SystemClock.elapsedRealtime(); }
+        // وقت الإنترنت من خوادم NTP مباشرة (UDP)، يعمل حتى لو كان تاريخ الجهاز خاطئاً فتفشل اتصالات HTTPS
+        @JavascriptInterface public void requestNetTime() {
+            new Thread(() -> {
+                long t = 0;
+                for (String h : new String[]{"time.google.com", "pool.ntp.org", "time.cloudflare.com", "time.windows.com"}) { t = sntp(h); if (t > 0) break; }
+                final long ms = t;
+                if (ms > 0) runOnUiThread(() -> { if (web != null) web.evaluateJavascript("window.__rwsNetTime&&window.__rwsNetTime(" + ms + ")", null); });
+            }).start();
+        }
+        @JavascriptInterface public void openDateSettings() {
+            runOnUiThread(() -> { try { startActivity(new Intent(Settings.ACTION_DATE_SETTINGS)); } catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception ignored) { } } });
+        }
         @JavascriptInterface public void hideKeyboard() { runOnUiThread(MainActivity.this::hideIme); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }

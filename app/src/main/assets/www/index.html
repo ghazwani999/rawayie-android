@@ -717,7 +717,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .clk .tm{white-space:nowrap}.clk>*{flex:none}
 .P.apar .cpan .clk{gap:14px}
 /* نافذة تفعيل الشاشة بكود */
-#act.actov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:45;pointer-events:auto;background:rgba(5,10,22,.86);display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl;font:400 16px/1.6 "Cairo",Tahoma,sans-serif;color:var(--stext);overflow-y:auto}
+#act.actov,#clk.actov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:45;pointer-events:auto;background:rgba(5,10,22,.86);display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl;font:400 16px/1.6 "Cairo",Tahoma,sans-serif;color:var(--stext);overflow-y:auto}
 .actbox{width:420px;max-width:100%;background:var(--sbg);border:1px solid var(--sline);border-radius:22px;padding:24px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6)}
 .actbox>*+*{margin-top:12px}
 .actbox img{width:64px;height:64px;object-fit:contain}.actbox h2{margin:4px 0 0;font-size:26px;color:var(--sacc)}.actbox p{margin:6px 0 0;color:var(--smuted);font-size:14.5px}
@@ -759,6 +759,19 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .actqr{font-size:16px;width:100%;margin-top:8px}
 .actqr .lqqr{width:13em;height:13em}
 .actman{width:100%;display:flex;flex-direction:column;align-items:center}
+/* ساعة الجهاز (بديل RTC) */
+.ckbox{width:440px}
+.ckbig{font:800 34px/1.2 "Cairo",Tahoma,monospace;color:#fff;margin:6px 0 10px;letter-spacing:1px}
+.ckr{display:flex;align-items:center;gap:10px;width:100%;margin:4px 0}
+.ckr button{font:800 24px/1 "Cairo",Tahoma,sans-serif;width:56px;height:46px;border-radius:12px;border:1px solid var(--sline);background:var(--scard);color:var(--stext);cursor:pointer;flex:none}
+.ckr button:focus,.ckact button:focus{outline:3px solid #E7B65B;outline-offset:2px}
+.ckv{flex:1;display:flex;justify-content:space-between;align-items:center;background:var(--sin);border:1px solid var(--sline);border-radius:12px;padding:6px 14px;min-height:46px;box-sizing:border-box}
+.ckv small{color:var(--smuted)}.ckv b{font-size:22px;color:#fff}
+.ckact{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:12px}
+.ckact button{font:700 15px "Cairo",Tahoma,sans-serif;flex:1 1 30%;min-height:44px;border-radius:12px;border:1px solid var(--sline);background:var(--scard);color:var(--stext);cursor:pointer}
+.ckact button.ok{background:#1F9D55;border-color:#1F9D55;color:#fff;flex-basis:100%}
+.clkwarn{position:absolute;top:calc(var(--it,0px) + 10px);left:50%;transform:translateX(-50%);z-index:9;font:700 20px/1.4 "Cairo",Tahoma,sans-serif;color:#1b1406;background:#E7B65B;border:0;border-radius:999px;padding:8px 26px;box-shadow:0 8px 24px rgba(0,0,0,.4);cursor:pointer;direction:rtl;max-width:92%;white-space:normal;text-align:center}
+.clkwarn:focus{outline:4px solid #fff}
 .actlater{font:inherit;background:none;border:0;color:var(--smuted);text-decoration:underline;cursor:pointer}
 .nogrid .actpad{display:block}.nogrid .actpad button{width:31%;margin:1%}
 #set .sched{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}#set .sched label{display:flex;flex-direction:column;font-size:13px;color:var(--smuted)}#set .sched input{font:inherit;color:var(--stext);background:#060d1c;border:1px solid var(--sline);border-radius:8px;padding:6px 8px}
@@ -768,7 +781,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .manage #menu{display:flex!important}.manage .pvbar{top:auto;bottom:10px;right:50%;transform:translateX(50%);font-size:14px;padding:7px 16px;pointer-events:none}
 .pvbar{position:fixed;top:8px;right:8px;z-index:60;background:#1F5A8A;color:#fff;font:700 13px "Cairo",Tahoma,sans-serif;padding:5px 12px;border-radius:999px;direction:rtl;pointer-events:none;opacity:.92}.pvbar.bad{background:#b32d2e}
 /* دقة الشاشات الكبيرة: لوحة الإعدادات والأزرار تكبر مع الشاشة (تلفاز 4K) فتبقى مقروءة وواضحة */
-#set,#sc,#toast,#act,.fshint{zoom:var(--uiz,1)}
+#set,#sc,#toast,#act,#clk,.fshint{zoom:var(--uiz,1)}
 .bglay{position:absolute;top:0;right:0;bottom:0;left:0;background:center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none}.bglay.in{opacity:1}
 .bgt.svg{background-size:cover!important;background-position:center!important;position:relative}.bgt.svg::after{content:"جديد";position:absolute;top:4px;left:4px;font:700 10px "Cairo",sans-serif;color:#1b1406;background:#E7B65B;border-radius:6px;padding:0 5px;line-height:16px}
 .bgw{position:relative;display:inline-block;flex:none}.bgx{position:absolute;top:-6px;right:-6px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:var(--sdanger);color:#fff;font:700 18px/1 "Cairo",sans-serif;cursor:pointer;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5)}.bgx.re{background:#1a7f45;font-size:16px}
@@ -878,16 +891,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610231454"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610231454"></script>
-<script charset="utf-8" src="data.js?v=2610231454"></script>
-<script charset="utf-8" src="i18n.js?v=2610231454"></script>
-<script charset="utf-8" src="version.js?v=2610231454"></script>
-<script charset="utf-8" src="app.js?v=2610231454"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610231454"></script>
-<script charset="utf-8" src="vendor/qr.js?v=2610231454"></script>
-<script charset="utf-8" src="lic-key.js?v=2610231454"></script>
-<script charset="utf-8" src="license.js?v=2610231454"></script>
-<script charset="utf-8" src="remote.js?v=2610231454"></script>
-<script charset="utf-8" src="offline.js?v=2610231454"></script>
-<script charset="utf-8" src="settings.js?v=2610231454"></script>
+<script charset="utf-8" src="compat.js?v=2610231525"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610231525"></script>
+<script charset="utf-8" src="data.js?v=2610231525"></script>
+<script charset="utf-8" src="i18n.js?v=2610231525"></script>
+<script charset="utf-8" src="version.js?v=2610231525"></script>
+<script charset="utf-8" src="app.js?v=2610231525"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610231525"></script>
+<script charset="utf-8" src="vendor/qr.js?v=2610231525"></script>
+<script charset="utf-8" src="lic-key.js?v=2610231525"></script>
+<script charset="utf-8" src="license.js?v=2610231525"></script>
+<script charset="utf-8" src="remote.js?v=2610231525"></script>
+<script charset="utf-8" src="offline.js?v=2610231525"></script>
+<script charset="utf-8" src="settings.js?v=2610231525"></script>

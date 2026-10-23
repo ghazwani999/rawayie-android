@@ -1,3 +1,74 @@
+/* ===== ساعة احتياطية (بديل RTC) =====
+   كثير من أجهزة TV Box لا تحتوي بطارية ساعة: عند انقطاع الكهرباء ترجع ساعتها لتاريخ قديم حتى تتصل بالإنترنت،
+   فتظهر مواقيت خاطئة. هنا يحفظ التطبيق آخر وقت صحيح باستمرار، ويكتشف رجوع الساعة بعد التشغيل،
+   فيكمل من آخر وقت معروف + مدة التشغيل، ويصحح نفسه تلقائياً من الإنترنت (NTP) أو بضبط يدوي سريع.
+   كل الصفحة تستخدم الوقت المصحّح لأن Date يُستبدل هنا قبل تحميل أي ملف آخر. */
+(function(){
+"use strict";
+var W = window, RD = W.Date, AN = W.RawayieAndroid, LK = "rws-clock", LG = "rws-clock-last";
+var FLOOR = RD.UTC(2026, 9, 1); // أي وقت قبل هذا التاريخ ساعة غير مضبوطة حتماً
+var st = {off:0, src:"device", suspect:false, at:0};
+function ls(k, v){ try { if (v === undefined) { var t = localStorage.getItem(k); return t ? JSON.parse(t) : null; } localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } }
+function up(){ try { if (AN && AN.uptime) { var u = +AN.uptime(); if (u > 0) return u; } } catch(e){} return 0; } // مدة التشغيل منذ إقلاع الجهاز (لا تتأثر بالساعة)
+var perf0 = (W.performance && W.performance.now) ? W.performance.now() : 0;
+function boot(){
+  var dev = RD.now(), u = up(), last = ls(LG), saved = ls(LK);
+  // نفس جلسة التشغيل (لم يُطفأ الجهاز): يستمر التصحيح المحفوظ
+  if (saved && saved.off && u && saved.up && u > saved.up && Math.abs((dev - saved.dev) - (u - saved.up)) < 120000) { st.off = saved.off; st.src = saved.src || "manual"; st.suspect = !!saved.suspect; return; }
+  var lastT = last && last.t || 0, lastUp = last && last.up || 0;
+  var plausible = dev >= FLOOR && dev >= lastT - 10 * 60000;
+  if (plausible) { // ساعة الجهاز تعمل (لم ترجع للخلف): يبقى تصحيح يدوي سابق إن وُجد، ويُراجع من الإنترنت عند توفره
+    if (saved && saved.off && (saved.src === "manual" || saved.src === "net") && dev + saved.off >= lastT - 10 * 60000) { st.off = saved.off; st.src = saved.src; }
+    return; }
+  // الساعة رجعت للخلف (انقطاع كهرباء بدون بطارية ساعة): أفضل تقدير = آخر وقت معروف + مدة التشغيل منذ الإقلاع
+  var est = Math.max(lastT, FLOOR);
+  if (u && lastUp && u > lastUp && Math.abs((dev - (last.dev || 0)) - (u - lastUp)) < 120000) est = lastT + (u - lastUp); // لم يُعد التشغيل: الوقت الدقيق معروف
+  else if (u) est = lastT + u;
+  st.off = est - dev; st.src = "estimate"; st.suspect = true;
+}
+boot();
+function D2(a, b, c, d, e, f, g){
+  var n = arguments.length;
+  if (!(this instanceof D2)) return new RD(RD.now() + st.off).toString();
+  switch (n) {
+    case 0: return new RD(RD.now() + st.off);
+    case 1: return new RD(a);
+    case 2: return new RD(a, b); case 3: return new RD(a, b, c); case 4: return new RD(a, b, c, d);
+    case 5: return new RD(a, b, c, d, e); case 6: return new RD(a, b, c, d, e, f); default: return new RD(a, b, c, d, e, f, g);
+  }
+}
+D2.prototype = RD.prototype; D2.UTC = RD.UTC; D2.parse = RD.parse;
+D2.now = function(){ return RD.now() + st.off; };
+W.Date = D2;
+function save(){ ls(LK, {off:st.off, src:st.src, suspect:st.suspect, dev:RD.now(), up:up()}); }
+function set(t, src){ st.off = Math.abs(t - RD.now()) < 2000 ? 0 : t - RD.now(); st.src = st.off ? src : "device"; st.suspect = false; st.at = RD.now(); save(); mark(); fire(); }
+// حفظ آخر وقت صحيح كل 30 ثانية (لا يُحفظ الوقت التقديري حتى لا يتراكم الخطأ)
+function mark(){ if (!st.suspect) ls(LG, {t:D2.now(), dev:RD.now(), up:up()}); }
+var lastDev = RD.now(), lastPerf = perf0;
+setInterval(function(){
+  // ساعة النظام تغيّرت فجأة (ضُبطت من الإنترنت أو يدوياً من إعدادات الجهاز) وأصبحت معقولة: نعتمدها
+  var dev = RD.now(), p = W.performance && W.performance.now ? W.performance.now() : 0, jump = p ? (dev - lastDev) - (p - lastPerf) : 0;
+  lastDev = dev; lastPerf = p;
+  if (st.off && Math.abs(jump) > 60000) { var last = ls(LG), lt = last && last.t || 0; if (dev >= FLOOR && dev >= lt - 600000) { st.off = 0; st.src = "device"; st.suspect = false; save(); fire(); } }
+  mark();
+}, 30000);
+mark();
+var subs = [];
+function fire(){ for (var i = 0; i < subs.length; i++) try { subs[i](st); } catch(e){} }
+/* التصحيح من الإنترنت: وقت NTP من التطبيق (لا يتأثر بشهادات HTTPS عند خطأ التاريخ)، أو رأس Date من الموقع */
+W.__rwsNetTime = function(ms){ ms = +ms; if (ms > FLOOR) { st.net = RD.now(); if (Math.abs(ms - D2.now()) > 20000 || st.suspect) set(ms, "net"); else if (st.suspect) { st.suspect = false; save(); fire(); } } };
+function netSync(){
+  try { if (AN && AN.requestNetTime) { AN.requestNetTime(); return; } } catch(e){}
+  if (!W.fetch) return;
+  var t0 = RD.now();
+  fetch(location.origin + "/?rwst=" + t0, {method:"HEAD", cache:"no-store"}).then(function(r){ var d = RD.parse(r.headers.get("Date") || ""); if (d > FLOOR) W.__rwsNetTime(d + (RD.now() - t0) / 2); }).catch(function(){});
+}
+setTimeout(netSync, 4000); setInterval(netSync, st.suspect ? 60000 : 3600000);
+setInterval(function(){ if (st.suspect) netSync(); }, 60000);
+W.RWS_CLOCK = {state:function(){ return {off:st.off, src:st.src, suspect:st.suspect, device:RD.now(), now:D2.now()}; },
+  set:function(t){ set(+t, "manual"); }, reset:function(){ st.off = 0; st.src = "device"; st.suspect = false; save(); fire(); }, sync:netSync,
+  confirm:function(){ st.suspect = false; st.src = st.off ? "manual" : "device"; save(); mark(); fire(); }, on:function(f){ subs.push(f); }};
+})();
 /* روائع الأذان: التوافق مع الأجهزة والمتصفحات القديمة
    يُحمَّل قبل باقي الملفات. يضيف ما ينقص المتصفحات القديمة (أندرويد 4.4 فما فوق، شاشات التلفاز الذكية، سفاري القديم)
    ويضع علامات على الصفحة تستعملها الأنماط البديلة. مكتوب بـ ES5 فقط. */

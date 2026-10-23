@@ -1119,6 +1119,60 @@ function actOpen(){
   };
   setTimeout(function(){ if (qH && !qH.hidden) { $(".lqtabs button", actEl).focus(); return; } (known || site0 ? code : $("#actsite", actEl) || code).focus(); }, 50);
 }
+/* ===== ساعة الجهاز (بديل RTC): ضبط سريع بالريموت عند ضياع الوقت بعد انقطاع الكهرباء ===== */
+var CK = window.RWS_CLOCK, clkEl = null, clkBadge = null;
+function two(n){ return (n < 10 ? "0" : "") + n; }
+function clkSrc(s){ return s.suspect ? "تقديري (رجعت ساعة الجهاز بعد انقطاع الكهرباء)" : s.src === "net" ? "مصحّح من الإنترنت" : s.src === "manual" ? "مضبوط يدوياً" : "ساعة الجهاز"; }
+function clkCard(){
+  if (!CK) return "";
+  var s = CK.state(), d = new Date(s.now);
+  return card("ساعة الجهاز (بديل RTC)",
+    '<div class="fld"><span><b>الوقت الآن: <span dir="ltr">' + d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate()) + " " + two(d.getHours()) + ":" + two(d.getMinutes()) + '</span></b><small>' + esc(clkSrc(s)) + '</small></span></div>' +
+    '<p class="note">إذا انقطعت الكهرباء عن جهاز بدون بطارية ساعة، يكمل التطبيق من آخر وقت صحيح حفظه، ويصحح الوقت تلقائياً من الإنترنت فور توفره. ويمكنك ضبطه يدوياً بالريموت في ثوانٍ.</p>' +
+    '<div class="row-end">' + btn("ضبط الوقت والتاريخ", "clkOpen") + '</div>');
+}
+function clkOpen(){
+  if (!CK) return;
+  if (!clkEl) { clkEl = document.createElement("div"); clkEl.id = "clk"; clkEl.className = "actov"; $("#ui").appendChild(clkEl); }
+  var t = new Date(CK.state().now); t.setSeconds(0, 0);
+  var AN = window.RawayieAndroid;
+  var row = function(k, lab){ return '<div class="ckr"><button type="button" data-ck="' + k + '-">−</button><div class="ckv"><small>' + lab + '</small><b id="ck-' + k + '"></b></div><button type="button" data-ck="' + k + '+">+</button></div>'; };
+  clkEl.innerHTML = '<div class="actbox ckbox" role="dialog" aria-modal="true" aria-labelledby="ckh"><h2 id="ckh">ضبط الوقت والتاريخ</h2>' +
+    '<p id="ck-src"></p><div class="ckbig" dir="ltr" id="ck-big"></div>' + row("h", "الساعة") + row("m", "الدقيقة") + row("d", "اليوم") + row("M", "الشهر") + row("y", "السنة") +
+    '<div class="ckact"><button type="button" class="ok" data-ck="ok">حفظ الوقت</button>' +
+    '<button type="button" data-ck="net">مزامنة من الإنترنت</button>' + (AN && AN.openDateSettings ? '<button type="button" data-ck="sys">إعدادات وقت الجهاز</button>' : "") +
+    '</div><p class="acterr" id="ck-msg" role="status"></p><button type="button" class="actlater" data-ck="x">إغلاق</button></div>';
+  clkEl.hidden = false;
+  var draw = function(){ var p = function(n){ return two(n); };
+    $("#ck-big", clkEl).textContent = t.getFullYear() + "-" + p(t.getMonth() + 1) + "-" + p(t.getDate()) + "  " + p(t.getHours()) + ":" + p(t.getMinutes());
+    $("#ck-h", clkEl).textContent = p(t.getHours()); $("#ck-m", clkEl).textContent = p(t.getMinutes()); $("#ck-d", clkEl).textContent = t.getDate(); $("#ck-M", clkEl).textContent = t.getMonth() + 1; $("#ck-y", clkEl).textContent = t.getFullYear();
+    var s = CK.state(); $("#ck-src", clkEl).textContent = "الحالي: " + clkSrc(s); };
+  draw();
+  clkEl.onclick = function(e){ var b = e.target.closest("[data-ck]"); if (!b) return; var k = b.dataset.ck, msg = $("#ck-msg", clkEl);
+    if (k === "x") { clkEl.hidden = true; return; }
+    if (k === "ok") { CK.set(t.getTime() + (new Date(CK.state().now).getSeconds()) * 0); msg.className = "acterr ok"; msg.textContent = "تم حفظ الوقت ✓ تُحسب المواقيت عليه الآن"; clkRefresh(); A.rebuild(); setTimeout(function(){ clkEl.hidden = true; }, 1200); return; }
+    if (k === "net") { msg.className = "acterr"; msg.textContent = "جارٍ جلب الوقت من الإنترنت..."; var before = CK.state(); CK.sync();
+      setTimeout(function(){ var s = CK.state(); if (s.src === "net" || (!s.suspect && before.suspect)) { t = new Date(s.now); t.setSeconds(0, 0); draw(); msg.className = "acterr ok"; msg.textContent = "تم ضبط الوقت من الإنترنت ✓"; clkRefresh(); A.rebuild(); }
+        else if (!s.suspect) { msg.className = "acterr ok"; msg.textContent = "الوقت صحيح ومطابق للإنترنت ✓"; } else { msg.className = "acterr bad"; msg.textContent = "لا يوجد اتصال بالإنترنت الآن. اضبط الوقت يدوياً"; } }, 5000); return; }
+    if (k === "sys") { try { window.RawayieAndroid.openDateSettings(); } catch(e2){} return; }
+    var u = k.slice(0, -1), dir = k.slice(-1) === "+" ? 1 : -1;
+    if (u === "h") t.setHours(t.getHours() + dir); else if (u === "m") t.setMinutes(t.getMinutes() + dir); else if (u === "d") t.setDate(t.getDate() + dir); else if (u === "M") t.setMonth(t.getMonth() + dir); else if (u === "y") t.setFullYear(t.getFullYear() + dir);
+    draw(); };
+  // الريموت: الأسهم بين الأزرار، وأرقام لوحة المفاتيح لا تُستخدم هنا
+  clkEl.onkeydown = function(e){ if (e.key === "Escape") { clkEl.hidden = true; return; }
+    var bs = $$("button", clkEl), i = bs.indexOf(document.activeElement); if (i < 0) return;
+    var n = {ArrowDown:1, ArrowUp:-1, ArrowLeft:1, ArrowRight:-1}[e.key]; if (n !== undefined) { e.preventDefault(); var j = (i + n + bs.length) % bs.length; bs[j].focus(); } };
+  setTimeout(function(){ var f = $(".ckact .ok", clkEl); if (f) f.focus(); }, 50);
+}
+// تنبيه على الشاشة ما دام الوقت تقديرياً بعد انقطاع الكهرباء (يختفي عند التصحيح)
+function clkRefresh(){
+  if (!CK || window.RAWAYIE_PREVIEW) return; var s = CK.state(), sg = document.getElementById("stage"); if (!sg) return;
+  if (clkBadge && !sg.contains(clkBadge)) clkBadge = null;
+  if (s.suspect) { if (!clkBadge) { clkBadge = document.createElement("button"); clkBadge.type = "button"; clkBadge.className = "clkwarn"; clkBadge.addEventListener("click", function(){ clkOpen(); }); sg.appendChild(clkBadge); }
+    clkBadge.textContent = "⚠ انقطعت الكهرباء ورجعت ساعة الجهاز: الوقت المعروض تقديري حتى يتصل بالإنترنت · اضغط لضبطه"; }
+  else if (clkBadge) { clkBadge.parentNode.removeChild(clkBadge); clkBadge = null; }
+}
+if (CK) { CK.on(function(){ clkRefresh(); try { A.rebuild(); } catch(e){} }); setInterval(clkRefresh, 5000); setTimeout(clkRefresh, 1500); }
 function actClose(later){ if (actEl) { actEl.hidden = true; if (actEl._stop) actEl._stop(); } if (later) { try { localStorage.setItem("rawayie-act-later", "1"); } catch(e){} try { document.cookie = "rwactlater=1; max-age=315360000; path=/; SameSite=Lax"; } catch(e){} } }
 // تطبيق مفتوح من موقع ووردبريس وغير مرتبط بعد: تظهر نافذة التفعيل تلقائياً
 setTimeout(function(){
@@ -1264,7 +1318,7 @@ function autoCard(){
 }
 
 R.general = function(){
-  return licCard() + card("رسالة بداية التشغيل",
+  return licCard() + clkCard() + card("رسالة بداية التشغيل",
     tog("تفعيل رسالة بداية التشغيل", "splash.on", "تظهر عند فتح التطبيق: البسملة ثم الشعار ثم اسم المسجد، وتختفي وحدها") +
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
@@ -1535,6 +1589,7 @@ function onClick(e){
     case "sleepPrev": close(); A.previewBlack(10000, true); break;
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
+    case "clkOpen": close(); clkOpen(); break;
     case "annReset": S.ann.azan = A.DEF.ann.azan; S.ann.iqama = A.DEF.ann.iqama; commit(); render(); toast("تمت استعادة النص الافتراضي"); break;
     case "annPrevA": case "annPrevI": close(); A.previewAnn(a === "annPrevA" ? "azan" : "iqnow"); break;
     case "splashPrev": close(); A.splash(true); break;
