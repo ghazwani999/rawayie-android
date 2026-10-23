@@ -1587,7 +1587,7 @@ function onClick(e){
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
     case "licCheck": if (window.LICENSE) window.LICENSE.check().then(function(ok){ toast(ok ? "تم تحديث الترخيص ✓" : (window.LICENSE.status().msg || "تعذر الاتصال بموقع الإدارة")); render(); }); break;
     case "licKey": var lk = $("#liccode"); if (lk) { var dg = lk.value.replace(/\D/g, ""); dg = x === "del" ? dg.slice(0, -1) : (dg + x).slice(0, 8); lk.value = dg.length > 4 ? dg.slice(0, 4) + " " + dg.slice(4) : dg; } break;
-    case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#ff8a8a"; } } break;
+    case "licAct": var lc = $("#liccode"); if (window.LICENSE && lc && window.LICENSE.activate(lc.value)) { toast("تم تفعيل التطبيق ✓"); render(); } else { var lm = $("#licmsg"); if (lm) { lm.textContent = "الكود غير صحيح لهذا الجهاز"; lm.style.color = "#FF4D4D"; } } break;
     case "goto": var gi = x.indexOf("|"); gotoOpt(x.slice(0, gi), x.slice(gi + 1)); break;
     case "resetTimes": S.adj = JSON.parse(JSON.stringify(A.DEF.adj)); S.iq = JSON.parse(JSON.stringify(A.DEF.iq)); S.duha = A.DEF.duha; S.shift = 0; S.summer = false; S.ramadan30 = false; S.hijriAdj = 0; commit(); render(); toast("تمت إعادة الضبط"); break;
     case "calEdit": calEdit = x; render(); var cb = $(".calbox", body); if (cb && cb.scrollIntoView) cb.scrollIntoView({block:"center"}); break;

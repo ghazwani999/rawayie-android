@@ -11,7 +11,7 @@
 <title>روائع الأذان</title>
 <style>
 /* شاشة المسجد: مسرح ثابت المقاس (1080×1920 رأسي أو 1920×1080 أفقي) يُكبَّر ليملأ الشاشة؛ لوحة إعدادات داكنة مستقلة */
-:root{--ink:#000;--sbg:#0B1528;--scard:#122039;--sline:#22365A;--stext:#EEF2F8;--smuted:#9AAAC2;--sacc:#E7B65B;--sdanger:#E5636B;--son:#2E7FD0;
+:root{--ink:#000;--sbg:#0B1528;--scard:#122039;--sline:#22365A;--stext:#EEF2F8;--smuted:#9AAAC2;--sacc:#E7B65B;--sdanger:#F03E3E;--son:#2E7FD0;
 color-scheme:dark;box-sizing:border-box}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
@@ -69,7 +69,7 @@ body{font-family:"Cairo",Tahoma,sans-serif;color:#fff}
 .sx{display:flex;flex-direction:column;align-items:center;gap:4px}
 .ss{color:var(--fg);line-height:1}
 .ap{color:var(--fg);font-style:normal}
-.red{color:#ff5a5a!important}
+.red{color:#FF3B30!important}
 .zone{position:relative;display:flex;flex-direction:column;flex:none}
 .L .zone{flex:1;justify-content:center}
 .zone.sliding>*:not(.slide){visibility:hidden}
@@ -141,7 +141,7 @@ html{-webkit-tap-highlight-color:transparent}
 .foot{text-align:center;color:var(--fg2);font-family:"Cairo",sans-serif;font-weight:400;text-shadow:none;flex:none}
 .foot,.o-ver{direction:ltr;unicode-bidi:isolate}
 .fsite{font-weight:600;letter-spacing:.02em;unicode-bidi:isolate}.floc{font-weight:600}.fsep{margin:0 .7em;font-weight:400}
-.net{color:#5fd38d}.net.off{color:#ff5a5a}.warn{color:var(--acc)}
+.net{color:#5fd38d}.net.off{color:#FF3B30}.warn{color:var(--acc)}
 .flag{position:absolute;bottom:26px;left:30px;width:62px;height:62px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .hdr{display:flex;align-items:center;justify-content:center;gap:24px}
 .hdr .logo{height:110px;object-fit:contain;opacity:var(--logoop,1)}
@@ -293,11 +293,11 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .ring circle{fill:none;stroke-width:9}
 .ring .r0{stroke:rgba(255,255,255,.12)}
 .ring .r1{stroke:var(--accraw);stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .4s;filter:drop-shadow(0 0 6px rgba(0,0,0,.35))}
-.ring .r1.red{stroke:#ff5a5a}
+.ring .r1.red{stroke:#FF3B30}
 .ring .rt line{stroke:rgba(255,255,255,.28);stroke-width:1.2;stroke-linecap:round}
 .ring .rdot{transform-origin:100px 100px;transition:transform 1s linear}
 .ring .rdot circle{fill:#fff;stroke:var(--accraw);stroke-width:3;filter:drop-shadow(0 0 6px var(--accraw))}
-.ring .rdot.red circle{stroke:#ff5a5a;filter:drop-shadow(0 0 6px #ff5a5a)}
+.ring .rdot.red circle{stroke:#FF3B30;filter:drop-shadow(0 0 6px #FF3B30)}
 .rin{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
 .o-lbl{font-size:40px;color:var(--fg2)}
 .o-at{font-size:38px;color:var(--accraw);direction:rtl}
@@ -614,7 +614,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 }
 @media (prefers-reduced-motion:reduce){.tick.mq{animation:none;left:auto;right:24px}.fade{animation:none}}
 
-#set .pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:30px;border-radius:999px;font-weight:700;background:rgba(255,255,255,.08);color:var(--smuted)}#set .pill.ok{background:rgba(47,164,99,.18);color:#4fd18b}#set .pill.bad{background:rgba(229,99,107,.18);color:var(--sdanger)}
+#set .pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:30px;border-radius:999px;font-weight:700;background:rgba(255,255,255,.08);color:var(--smuted)}#set .pill.ok{background:rgba(47,164,99,.18);color:#4fd18b}#set .pill.bad{background:rgba(240,62,62,.18);color:var(--sdanger)}
 
 /* ===== تنظيم الإعدادات: مجموعات وأيقونات وصفحة رئيسية وبحث ===== */
 #set .ico{width:20px;height:20px;flex:none;pointer-events:none}
@@ -664,7 +664,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 /* ===== الفترة التجريبية والتفعيل ===== */
 .licbadge{position:absolute;right:24px;bottom:8px;z-index:4;font:600 18px/1.4 "Cairo",Tahoma,sans-serif;color:rgba(255,255,255,.78);background:rgba(0,0,0,.38);padding:4px 18px;border-radius:999px;white-space:nowrap;direction:rtl}
 .licstrip{display:flex;width:100%;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:14px 18px;border-radius:14px;border:1px solid #c99a3d;background:linear-gradient(90deg,rgba(231,182,91,.16),rgba(231,182,91,.06));color:var(--stext);text-align:start;font:inherit;cursor:pointer}
-.licstrip.bad{border-color:var(--sdanger);background:rgba(229,99,107,.14)}
+.licstrip.bad{border-color:var(--sdanger);background:rgba(240,62,62,.14)}
 .licstrip b{display:block;font-size:16px}.licstrip small{display:block;color:var(--smuted);font-size:13px;margin-top:2px}
 .licstrip .lsid{flex:none;text-align:center}.licstrip .lsid b{font-size:24px;letter-spacing:3px;color:var(--sacc);direction:ltr}
 .P .licbadge{top:auto;bottom:50px;right:50%;transform:translateX(50%);font-size:20px}
@@ -696,7 +696,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .licnum button:focus,.licgo:focus,.licsite:focus,.licwa:focus{outline:4px solid #E7B65B;outline-offset:3px}
 .licgo{width:100%;max-width:478px;height:96px;font:700 42px "Cairo",Tahoma,sans-serif;border:0;border-radius:22px;background:#5b5240;color:#d8cfbd;cursor:pointer;transition:background .2s}
 .licgo.ready{background:#E7B65B;color:#1a1206;box-shadow:0 10px 26px rgba(231,182,91,.3)}
-.licerr{font-size:30px;color:#ff8a8a;font-weight:700}.licerr.ok{color:#9be29b}
+.licerr{font-size:30px;color:#FF4D4D;font-weight:700}.licerr.ok{color:#9be29b}
 /* الأفقي: المعلومات يميناً وإدخال الكود يساراً */
 .L .licbox{max-width:1720px;flex-direction:row;align-items:center;gap:56px}
 .L .licinfo,.L .licf{flex:1 1 0;min-width:0}
@@ -748,7 +748,7 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 .lqsteps{margin:0;padding:0 1.4em 0 0;text-align:right;font-size:.86em;line-height:1.6;opacity:.92}
 .lqcode{font-size:.82em;opacity:.9;display:flex;flex-direction:column;align-items:center;gap:.1em}
 .lqcode b{font:800 1.9em/1.1 "Cairo",Tahoma,monospace;letter-spacing:.12em;color:#fff;direction:ltr}
-.lqst{font-size:.85em;min-height:1.4em;opacity:.85}.lqst.ok{color:#3ddc84;opacity:1;font-weight:800;font-size:1.05em}.lqst.bad{color:#ff8a80;opacity:1}
+.lqst{font-size:.85em;min-height:1.4em;opacity:.85}.lqst.ok{color:#3ddc84;opacity:1;font-weight:800;font-size:1.05em}.lqst.bad{color:#FF4D4D;opacity:1}
 .lqnew{font:inherit;font-size:.8em;background:none;border:1px solid rgba(255,255,255,.25);color:inherit;border-radius:999px;padding:.2em 1em;cursor:pointer}
 .lqnew:focus{outline:3px solid #E7B65B}
 /* داخل شاشة التفعيل (وحدات التصميم) */
@@ -892,16 +892,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610240116"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610240116"></script>
-<script charset="utf-8" src="data.js?v=2610240116"></script>
-<script charset="utf-8" src="i18n.js?v=2610240116"></script>
-<script charset="utf-8" src="version.js?v=2610240116"></script>
-<script charset="utf-8" src="app.js?v=2610240116"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610240116"></script>
-<script charset="utf-8" src="vendor/qr.js?v=2610240116"></script>
-<script charset="utf-8" src="lic-key.js?v=2610240116"></script>
-<script charset="utf-8" src="license.js?v=2610240116"></script>
-<script charset="utf-8" src="remote.js?v=2610240116"></script>
-<script charset="utf-8" src="offline.js?v=2610240116"></script>
-<script charset="utf-8" src="settings.js?v=2610240116"></script>
+<script charset="utf-8" src="compat.js?v=2610240121"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610240121"></script>
+<script charset="utf-8" src="data.js?v=2610240121"></script>
+<script charset="utf-8" src="i18n.js?v=2610240121"></script>
+<script charset="utf-8" src="version.js?v=2610240121"></script>
+<script charset="utf-8" src="app.js?v=2610240121"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610240121"></script>
+<script charset="utf-8" src="vendor/qr.js?v=2610240121"></script>
+<script charset="utf-8" src="lic-key.js?v=2610240121"></script>
+<script charset="utf-8" src="license.js?v=2610240121"></script>
+<script charset="utf-8" src="remote.js?v=2610240121"></script>
+<script charset="utf-8" src="offline.js?v=2610240121"></script>
+<script charset="utf-8" src="settings.js?v=2610240121"></script>
