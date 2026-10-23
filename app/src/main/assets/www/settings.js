@@ -1219,6 +1219,9 @@ R.perms = function(){
     '<label class="fld" for="pw"><span><b>كلمة سر مدير الشاشة</b><small>' + (S.pass ? "مفعلة. المدير يملك كل الصلاحيات" : "غير مفعلة: الإعدادات مفتوحة للجميع") + '</small></span><input type="password" id="pw" placeholder="' + (S.pass ? "اكتب كلمة جديدة أو اتركها فارغة للإلغاء" : "اكتب كلمة السر") + '" autocomplete="new-password"></label>' +
     '<div class="row-end">' + btn("حفظ كلمة سر المدير", "pwSave") + '</div>',
     "يجب تفعيل كلمة سر المدير أولاً حتى تعمل صلاحيات المشرف") +
+  (S.pass ? card("بقاء الدخول مفتوحاً",
+    numIn("طلب كلمة السر مرة أخرى بعد عدم الاستخدام", "lockMin", 0, 720, 5, "دقيقة", "بعد إدخال كلمة السر يبقى المدير أو المشرف داخل الإعدادات بدون طلبها في كل مرة، حتى يمر هذا الوقت بدون أي استخدام. 0 = تُطلب عند كل فتح للإعدادات") +
+    '<div class="row-end">' + btn("قفل الإعدادات الآن", "lockNow", "ghost") + '</div>') : "") +
   card("حساب مشرف المسجد",
     txt("اسم المشرف", "sup.name") +
     '<label class="fld" for="spw"><span><b>كلمة سر المشرف</b><small>' + (S.sup.pass ? "مفعلة" : "غير مفعلة") + '. يجب أن تختلف عن كلمة سر المدير</small></span><input type="password" id="spw" placeholder="' + (S.sup.pass ? "كلمة جديدة أو فارغة للإلغاء" : "اكتب كلمة سر المشرف") + '" autocomplete="new-password"></label>' +
@@ -1602,6 +1605,7 @@ function onClick(e){
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
+    case "lockNow": unlocked = false; lockSave(); close(); toast("تم قفل الإعدادات"); break;
     case "offAdmin": try { window.RawayieAndroid.requestAdmin(); } catch(e){} setTimeout(render, 4000); break;
     case "offTest": try { if (window.RawayieAndroid.screenOff(Date.now() - (window.RWS_CLOCK ? window.RWS_CLOCK.state().off : 0) + 30000)) toast("تنطفئ الشاشة الآن وتعود بعد 30 ثانية"); else toast("تعذر الإطفاء في هذا الجهاز"); } catch(e){ toast("تعذر الإطفاء في هذا الجهاز"); } break;
     case "annReset": S.ann.azan = A.DEF.ann.azan; S.ann.iqama = A.DEF.ann.iqama; commit(); render(); toast("تمت استعادة النص الافتراضي"); break;
@@ -1703,10 +1707,19 @@ function open(){
   if (!panel) build();
   sIndex = null;
   panel.hidden = false; document.body.classList.add("setopen");
+  if (S.pass && unlocked && !lockValid()) unlocked = false;
+  if (S.pass && unlocked) lastAct = Date.now();
   if (S.pass && !unlocked) { $("#lock").hidden = false; $("#setwrap").hidden = true; setTimeout(function(){ $("#lockpw").focus(); }, 50); }
   else { $("#lock").hidden = true; $("#setwrap").hidden = false; render(); }
 }
-function close(){ if (S.pass) { unlocked = false; } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
+/* بقاء الدخول: بعد كلمة السر لا تُطلب مرة أخرى حتى يمر وقت عدم الاستخدام (يبقى بعد إعادة تحميل الصفحة في نفس التشغيل) */
+var lastAct = 0, LKS = "rws-unlock";
+function lockMin(){ var m = S.lockMin; return m === undefined || m === null || m === "" ? 15 : Math.max(0, +m || 0); }
+function lockSave(){ try { if (unlocked && S.pass && lockMin() > 0) sessionStorage.setItem(LKS, JSON.stringify({role:role, at:lastAct || Date.now()})); else sessionStorage.removeItem(LKS); } catch(e){} }
+function lockValid(){ if (!S.pass || !unlocked) return unlocked; var m = lockMin(); if (!m) return false; if (Date.now() - (lastAct || 0) > m*60000) { unlocked = false; lockSave(); return false; } return true; }
+(function(){ try { var o = JSON.parse(sessionStorage.getItem(LKS) || "null"); if (o && S.pass && Date.now() - o.at < lockMin()*60000 && (o.role === "admin" || (o.role === "sup" && S.sup.pass))) { unlocked = true; role = o.role; lastAct = o.at; } } catch(e){} })();
+["keydown", "pointerdown", "touchstart", "wheel"].forEach(function(ev){ document.addEventListener(ev, function(){ if (unlocked && S.pass && panel && !panel.hidden) { var n = Date.now(); if (n - lastAct > 20000) { lastAct = n; lockSave(); } else lastAct = n; } }, {capture:true, passive:true}); });
+function close(){ if (S.pass) { if (lockMin() > 0 && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
   panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
@@ -1747,8 +1760,8 @@ function build(){
   panel.addEventListener("keydown", function(e){ if (e.key === "Escape" && VK.el && !VK.el.hidden && VK.docked) { e.stopPropagation(); var tt = VK.t; vkClose(); if (tt) tt.focus(); } }, true);
   $("#lock").addEventListener("submit", function(e){ e.preventDefault();
     var v = $("#lockpw").value;
-    if (v === S.pass) { unlocked = true; role = "admin"; }
-    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; }
+    if (v === S.pass) { unlocked = true; role = "admin"; lastAct = Date.now(); lockSave(); }
+    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; lastAct = Date.now(); lockSave(); }
     else { $("#lockerr").hidden = false; return; }
     $("#lockpw").value = ""; $("#lockerr").hidden = true; open(); });
 }
