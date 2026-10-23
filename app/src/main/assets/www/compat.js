@@ -6,8 +6,11 @@
 var W = window, D = document, H = D.documentElement;
 
 /* وضع المعاينة: لوحة المدير تفتح شاشة مسجد في صفحة جديدة لعرضها كما هي، بدون حفظ أي شيء في هذا الجهاز */
-W.RAWAYIE_PREVIEW = /[?&]preview=1(&|$)/.test(location.search);
-if (W.RAWAYIE_PREVIEW) H.className += (H.className ? " " : "") + "preview";
+/* وضع الإدارة من الموقع (manage=1): نفس واجهة الإعدادات في التطبيق، والحفظ يذهب لإعدادات الشاشة في الموقع.
+   يعمل مثل المعاينة (لا يحفظ في هذا المتصفح ولا يفعّل هذا الجهاز) مع فتح الإعدادات */
+W.RAWAYIE_MANAGE = /[?&]manage=1(&|$)/.test(location.search);
+W.RAWAYIE_PREVIEW = W.RAWAYIE_MANAGE || /[?&]preview=1(&|$)/.test(location.search);
+if (W.RAWAYIE_PREVIEW) H.className += (H.className ? " " : "") + (W.RAWAYIE_MANAGE ? "preview manage" : "preview");
 
 // آخر خطأ في الصفحة يُرسل مع حالة الشاشة للوحة المدير، للتشخيص عن بعد
 W.__lastErr = ""; W.addEventListener("error", function(e){ try { W.__lastErr = String(e.message || e.error || "") + (e.filename ? " @" + String(e.filename).split("/").pop().split("?")[0] + ":" + e.lineno : ""); } catch(x){} });

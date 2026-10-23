@@ -90,7 +90,14 @@ function secOf(k){ for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i][0] 
 function groupName(g){ for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][0] === g) return GROUPS[i][1]; return ""; }
 var R = {};
 var ADMIN_ONLY = {perms:1, general:1, remote:1};
-function allowed(sec){ if (sec === "home") return true; if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
+/* وضع الإدارة من الموقع: أقسام الجهاز نفسه لا تظهر (الربط وكلمة السر والتشغيل)، ومشرف الموقع يرى أقسامه المسموحة فقط */
+var MANAGE_HIDE = {remote:1, perms:1, general:1};
+var WP_SEC = {mosque:"mosque", times:"times", calendar:"times", friday:"times", screens:"screens", hide:"screens", sounds:"screens", adhkar:"adhkar", news:"news", texts:"texts", slides:"slides", boards:"slides",
+  display:"look", look:"look", hilite:"look", fonts:"look", layout:"look", shadow:"look", weather:"look", rotate:"rotate"};
+function manageSecs(){ var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
+function allowed(sec){ if (sec === "home") return true;
+  if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
+    return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0)); } if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
 function firstAllowed(){ for (var i = 0; i < SECTIONS.length; i++) if (allowed(SECTIONS[i][0])) return SECTIONS[i][0]; return ""; }
 function anyAllowed(){ return !!firstAllowed(); }
 
@@ -531,6 +538,7 @@ var VK_L = {
 var VK_ALT = {"ا":["أ","إ","آ","ٱ"],"ى":["ئ"],"ي":["ئ"],"و":["ؤ"],"ه":["ة"],".":["َ","ُ","ِ","ّ","ْ","ً","ٌ","ٍ"],"،":["؛","؟","!",":"],",":[";","?","!",":"],"e":["é","è"],"a":["à","á"]};
 function vkOn(){ var v = vkOn0(); imeSync(v); return v; }
 function vkOn0(){
+  if (window.RAWAYIE_MANAGE) return false; // الموقع: لوحة مفاتيح الكمبيوتر أو الجوال نفسه
   var m = S.vkb || "auto"; if (m === "on") return true; if (m === "off") return false;
   var AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
   if (rot) return true; // الشاشة مدوّرة: لوحة النظام تظهر بالعرض فتغطيها
@@ -1060,15 +1068,29 @@ function actOpen(){
   var known = R0.wpSite(), site0 = known || (S.remote && S.remote.site) || "";
   if (!actEl) { actEl = document.createElement("div"); actEl.id = "act"; actEl.className = "actov"; $("#ui").appendChild(actEl); }
   var keys = ["1","2","3","4","5","6","7","8","9","del","0","ok"];
+  var hasQR = !!(R0.linkSession && window.LICENSE && window.LICENSE.qrPanel && window.QRSvg);
+  if (actEl._stop) actEl._stop();
   actEl.innerHTML = '<div class="actbox" role="dialog" aria-modal="true" aria-labelledby="acth"><img src="img/mark.png" alt=""><h2 id="acth">ربط الشاشة وتفعيلها</h2>' +
-    '<p>اكتب <b>كود التفعيل (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
+    (hasQR ? '<div class="lqtabs" role="tablist"><button type="button" data-m="qr">ربط بالجوال (QR)</button><button type="button" data-m="code">كود التفعيل</button></div><div class="actqr"></div>' : "") +
+    '<div class="actman"><p>اكتب <b>كود التفعيل (6 أرقام)</b> من لوحة المدير ← شاشات المساجد</p>' +
     (window.LICENSE ? '<p class="actdev">رقم الجهاز: <b dir="ltr">' + esc(window.LICENSE.status().idText) + '</b></p>' : "") +
     (known ? '<p class="actsite" dir="ltr">' + esc(known.replace(/^https?:\/\//, "")) + '</p>' :
       '<label class="actf" for="actsite"><span>عنوان موقع الإدارة</span><input id="actsite" type="url" dir="ltr" placeholder="example.com" autocomplete="url" value="' + esc(site0.replace(/^https?:\/\//, "")) + '"></label>') +
     '<input id="actcode" class="actcode" dir="ltr" inputmode="none" autocomplete="one-time-code" maxlength="9" placeholder="•••• ••••" aria-label="كود التفعيل أو الربط">' +
     '<div class="actpad">' + keys.map(function(k, i){ return '<button type="button" data-k="' + k + '" data-i="' + i + '"' + (k === "ok" ? ' class="ok"' : "") + '>' + (k === "del" ? "⌫" : k === "ok" ? "تفعيل" : k) + '</button>'; }).join("") + '</div>' +
-    '<p class="acterr" id="acterr" role="alert"></p><button type="button" class="actlater" data-k="later">لاحقاً</button></div>';
+    '<p class="acterr" id="acterr" role="alert"></p></div><button type="button" class="actlater" data-k="later">لاحقاً</button></div>';
   actEl.hidden = false;
+  // الربط برمز QR أولاً (يحتاج عنوان الموقع)، وكود التفعيل بديل
+  var qH = $(".actqr", actEl), qS = null, man = $(".actman", actEl);
+  var siteNow = function(){ return known || ($("#actsite", actEl) || {}).value || site0 || ""; };
+  var setM = function(m){ if (!qH) return;
+    if (m === "qr" && !String(siteNow()).trim()) { m = "code"; var e0 = $("#acterr", actEl); e0.className = "acterr bad"; e0.textContent = "اكتب عنوان موقع الإدارة أولاً، ثم اختر «ربط بالجوال»"; }
+    $$(".lqtabs button", actEl).forEach(function(b){ b.className = b.dataset.m === m ? "on" : ""; });
+    qH.hidden = m !== "qr"; man.hidden = m === "qr";
+    if (m === "qr" && !qS) qS = window.LICENSE.qrPanel(qH, siteNow(), function(){ actClose(); A.rebuild(); });
+    if (m !== "qr" && qS) { qS.stop(); qS = null; } };
+  actEl._stop = function(){ if (qS) qS.stop(); qS = null; };
+  if (qH) { $(".lqtabs", actEl).addEventListener("click", function(e){ var b = e.target.closest("[data-m]"); if (b) setM(b.dataset.m); }); setM(known || site0 ? "qr" : "code"); }
   var code = $("#actcode", actEl), err = $("#acterr", actEl);
   var fmt = function(){ var d = code.value.replace(/\D/g, "").slice(0, 6); code.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; };
   var go = function(){
@@ -1087,16 +1109,16 @@ function actOpen(){
   // ريموت التلفاز: الأسهم تتنقل بين أزرار لوحة الأرقام، والأرقام تُكتب مباشرة
   actEl.onkeydown = function(e){
     var t = e.target, i = t.dataset && t.dataset.i !== undefined ? +t.dataset.i : -1, pad = $$(".actpad button", actEl);
-    if (/^[0-9]$/.test(e.key) && t !== code && t.id !== "actsite") { e.preventDefault(); code.value = code.value.replace(/\D/g, "") + e.key; fmt(); return; }
+    if (/^[0-9]$/.test(e.key) && t !== code && t.id !== "actsite") { e.preventDefault(); if (qH && !qH.hidden) setM("code"); code.value = code.value.replace(/\D/g, "") + e.key; fmt(); return; }
     if (e.key === "Enter" && (t === code || t.id === "actsite")) { e.preventDefault(); go(); return; }
     if (e.key === "Escape") { actClose(true); return; }
     if (i >= 0) { var n = {ArrowRight:-1, ArrowLeft:1, ArrowDown:3, ArrowUp:-3}[e.key];
       if (n !== undefined) { e.preventDefault(); var j = i + n; if (j >= 0 && j < pad.length) pad[j].focus(); else if (j < 0) code.focus(); } }
     else if (t === code && e.key === "ArrowDown") { e.preventDefault(); pad[1].focus(); }
   };
-  setTimeout(function(){ (known || site0 ? code : $("#actsite", actEl) || code).focus(); }, 50);
+  setTimeout(function(){ if (qH && !qH.hidden) { $(".lqtabs button", actEl).focus(); return; } (known || site0 ? code : $("#actsite", actEl) || code).focus(); }, 50);
 }
-function actClose(later){ if (actEl) actEl.hidden = true; if (later) { try { localStorage.setItem("rawayie-act-later", "1"); } catch(e){} try { document.cookie = "rwactlater=1; max-age=315360000; path=/; SameSite=Lax"; } catch(e){} } }
+function actClose(later){ if (actEl) { actEl.hidden = true; if (actEl._stop) actEl._stop(); } if (later) { try { localStorage.setItem("rawayie-act-later", "1"); } catch(e){} try { document.cookie = "rwactlater=1; max-age=315360000; path=/; SameSite=Lax"; } catch(e){} } }
 // تطبيق مفتوح من موقع ووردبريس وغير مرتبط بعد: تظهر نافذة التفعيل تلقائياً
 setTimeout(function(){
   var R0 = window.REMOTE, later = false, L0 = window.LICENSE;
@@ -1265,7 +1287,7 @@ R.general = function(){
 
 /* ===== الصفحة الرئيسية للإعدادات: كل الأقسام في مجموعات مع البحث في كل الخيارات ===== */
 /* شريط التفعيل أعلى صفحة الإعدادات: رقم الجهاز ظاهر دائماً حتى يُرسل لطلب كود التفعيل */
-function licStrip(){
+function licStrip(){ if (window.RAWAYIE_MANAGE) return "";
   var L = window.LICENSE; if (!L) return ""; var s = L.status(); if (s.active) return "";
   return '<button type="button" class="licstrip' + (s.expired ? " bad" : "") + '" data-act="goto" data-x="general|رقم الجهاز"><span><b>' + (s.trial ? "نسخة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : s.pending ? "جارٍ التحقق من ترخيص الشاشة" : esc(s.msg || "الشاشة غير مفعّلة")) + '</b><small>أرسل رقم الجهاز عبر واتساب ' + esc(s.wa) + ' لطلب كود التفعيل من الإدارة</small></span><span class="lsid"><small>رقم الجهاز</small><b dir="ltr">' + esc(s.idText) + '</b></span></button>';
 }
@@ -1393,13 +1415,13 @@ function shrink(file, max){
 function saveAll(){
   A.save();
   var b = $("#saveall"), jobs = [];
-  if (window.REMOTE && S.remote && S.remote.on) jobs.push(window.REMOTE.push());
+  if (window.REMOTE && ((S.remote && S.remote.on) || window.RAWAYIE_MANAGE)) jobs.push(window.REMOTE.push());
   if (window.OFFLINE && window.OFFLINE.prepare) jobs.push(window.OFFLINE.prepare());
   if (b) { b.disabled = true; b.textContent = "جارٍ الحفظ..."; }
   Promise.all(jobs.map(function(p){ return Promise.resolve(p).catch(function(){}); })).then(function(){
     var z = A.zp(Date.now()); S.savedAt = Date.now(); A.save();
     if (b) { b.disabled = false; b.textContent = "تم الحفظ ✓"; b.classList.add("ok"); setTimeout(function(){ b.textContent = "حفظ الإعدادات"; b.classList.remove("ok"); }, 2500); }
-    toast("تم حفظ جميع الإعدادات في هذا الجهاز" + (S.remote && S.remote.on ? " والخادم" : "") + " · " + A.two(z.h) + ":" + A.two(z.m));
+    toast((window.RAWAYIE_MANAGE ? "تم الحفظ في الموقع، ويصل للشاشة خلال دقيقة" : "تم حفظ جميع الإعدادات في هذا الجهاز" + (S.remote && S.remote.on ? " والخادم" : "")) + " · " + A.two(z.h) + ":" + A.two(z.m));
   });
 }
 // ملف واحد فيه كل الإعدادات مع الشعار والخلفيات والأصوات والشرائح المرفوعة
@@ -1607,7 +1629,7 @@ function saveBoard(x){
 
 /* ===== الفتح والإغلاق ===== */
 function open(){
-  if (window.RAWAYIE_PREVIEW) return; // المعاينة للعرض فقط، والتعديل من لوحة المدير
+  if (window.RAWAYIE_PREVIEW && !window.RAWAYIE_MANAGE) return; // المعاينة للعرض فقط، والتعديل من لوحة المدير
   if (!panel) build();
   sIndex = null;
   panel.hidden = false; document.body.classList.add("setopen");
@@ -1785,5 +1807,5 @@ function stepBack(){ if (back()) return; if (panel && !panel.hidden) close(); }
 document.addEventListener("mouseup", function(e){ if (e.button === 3) { e.preventDefault(); stepBack(); } }, true);
 document.addEventListener("auxclick", function(e){ if (e.button === 3) e.preventDefault(); }, true);
 document.addEventListener("contextmenu", function(e){ if (panel && !panel.hidden) { e.preventDefault(); stepBack(); } }, true);
-window.SETTINGS = {open:open, close:close, back:back, stepBack:stepBack};
+window.SETTINGS = {open:open, close:close, back:back, stepBack:stepBack, refresh:function(){ if (panel && !panel.hidden) render(); }};
 })();
