@@ -539,8 +539,9 @@ var VK_ALT = {"ا":["أ","إ","آ","ٱ"],"ى":["ئ"],"ي":["ئ"],"و":["ؤ"],"ه
 function vkOn(){ var v = vkOn0(); imeSync(v); return v; }
 function vkOn0(){
   if (window.RAWAYIE_MANAGE) return false; // الموقع: لوحة مفاتيح الكمبيوتر أو الجوال نفسه
-  var m = S.vkb || "auto"; if (m === "on") return true; if (m === "off") return false;
-  var AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
+  var m = S.vkb || "auto", AN = window.RawayieAndroid, rot = +document.documentElement.getAttribute("data-rot") || 0;
+  if (rot && AN) return true; // تطبيق أندرويد والشاشة مدوّرة: لوحة النظام تظهر بالعرض دائماً، فتُستخدم لوحة التطبيق المدوّرة معها
+  if (m === "on") return true; if (m === "off") return false;
   if (rot) return true; // الشاشة مدوّرة: لوحة النظام تظهر بالعرض فتغطيها
   if (AN) return true; // تطبيق أندرويد (تلفاز أو جوال): لوحة التطبيق والمحرر الخاص في كل الحقول ومنها البحث
   return false;
@@ -1659,6 +1660,8 @@ function build(){
   panel.addEventListener("mousedown", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el)) { e.preventDefault(); edOpen(el); } });
   panel.addEventListener("keydown", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el) && (e.key.length === 1 || e.key === "Enter") && !e.ctrlKey && !e.metaKey) { e.preventDefault(); edOpen(el); if (e.key.length === 1) { var t = $("#edt"); t.value += e.key; t.dispatchEvent(new Event("input")); } } });
   panel.addEventListener("touchend", function(e){ if (S.textEditor === false) return; var el = e.target; if (edEligible(el)) { e.preventDefault(); edOpen(el); } });
+  // الفأرة (USB أو مؤشر الريموت): الضغط على حقل نص يفتح المحرر الخاص ولوحة التطبيق، فلا تظهر لوحة النظام بالعرض في الوضع الرأسي
+  panel.addEventListener("mouseup", function(e){ if (S.textEditor === false || e.button !== 0) return; var el = e.target; if (edEligible(el) && !(ED.el && $("#ed") && !$("#ed").hidden)) { e.preventDefault(); edOpen(el); } });
   pkBind(panel);
   panel.addEventListener("click", onClick); panel.addEventListener("change", onChange); panel.addEventListener("input", onSlInput);
   // لوحة المفاتيح الخاصة: تمنع لوحة النظام قبل أن تظهر، وتفتح تحت الحقل
@@ -1666,6 +1669,7 @@ function build(){
   panel.addEventListener("pointerdown", vkPre, true); panel.addEventListener("touchstart", vkPre, {capture:true, passive:true});
   panel.addEventListener("focusin", function(e){
     var el = e.target;
+    if (vkOn() && /^(INPUT|TEXTAREA)$/.test(el.tagName)) { imeHide(); setTimeout(imeHide, 150); setTimeout(imeHide, 500); } // احتياط: أي لوحة نظام تظهر تُغلق فوراً
     if (VK.el && !VK.el.hidden && VK.docked && el !== VK.t && !VK.el.contains(el)) vkClose();
     if (!vkOn() || !vkTyping(el) || el.closest("#ed") || el.closest(".vkwrap")) return;
     if (S.textEditor !== false && edEligible(el)) return; // يفتح المحرر الخاص ومعه لوحة المفاتيح

@@ -68,6 +68,15 @@ public class MainActivity extends Activity {
         }).start();
     }
 
+    private boolean imeVisible() {
+        try {
+            View d = getWindow().getDecorView();
+            if (Build.VERSION.SDK_INT >= 30) { android.view.WindowInsets wi = d.getRootWindowInsets(); if (wi != null) return wi.isVisible(android.view.WindowInsets.Type.ime()); }
+            android.graphics.Rect r = new android.graphics.Rect(); d.getWindowVisibleDisplayFrame(r);
+            int h = d.getRootView().getHeight(); return h > 0 && h - r.bottom > h * 0.15;
+        } catch (Exception e) { return false; }
+    }
+
     private void hideIme() {
         try {
             android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -139,6 +148,8 @@ public class MainActivity extends Activity {
         root.addView(splashView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         ui.postDelayed(this::hideSplash, 12000); // احتياط: لا تبقى شاشة البداية أبداً
         setContentView(root);
+        // احتياط: إذا ظهرت لوحة مفاتيح النظام رغم تفعيل لوحة التطبيق (الفأرة أو نسخ WebView القديمة) تُغلق فوراً
+        root.getViewTreeObserver().addOnGlobalLayoutListener(() -> { if (imeBlock && imeVisible()) hideIme(); });
         if (Build.VERSION.SDK_INT >= 26) web.setOnCapturedPointerListener((v, ev) -> onVMouse(ev));
 
         WebSettings s = web.getSettings();
