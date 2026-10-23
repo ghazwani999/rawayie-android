@@ -87,6 +87,44 @@ public class MainActivity extends Activity {
         finally { if (sock != null) sock.close(); }
     }
 
+    private boolean dimmed = false;
+    boolean screenOff(long until) {
+        long now = System.currentTimeMillis();
+        if (until <= now + 15000 || until > now + 6 * 3600000L) return false; // مدة معقولة فقط
+        getSharedPreferences("rawayie", MODE_PRIVATE).edit().putLong("offUntil", until).apply();
+        // منبّه بالنظام يعيد الشاشة حتى لو نام المعالج، ومؤقت داخلي احتياطي
+        try {
+            android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(ALARM_SERVICE);
+            int fl = android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? android.app.PendingIntent.FLAG_IMMUTABLE : 0);
+            android.app.PendingIntent pi = android.app.PendingIntent.getBroadcast(this, 7, new Intent(this, WakeReceiver.class), fl);
+            boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
+            if (exact && Build.VERSION.SDK_INT >= 23) am.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, until, pi);
+            else if (Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, until, pi);
+            else am.setExact(android.app.AlarmManager.RTC_WAKEUP, until, pi);
+        } catch (Exception ignored) { }
+        ui.removeCallbacks(wakeTask); ui.postDelayed(wakeTask, until - now);
+        runOnUiThread(() -> {
+            boolean locked = false;
+            try {
+                android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+                android.content.ComponentName cn = new android.content.ComponentName(this, AdminReceiver.class);
+                if (dpm != null && dpm.isAdminActive(cn)) { dpm.lockNow(); locked = true; }
+            } catch (Exception ignored) { }
+            if (!locked) { // بدون الصلاحية: أقل إضاءة ممكنة (الجوال والجهاز اللوحي) مع الشاشة السوداء
+                WindowManager.LayoutParams lp = getWindow().getAttributes(); lp.screenBrightness = 0.0f; getWindow().setAttributes(lp); dimmed = true;
+            }
+        });
+        return true;
+    }
+    private final Runnable wakeTask = () -> screenOnNow();
+    void screenOnNow() {
+        ui.removeCallbacks(wakeTask);
+        if (dimmed) { WindowManager.LayoutParams lp = getWindow().getAttributes(); lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE; getWindow().setAttributes(lp); dimmed = false; }
+        long u = getSharedPreferences("rawayie", MODE_PRIVATE).getLong("offUntil", 0);
+        if (u > 0) WakeReceiver.wake(this);
+        if (Build.VERSION.SDK_INT >= 27) { try { setTurnScreenOn(true); setShowWhenLocked(true); } catch (Exception ignored) { } }
+    }
+
     private boolean imeVisible() {
         try {
             View d = getWindow().getDecorView();
@@ -331,6 +369,8 @@ public class MainActivity extends Activity {
         super.onResume();
         if (web != null) { web.onResume(); web.resumeTimers(); }
         hideBars();
+        // رجوع بعد إطفاء الشاشة (بالمنبّه أو بالريموت): الإضاءة الطبيعية
+        if (dimmed && getSharedPreferences("rawayie", MODE_PRIVATE).getLong("offUntil", 0) < System.currentTimeMillis()) screenOnNow();
     }
 
     // لا نوقف المؤقتات عند الخروج المؤقت حتى تبقى المواقيت والأذان تعمل
@@ -697,6 +737,24 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void openDateSettings() {
             runOnUiThread(() -> { try { startActivity(new Intent(Settings.ACTION_DATE_SETTINGS)); } catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception ignored) { } } });
         }
+        /* ===== إطفاء الشاشة فعلياً وقت الصلاة ثم إعادتها ===== */
+        @JavascriptInterface public String offInfo() {
+            boolean adm = false;
+            try { android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+                adm = dpm != null && dpm.isAdminActive(new android.content.ComponentName(MainActivity.this, AdminReceiver.class)); } catch (Exception ignored) { }
+            return "{\"admin\":" + adm + ",\"until\":" + getSharedPreferences("rawayie", MODE_PRIVATE).getLong("offUntil", 0) + "}";
+        }
+        @JavascriptInterface public void requestAdmin() {
+            runOnUiThread(() -> { try {
+                Intent i = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                i.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, new android.content.ComponentName(MainActivity.this, AdminReceiver.class));
+                i.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "يسمح لتطبيق روائع الأذان بإطفاء الشاشة وقت الصلاة فقط، ثم يعيد تشغيلها تلقائياً بعد انتهائها.");
+                startActivity(i);
+            } catch (Exception e) { Toast.makeText(MainActivity.this, "هذا الجهاز لا يدعم صلاحية إطفاء الشاشة", Toast.LENGTH_LONG).show(); } });
+        }
+        // until: وقت إعادة التشغيل بساعة الجهاز (ملّي ثانية)
+        @JavascriptInterface public boolean screenOff(long until) { return MainActivity.this.screenOff(until); }
+        @JavascriptInterface public void screenOn() { runOnUiThread(MainActivity.this::screenOnNow); }
         @JavascriptInterface public void hideKeyboard() { runOnUiThread(MainActivity.this::hideIme); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }

@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "7.2"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "7.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -13,7 +13,7 @@ var DEF = {
   iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
   hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
-  sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
+  offPrayer:false, offSleep:false, sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
@@ -1133,8 +1133,21 @@ var timer = null, previewKind = "", previewSleep = false, previewBlackUntil = 0,
 /* كل جزء من التحديث يعمل مستقلاً: لو تعطل جزء في متصفح قديم، تستمر الساعة وشاشات الأذان والإقامة */
 var lastErr = "";
 function safe(name, fn){ try { fn(); } catch(e){ lastErr = name + ": " + (e && e.message || e); try { console.error(name, e); } catch(x){} } }
+/* إطفاء الشاشة فعلياً وقت الصلاة (تطبيق أندرويد): مرة واحدة لكل فترة إخفاء، وتعود قبل نهايتها بـ 15 ثانية */
+var offKey = "";
+function offCheck(now, ph){
+  var AN = window.RawayieAndroid; if (!AN || !AN.screenOff || window.RAWAYIE_PREVIEW || now < previewBlackUntil) return;
+  if (ph.mode !== "black") { offKey = ""; return; }
+  if (!(ph.sleep ? S.offSleep : S.offPrayer)) return;
+  var end = ph.sleep ? ph.wakeAt : ph.p.I + ph.p.pd*60000, key = (ph.sleep ? "S" : "P") + end;
+  if (!end || offKey === key) return; offKey = key; // إن شغّلها أحد بالريموت لا تُطفأ مرة أخرى في نفس الفترة
+  if (end - now < 60000) return;
+  var off = window.RWS_CLOCK ? window.RWS_CLOCK.state().off : 0; // المنبّه بساعة الجهاز نفسها
+  try { AN.screenOff(Math.round(end - off - 15000)); } catch(e){}
+}
 function tick(force){
   var now = Date.now(), z = zp(now), ph = phase(now);
+  safe("off", function(){ offCheck(now, ph); });
   if (now - fitRowsAt > 5000) { fitRowsAt = now; safe("fitrows", fitRows); }
   var dk = z.Y + "-" + z.M + "-" + z.D;
   if (dk !== lastDay) safe("date", function(){

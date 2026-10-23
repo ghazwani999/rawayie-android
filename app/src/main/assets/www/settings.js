@@ -240,8 +240,20 @@ R.screens = function(){
     tog("عرض حديث الرسول ﷺ قبل الإقامة", "hadithOn") + numIn("توقيت عرض الحديث", "hadithSec", 10, 600, 5, "ثانية قبل الإقامة") + txt("نص الحديث", "hadithText", "", true)) +
   "";
 };
+/* إطفاء الشاشة فعلياً (تطبيق أندرويد): بدل الشاشة السوداء تنطفئ الشاشة تماماً وتعود وحدها بعد الصلاة */
+function offCard(){
+  var AN = window.RawayieAndroid; if (!AN || !AN.screenOff) return "";
+  var inf = {}; try { inf = JSON.parse(AN.offInfo()); } catch(e){}
+  return card("إطفاء الشاشة فعلياً",
+    tog("إطفاء الشاشة أثناء الصلاة", "offPrayer", "بدل الشاشة السوداء: تنطفئ الشاشة عند بدء الإخفاء وتعود وحدها قبل نهاية مدة الصلاة بـ 15 ثانية") +
+    tog("إطفاء الشاشة في وضع السكون", "offSleep", "بعد العشاء وبعد الشروق إن كان وضع السكون مفعّلاً، وتعود قبل الأذان") +
+    '<div class="fld"><span><b>صلاحية إطفاء الشاشة: ' + (inf.admin ? "مفعّلة ✓" : "غير مفعّلة") + '</b><small>' + (inf.admin ? "تنطفئ الشاشة تماماً (التلفاز يعرض «لا توجد إشارة» أو يدخل الاستعداد حسب نوعه)." : "بدونها تُخفَّض الإضاءة لأقل درجة (تنفع في الجوال والجهاز اللوحي فقط) مع الشاشة السوداء. فعّلها مرة واحدة لإطفاء التلفاز فعلياً.") + '</small></span>' +
+      (inf.admin ? "" : btn("منح الصلاحية", "offAdmin")) + '</div>' +
+    '<p class="note">مهم: جرّب أولاً بزر «تجربة 30 ثانية». إذا لم ترجع الشاشة وحدها في جهازك، فهذا الجهاز لا يسمح للتطبيقات بتشغيل الشاشة؛ اضغط زر الريموت لتشغيلها وأوقف هذا الخيار واستخدم الشاشة السوداء.</p>' +
+    '<div class="row-end">' + btn("تجربة: إطفاء 30 ثانية ثم تشغيل", "offTest", "ghost") + '</div>');
+}
 R.hide = function(){
-  return card("إخفاء الشاشة أثناء الصلاة",
+  return offCard() + card("إخفاء الشاشة أثناء الصلاة",
     tog("تفعيل إخفاء الشاشة أثناء الصلاة", "hidePrayer") +
     '<div class="grid2">' + ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return numIn("مدة صلاة " + PN[k], "pd." + k, 3, 40, 1, "دقيقة"); }).join("") + '</div>' +
     '<h4 class="subh">خلفية شاشة الإخفاء</h4>' + bgSpecUI({style:"blackStyle", color:"blackColor", light:"blackLight", img:"blackImg"}, false) +
@@ -1590,6 +1602,8 @@ function onClick(e){
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
+    case "offAdmin": try { window.RawayieAndroid.requestAdmin(); } catch(e){} setTimeout(render, 4000); break;
+    case "offTest": try { if (window.RawayieAndroid.screenOff(Date.now() - (window.RWS_CLOCK ? window.RWS_CLOCK.state().off : 0) + 30000)) toast("تنطفئ الشاشة الآن وتعود بعد 30 ثانية"); else toast("تعذر الإطفاء في هذا الجهاز"); } catch(e){ toast("تعذر الإطفاء في هذا الجهاز"); } break;
     case "annReset": S.ann.azan = A.DEF.ann.azan; S.ann.iqama = A.DEF.ann.iqama; commit(); render(); toast("تمت استعادة النص الافتراضي"); break;
     case "annPrevA": case "annPrevI": close(); A.previewAnn(a === "annPrevA" ? "azan" : "iqnow"); break;
     case "splashPrev": close(); A.splash(true); break;
