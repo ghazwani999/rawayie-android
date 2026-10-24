@@ -237,18 +237,18 @@ html{-webkit-tap-highlight-color:transparent}
   background:radial-gradient(circle,rgba(255,255,255,.16) 0,rgba(255,255,255,.06) 58%,rgba(255,255,255,0) 71%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.09)}
 .logolt .tkc{background:radial-gradient(circle,rgba(0,0,0,.24) 0,rgba(0,0,0,.12) 58%,rgba(0,0,0,0) 71%)}
 .tkc{gap:4px;overflow:hidden;padding:0 26px;box-sizing:border-box}
-.tk .cards{display:flex;gap:18px;flex:none}
-.tk .card{flex:1;min-width:0;border-radius:var(--rowrad,22px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--rowbg,rgba(255,255,255,.08));box-shadow:var(--rowsh,none);line-height:1.1;transition:background .4s,opacity .4s}
+.tk .cards{display:flex;gap:var(--rowgap,18px);flex:none}
+.tk .card{flex:1;min-width:0;border-radius:var(--rowrad,22px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.1;transition:background .4s,opacity .4s}
 .tk .card.hi{background:var(--hi)}
 .tk .card .n{color:var(--acc);font-weight:700}.tk .card .a{color:var(--fg);direction:ltr;white-space:nowrap}.tk .card .i{color:var(--acc);direction:ltr;white-space:nowrap}
 .tk .fixed{margin:4px 0 10px}
 .L .tk .tks,.L .tk .tkw{font-size:40px}.L .tk .wx{font-size:56px}.L .tk .wx img{width:56px;height:56px}
 .L .tk .tkdl{font-size:calc(54px*var(--s-date,1)*var(--ts,1))}.L .tk .mname{font-size:calc(46px*var(--s-name,1)*var(--ts,1))}
-.L .tkc,.L .tke{width:calc(330px*var(--emb2,1));height:calc(330px*var(--emb2,1))}
+.tk .zone{min-height:0}.L .tkc,.L .tke{width:auto;height:min(330px,100%);aspect-ratio:1}
 .L .tk .cv{font-size:calc(104px*var(--s-count,1)*var(--ns,1))}.L .tk .cl{font-size:calc(34px*var(--s-count,1)*var(--ts,1))}
 .L .tk .tm{font-size:calc(240px*var(--s-clock,1)*var(--ns,1))}
 .L .tk .fixed{font-size:calc(52px*var(--s-fixed,1)*var(--ts,1))}
-.L .tk .cards{height:calc(270px*var(--s-rows,1))}
+.L .tk .cards{min-height:calc(250px*var(--s-rows,1))}.L .tk .card{padding:12px 6px;box-sizing:border-box}
 .L .tk .card .n{font-size:calc(42px*var(--s-pname,1)*var(--ts,1))}.L .tk .card .a{font-size:calc(92px*var(--s-ptime,1)*var(--ns,1))}.L .tk .card .i{font-size:calc(66px*var(--s-ptime,1)*var(--ns,1))}
 .P .tkh{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:6px}.P .tkd{grid-column:1/-1;order:3}
 .P .tk .tks,.P .tk .tkw{font-size:34px}.P .tk .wx{font-size:50px}.P .tk .wx img{width:50px;height:50px}
@@ -262,7 +262,33 @@ html{-webkit-tap-highlight-color:transparent}
 .P .tk .cards{flex-wrap:wrap;gap:16px}
 .P .tk .card{flex:1 1 30%;height:calc(250px*var(--s-rows,1))}
 .P .tk .card .n{font-size:calc(42px*var(--s-pname,1)*var(--ts,1))}.P .tk .card .a{font-size:calc(84px*var(--s-ptime,1)*var(--ns,1))}.P .tk .card .i{font-size:calc(60px*var(--s-ptime,1)*var(--ns,1))}
-.nocnt .tkc{visibility:hidden}
+.nocnt .tkc{visibility:hidden}.tke:empty{visibility:hidden}
+/* إعدادات جدول المواقيت تنطبق على البطاقات أيضاً: الظل والتمييز والإطار والتكبير ونمط «بطاقات» وألوانه والعلامة المائية */
+.shadow .tk .card{box-shadow:var(--rowsh)}
+.lightbg .tk .card.hi .n,.lightbg .tk .card.hi .a,.lightbg .tk .card.hi .i{color:#fff;text-shadow:none}
+.hitxt .tk .card.hi .n,.hitxt .tk .card.hi .a,.hitxt .tk .card.hi .i{color:var(--hifg);text-shadow:none}
+.hiframe .tk .card.hi{background:transparent;box-shadow:inset 0 0 0 5px var(--hiline)}
+.hiframe.shadow .tk .card.hi{background:var(--rowbg);box-shadow:inset 0 0 0 5px var(--hiline),var(--rowsh)}
+.hizoom .tk .card.hi{transform:scale(1.05);position:relative;z-index:1}
+#stage.tcards .tk .card{background:rgba(4,12,34,.32);border:2px solid rgba(255,255,255,.26);box-shadow:none;box-sizing:border-box}
+#stage.tcards .tk .card .n{color:var(--tcn)}#stage.tcards .tk .card .a{color:var(--tca)}#stage.tcards .tk .card .i{color:var(--tci)}
+#stage.tcards .tk .card.hi{background:var(--tch);border-color:rgba(255,255,255,.75);box-shadow:inset 0 3px 0 rgba(255,255,255,.28),0 0 0 3px rgba(255,255,255,.18),0 8px 22px rgba(0,0,0,.35)}
+#stage.tcards .tk .card.hi .n,#stage.tcards .tk .card.hi .a,#stage.tcards .tk .card.hi .i{color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.25)}
+#stage.tcards.hitxt .tk .card.hi .n,#stage.tcards.hitxt .tk .card.hi .a,#stage.tcards.hitxt .tk .card.hi .i{color:var(--hifg)}
+#stage.tcards.hiframe .tk .card.hi{background:rgba(4,12,34,.32);border:4px solid var(--tch);box-shadow:0 0 18px var(--tch)}
+#stage.tcards.hiframe .tk .card.hi .n{color:var(--tcn)}#stage.tcards.hiframe .tk .card.hi .a{color:var(--tca)}#stage.tcards.hiframe .tk .card.hi .i{color:var(--tci)}
+.tk .card.eid .n{color:var(--fg)}
+.wmon .tk .cards{position:relative;isolation:isolate}
+.wmon .tk .cards::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--wmimg,url(img/mark.png)) center/auto var(--wmh,85%) no-repeat;opacity:var(--wmop,.12)}
+.lightbg.wmon .tk .cards::before{filter:brightness(.35)}
+.L .tk.bigl .card .a{font-size:calc(108px*var(--s-ptime,1)*var(--ns,1))}.L .tk.bigl .card .i{font-size:calc(78px*var(--s-ptime,1)*var(--ns,1))}
+.L .tk.bigl .cards{min-height:calc(280px*var(--s-rows,1))}
+.L .tk.fullclk .tm{font-size:calc(190px*var(--s-clock,1)*var(--ns,1))}
+.L .tk.bigcnt .cv{font-size:calc(128px*var(--s-count,1)*var(--ns,1))}
+.L .tke{height:min(calc(330px*var(--emb,.7)/.7),100%)}
+.tk .thl{display:none}.tk.thd .thl{display:block;font-size:calc(24px*var(--ts,1));color:var(--fg2);font-family:var(--ft);font-weight:400;line-height:1.3;direction:rtl;opacity:.85}
+.tk .iqclk{margin-top:6px}
+.tk .nightbar{margin-top:10px}
 
 /* الشاشات الكاملة */
 #ov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center;padding:70px;
@@ -943,16 +969,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610241412"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610241412"></script>
-<script charset="utf-8" src="data.js?v=2610241412"></script>
-<script charset="utf-8" src="i18n.js?v=2610241412"></script>
-<script charset="utf-8" src="version.js?v=2610241412"></script>
-<script charset="utf-8" src="app.js?v=2610241412"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610241412"></script>
-<script charset="utf-8" src="vendor/qr.js?v=2610241412"></script>
-<script charset="utf-8" src="lic-key.js?v=2610241412"></script>
-<script charset="utf-8" src="license.js?v=2610241412"></script>
-<script charset="utf-8" src="remote.js?v=2610241412"></script>
-<script charset="utf-8" src="offline.js?v=2610241412"></script>
-<script charset="utf-8" src="settings.js?v=2610241412"></script>
+<script charset="utf-8" src="compat.js?v=2610241423"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610241423"></script>
+<script charset="utf-8" src="data.js?v=2610241423"></script>
+<script charset="utf-8" src="i18n.js?v=2610241423"></script>
+<script charset="utf-8" src="version.js?v=2610241423"></script>
+<script charset="utf-8" src="app.js?v=2610241423"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610241423"></script>
+<script charset="utf-8" src="vendor/qr.js?v=2610241423"></script>
+<script charset="utf-8" src="lic-key.js?v=2610241423"></script>
+<script charset="utf-8" src="license.js?v=2610241423"></script>
+<script charset="utf-8" src="remote.js?v=2610241423"></script>
+<script charset="utf-8" src="offline.js?v=2610241423"></script>
+<script charset="utf-8" src="settings.js?v=2610241423"></script>

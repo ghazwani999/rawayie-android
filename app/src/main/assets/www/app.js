@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "8.9"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.0"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -582,9 +582,10 @@ function build(){
     var wxk = '<div class="wx" hidden><span></span><img alt=""></div>';
     html = '<div class="tkh"><div class="tks"></div><div class="tkd"><div class="tkdl"><span class="dayn"></span><span class="hij"></span><span class="tkdot">·</span><span class="gre"></span></div><div class="mname"></div></div><div class="tkw">' + wxk + '</div></div>' +
       '<div class="zone tkz"><div class="tkm"><div class="tkc cnt"><div class="cv"></div><div class="cl"></div></div>' +
-      '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span></div></div></div>' +
+      '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span></div>' + (S.look.iqClock && !S.look.homeClock ? '<div class="iqclk"></div>' : "") + '</div></div>' +
       '<div class="emb tke">' + logoHTML("elogo") + '</div></div><div class="slide" hidden></div></div>' +
       (S.fixedOn ? '<div class="fixed"></div>' : "") + '<div class="cards"></div>' +
+      (S.look.nightTimes && (S.look.nightMid !== false || S.look.nightThird !== false) ? '<div class="nightbar" hidden></div>' : "") +
       (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
   } else {
     var wp = S.weather.pos || "mid", wxh = '<div class="wx" hidden><span></span><img alt=""></div>';
@@ -606,7 +607,7 @@ function build(){
   if (S.look.netStar) html += '<i class="nstar net" aria-hidden="true">★</i>'; // نجمة الاتصال: خضراء متصل، حمراء منقطع
   mainEl.innerHTML = html;
   var TK = !boards && !P && S.look.tpl === "cards";
-  mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
+  mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
     (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
     (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
   ui = {
@@ -696,8 +697,8 @@ function renderTimes(ph){
     var off = x.k === "eid" ? "" : S.look.iqFmt === "time" ? fmtT(x.I) : num(Math.round((x.I - x.A)/60000)) + "’";
     if (ui.rows) return '<div class="row' + cls + '" data-k="' + x.k + '"><div class="c1">' + esc(x.name) + '</div><div class="c2">' + fmtT(x.A) + '</div>' +
       (S.look.homeClock ? "" : '<div class="c3">' + off + '</div>') + '</div>';
-    return '<div class="card' + cls + '" data-k="' + x.k + '"><div class="n">' + esc(x.name) + '</div><div class="a">' + fmtT(x.A) + '</div>' +
-      (S.look.homeClock || x.k === "eid" ? "" : '<div class="i">' + off + '</div>') + '</div>';
+    return '<div class="card' + cls + '" data-k="' + x.k + '"><div class="n">' + esc(x.name) + '</div><div class="a">' + (ui.tks ? '<small class="thl">' + esc(t("adhan_time")) + '</small>' : "") + fmtT(x.A) + '</div>' +
+      (S.look.homeClock || x.k === "eid" ? "" : '<div class="i">' + (ui.tks ? '<small class="thl">' + esc(S.look.iqFmt === "time" ? t("iqama_time") : "الإقامة بعد") + '</small>' : "") + off + '</div>') + '</div>';
   }).join("");
   if (ui.tks) { var sr = null; day.list.forEach(function(x){ if (x.k === "sunrise") sr = x; });
     ui.tks.innerHTML = sr ? '<div><b>' + esc(sr.name) + '</b><span>' + fmtT(sr.A) + '</span></div>' + (+S.duha ? '<div><b>' + esc(S.lang === "en" ? "Duha" : "الضحى") + '</b><span>' + fmtT(sr.I) + '</span></div>' : "") : ""; }
