@@ -683,7 +683,7 @@ function autoBg(now, ph){
 }
 
 /* وجه ساعة حائط واقعية داخل دائرة الإقامة (بدون عقارب حتى لا تتعارض مع العداد):
-   إطار معدني، ميناء متدرج، مسار دقائق مزدوج، مؤشرات ساعات بارزة، الرقمان 12 و6، وانعكاس زجاج */
+   إطار معدني، ميناء متدرج، مسار دقائق مزدوج، الرقمان 12 و6، وانعكاس زجاج */
 function clockFace(){
   var h = '<svg class="face" viewBox="0 0 200 200" aria-hidden="true"><defs>' +
     '<linearGradient id="fcm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".28" stop-color="#b9b9b9"/><stop offset=".5" stop-color="#f2f2f2"/><stop offset=".74" stop-color="#7d7d7d"/><stop offset="1" stop-color="#d6d6d6"/></linearGradient>' +
@@ -693,11 +693,9 @@ function clockFace(){
     '<circle cx="100" cy="100" r="84" class="fbez"/>' +
     '<circle cx="100" cy="100" r="81.5" class="fdisc"/><circle cx="100" cy="100" r="81.5" class="fshade"/>' +
     '<circle cx="100" cy="100" r="77.5" class="ftrack"/><circle cx="100" cy="100" r="73" class="ftrack"/>';
-  for (var i = 0; i < 60; i++) if (i % 5) h += '<line x1="100" y1="22.5" x2="100" y2="27" class="ftm" transform="rotate(' + (i*6) + ' 100 100)"/>';
-  for (var k = 0; k < 12; k++) { if (k === 3 || k === 9) continue; var w = k % 3 ? 2.6 : 3.6, ln = k % 3 ? 10 : 13;
-    if (k === 0) h += '<rect x="' + (100 - 4.6) + '" y="27.5" width="3.4" height="' + ln + '" rx=".8" class="fidx" /><rect x="' + (100 + 1.2) + '" y="27.5" width="3.4" height="' + ln + '" rx=".8" class="fidx"/>';
-    else h += '<rect x="' + (100 - w/2) + '" y="27.5" width="' + w + '" height="' + ln + '" rx=".8" class="fidx" transform="rotate(' + (k*30) + ' 100 100)"/>'; }
-  h += '<text x="100" y="49" class="fnum">' + num("12") + '</text><text x="100" y="151" class="fnum">' + num("6") + '</text>';
+  for (var i = 0; i < 60; i++) h += '<line x1="100" y1="22.5" x2="100" y2="' + (i % 5 ? 27 : 28.5) + '" class="' + (i % 5 ? "ftm" : "ftm f5") + '" transform="rotate(' + (i*6) + ' 100 100)"/>';
+  // مسار الدقائق فقط، والعلامة كل 5 دقائق أطول قليلاً (بدون مؤشرات الساعات الكبيرة حتى لا تتعارض مع العداد)
+  h += '<text x="100" y="38" class="fnum">' + num("12") + '</text><text x="100" y="151" class="fnum">' + num("6") + '</text>';
   return h + '<path d="M28 92 A72 72 0 0 1 172 92 Q100 70 28 92 Z" class="fglass"/></svg>';
 }
 var lastRowKey = "", lastDay = "";
