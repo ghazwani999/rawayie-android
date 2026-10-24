@@ -1,14 +1,14 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "8.2"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "8.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
 
 var DEF = {
   lang:"ar", mosque:"مسجد الحي", addr:"", alerts:[], ann:{on:true, azan:"حان الآن موعد أذان صلاة {الصلاة}، وذلك في {المسجد}", iqama:"حان الآن موعد إقامة صلاة {الصلاة}"}, splash:{on:true, sec:6, text:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", name:true, sub:""}, city:"dammam",
-  custom:{on:false, lat:26.4207, lng:50.0888, tz:180, method:"uq", name:""},
+  custom:{on:false, lat:26.4207, lng:50.0888, tz:180, tzName:"", method:"uq", name:"", country:"", fajr:18, isha:17, ishaMin:90, ishaBy:"angle", maghribMin:0, asr:"std", high:"angle", src:"calc", table:null},
   adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, shift:0, summer:false, ramadan30:false, hijriAdj:0,
   iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
@@ -138,10 +138,22 @@ function two(n){ return (n < 10 ? "0" : "") + n; }
 function locale(){ return S.lang === "en" ? "en" : S.lang === "bn" ? "bn" : "ar"; }
 
 /* ===== المنطقة الزمنية ===== */
-function tz(){ return S.custom.on ? +S.custom.tz : 180; }
-function zp(ms){ var d = new Date(ms + tz()*60000);
+/* المنطقة الزمنية: السعودية +3، أو موقع مخصص بمنطقته الزمنية (مع التوقيت الصيفي تلقائياً إن وُجد) */
+var tzFmt = {}, tzCache = {};
+function tzOffset(name, ms){
+  var hk = name + "|" + Math.floor(ms/3600000); if (tzCache[hk] !== undefined) return tzCache[hk];
+  var v = null;
+  try { var f = tzFmt[name] || (tzFmt[name] = new Intl.DateTimeFormat("en-US", {timeZone:name, hour12:false, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"}));
+    var p = {}; f.formatToParts(new Date(ms)).forEach(function(x){ p[x.type] = x.value; });
+    v = Math.round((Date.UTC(+p.year, +p.month - 1, +p.day, (+p.hour) % 24, +p.minute) - Math.floor(ms/60000)*60000)/60000);
+  } catch(e){ v = null; }
+  if (v === null || isNaN(v)) v = +S.custom.tz || 0;
+  tzCache[hk] = v; return v;
+}
+function tz(ms){ if (!S.custom.on) return 180; if (S.custom.tzName) return tzOffset(S.custom.tzName, ms === undefined ? Date.now() : ms); return +S.custom.tz; }
+function zp(ms){ var d = new Date(ms + tz(ms)*60000);
   return {Y:d.getUTCFullYear(), M:d.getUTCMonth(), D:d.getUTCDate(), h:d.getUTCHours(), m:d.getUTCMinutes(), s:d.getUTCSeconds(), dow:d.getUTCDay()}; }
-function zms(Y, M, D, h, m){ return Date.UTC(Y, M, D, h, m) - tz()*60000; }
+function zms(Y, M, D, h, m){ var u = Date.UTC(Y, M, D, h, m); return u - tz(u - tz(u)*60000)*60000; }
 function dkey(Y, M, D){ var d = new Date(Date.UTC(Y, M, D)); return d.getUTCFullYear() + "-" + two(d.getUTCMonth()+1) + "-" + two(d.getUTCDate()); }
 function hm(str){ var p = String(str).split(":"); return (+p[0])*60 + (+p[1] || 0); }
 
@@ -201,8 +213,13 @@ function uqRow(Y, M, D){
 }
 
 /* ===== الحساب الفلكي (احتياطي، أو لموقع مخصص) ===== */
-var METHODS = {uq:[18.5, 90], mwl:[18, 17], egypt:[19.5, 17.5], isna:[15, 15], karachi:[18, 18], gulf:[19.5, 90]};
-function astro(Y, M, D, lat, lng, tzMin, method, isRam){
+/* طرق الحساب: [زاوية الفجر، زاوية العشاء أو دقائقها بعد المغرب (60 فأكثر = دقائق)، زاوية المغرب إن وُجدت] */
+var METHODS = {uq:[18.5, 90], mwl:[18, 17], egypt:[19.5, 17.5], isna:[15, 15], karachi:[18, 18], gulf:[19.5, 90], kuwait:[18, 17.5], qatar:[18, 90],
+  dubai:[18.2, 18.2], jordan:[18, 18], morocco:[19, 17], algeria:[18, 17], tunisia:[18, 18], turkey:[18, 17], france:[12, 12], russia:[16, 15],
+  singapore:[20, 18], jakim:[20, 18], kemenag:[20, 18], tehran:[17.7, 14, 4.5], jafari:[16, 14, 4]};
+/* الحساب الفلكي (طريقة PrayTimes): الزوايا، والعصر (شافعي أو حنفي)، والعروض العالية، والمغرب بزاوية أو بدقائق */
+function astro(Y, M, D, lat, lng, tzMin, method, isRam, o){
+  o = o || {};
   var R = Math.PI/180, sin = function(d){ return Math.sin(d*R); }, cos = function(d){ return Math.cos(d*R); }, tan = function(d){ return Math.tan(d*R); };
   var asin = function(x){ return Math.asin(x)/R; }, acos = function(x){ return Math.acos(Math.max(-1, Math.min(1, x)))/R; };
   var fix = function(a, b){ return a - b*Math.floor(a/b); };
@@ -212,12 +229,24 @@ function astro(Y, M, D, lat, lng, tzMin, method, isRam){
   var RA = fix(Math.atan2(cos(e)*sin(L), cos(L))/R, 360)/15;
   var eqt = q/15 - RA; if (eqt > 12) eqt -= 24; if (eqt < -12) eqt += 24;
   var dec = asin(sin(e)*sin(L)), noon = 12 + tzMin/60 - lng/15 - eqt;
-  var T = function(a){ return acos((-sin(a) - sin(lat)*sin(dec))/(cos(lat)*cos(dec)))/15; };
-  var altA = Math.atan2(1, 1 + tan(Math.abs(lat - dec)))/R;
+  var T = function(a){ var c = (-sin(a) - sin(lat)*sin(dec))/(cos(lat)*cos(dec)); return Math.abs(c) > 1 ? NaN : Math.acos(c)/R/15; };
+  var asrF = o.asr === "hanafi" ? 2 : 1;
+  var altA = Math.atan2(1, asrF + tan(Math.abs(lat - dec)))/R;
   var asr = noon + acos((sin(altA) - sin(lat)*sin(dec))/(cos(lat)*cos(dec)))/15;
-  var m = METHODS[method] || METHODS.uq, maghrib = noon + T(0.833);
+  var m = method === "custom" ? [+o.fajr || 18, o.ishaBy === "min" ? Math.max(60, +o.ishaMin || 90) : (+o.isha || 17)] : (METHODS[method] || METHODS.uq);
+  var tSun = T(0.833), sunrise = noon - tSun, sunset = noon + tSun;
+  var maghrib = m[2] ? noon + T(m[2]) : sunset + (+o.maghribMin || 0)/60;
+  var fajr = noon - T(m[0]);
   var isha = m[1] >= 60 ? maghrib + (m[1] + (isRam ? 30 : 0))/60 : noon + T(m[1]);
-  return [noon - T(m[0]), noon - T(0.833), noon + 1/60, asr, maghrib, isha].map(function(h){ return Math.round(h*60); });
+  // العروض العالية: إذا لم تصل الشمس للزاوية أو طال الوقت عن جزء الليل المسموح
+  if (!isNaN(sunrise) && !isNaN(sunset)) {
+    var night = 24 - (sunset - sunrise), hl = o.high || "angle";
+    var part = function(ang){ return hl === "mid" ? 0.5 : hl === "seventh" ? 1/7 : ang/60; };
+    if (hl === "none") hl = "angle"; // «بدون» تطبق فقط عندما تصل الشمس للزاوية، وإلا يُستخدم جزء الليل حتى لا يضيع الوقت
+    var pf = part(m[0])*night; if (isNaN(fajr) || (o.high !== "none" && sunrise - fajr > pf)) fajr = sunrise - pf;
+    if (m[1] < 60) { var pi = part(m[1])*night; if (isNaN(isha) || (o.high !== "none" && isha - sunset > pi)) isha = sunset + pi; }
+  }
+  return [fajr, sunrise, noon + 1/60, asr, maghrib, isha].map(function(h){ return isNaN(h) ? 0 : Math.round(h*60); });
 }
 function cityInfo(){ if (S.custom.on) return {name:S.custom.name || "", lat:+S.custom.lat, lng:+S.custom.lng};
   var c = window.CITIES[S.city] || window.CITIES.dammam; return {name:c[0], lat:c[2], lng:c[3]}; }
@@ -230,7 +259,9 @@ function dayTimes(Y, M, D){
   var h = hijri(Y, M, D), isRam = h.month === 9, dow = nd.getUTCDay();
   var base = uqRow(Y, M, D), src = "uq";
   if (!base) { var ci = cityInfo(); src = "astro";
-    base = astro(Y, M, D, ci.lat, ci.lng, tz(), S.custom.on ? S.custom.method : "uq", isRam && (S.ramadan30 || !S.custom.on || S.custom.method === "uq")); }
+    var tb = S.custom.on && S.custom.src === "table" && S.custom.table ? S.custom.table[two(M + 1) + "-" + two(D)] : null;
+    if (tb && tb.length >= 6) { base = tb.slice(0, 6); src = "table"; }
+    else base = astro(Y, M, D, ci.lat, ci.lng, tz(Date.UTC(Y, M, D, 12)), S.custom.on ? S.custom.method : "uq", isRam && (S.ramadan30 || !S.custom.on || S.custom.method === "uq"), S.custom.on ? S.custom : null); }
   var ov = S.overrides[key] || {};
   var fri = S.fri.on && dow === 5;
   var list = ALL.map(function(k, i){
@@ -1269,7 +1300,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
   setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
-  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
+  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 

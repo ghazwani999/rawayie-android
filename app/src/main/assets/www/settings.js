@@ -153,11 +153,102 @@ R.mosque = function(){
       '<label class="fld"><span><b>المدينة</b><small>مواقيت أم القرى الرسمية لـ 118 مدينة سعودية</small></span><input type="search" id="csearch" placeholder="ابحث عن المدينة" aria-label="ابحث عن المدينة"></label>' +
       '<label class="fld" for="city"><span><b>اختر المدينة</b></span><select id="city" data-p="city" data-t="str">' + opts + '</select></label>' +
       txt("الحي أو العنوان", "addr", "مثل: حي النزهة. يظهر مع اسم المدينة أسفل الشاشة") + tog("إظهار موقع المسجد أسفل الشاشة", "look.showLoc", "بجانب إصدار التطبيق") +
-      tog("موقع مخصص (خارج المدن المدعومة)", "custom.on", "يحسب المواقيت فلكياً من الإحداثيات") +
-      (S.custom.on ? txt("اسم الموقع", "custom.name") + numIn("خط العرض", "custom.lat", -90, 90, 0.0001) + numIn("خط الطول", "custom.lng", -180, 180, 0.0001) +
-        numIn("فرق التوقيت عن غرينتش", "custom.tz", -720, 840, 30, "دقيقة", "180 = توقيت السعودية") +
-        sel("طريقة الحساب", "custom.method", [["uq","أم القرى"],["mwl","رابطة العالم الإسلامي"],["egypt","الهيئة المصرية"],["isna","أمريكا الشمالية"],["karachi","كراتشي"],["gulf","الخليج"]]) : ""));
+      tog("موقع مخصص (أي مدينة في العالم)", "custom.on", "منشئ مواقيت الصلاة: اختر الدولة والمدينة أو موقعك الحالي، وطريقة الحساب والزوايا")) +
+    (S.custom.on ? genCards() : "");
 };
+/* ===== منشئ مواقيت الصلاة: أي مدينة في العالم، طرق الحساب والزوايا والتعديلات، جدول سنوي يُحفظ في الجهاز ويعمل بدون إنترنت ===== */
+var GEN_METHODS = [["mwl","رابطة العالم الإسلامي (18° / 17°)"],["uq","أم القرى (18.5° / 90 دقيقة)"],["egypt","الهيئة المصرية العامة للمساحة (19.5° / 17.5°)"],
+  ["isna","أمريكا الشمالية ISNA (15° / 15°)"],["karachi","جامعة العلوم الإسلامية بكراتشي (18° / 18°)"],["gulf","الخليج (19.5° / 90 دقيقة)"],["kuwait","الكويت (18° / 17.5°)"],
+  ["qatar","قطر (18° / 90 دقيقة)"],["dubai","دبي (18.2° / 18.2°)"],["jordan","الأردن (18° / 18°)"],["morocco","المغرب (19° / 17°)"],["algeria","الجزائر (18° / 17°)"],
+  ["tunisia","تونس (18° / 18°)"],["turkey","تركيا - ديانت (18° / 17°)"],["france","فرنسا UOIF (12° / 12°)"],["russia","روسيا (16° / 15°)"],["singapore","سنغافورة (20° / 18°)"],
+  ["jakim","ماليزيا JAKIM (20° / 18°)"],["kemenag","إندونيسيا (20° / 18°)"],["tehran","طهران (17.7° / 14°)"],["jafari","الجعفري (16° / 14°)"],["custom","زوايا مخصصة"]];
+var GEN_DEF = {EG:"egypt", AE:"dubai", KW:"kuwait", QA:"qatar", BH:"gulf", OM:"gulf", JO:"jordan", PS:"jordan", MA:"morocco", DZ:"algeria", TN:"tunisia", LY:"egypt", SD:"egypt",
+  TR:"turkey", FR:"france", BE:"france", RU:"russia", SG:"singapore", MY:"jakim", BN:"jakim", ID:"kemenag", IR:"tehran", PK:"karachi", IN:"karachi", BD:"karachi", AF:"karachi",
+  US:"isna", CA:"isna", MX:"isna", YE:"uq", IQ:"mwl", SY:"egypt", LB:"egypt"};
+var GEN_HANAFI = {TR:1, PK:1, IN:1, BD:1, AF:1, TJ:1, UZ:1, KZ:1, KG:1, TM:1, AZ:0};
+var genMonth = false, genQ = "", genT = null;
+document.addEventListener("input", function(e){ if (!e.target || e.target.id !== "gq") return; genQ = e.target.value.trim(); clearTimeout(genT);
+  genT = setTimeout(genResults, 300); });
+// نتائج البحث تتحدث في مكانها بدون إعادة رسم الصفحة (فلا يُغلق المحرر ولوحة المفاتيح)
+function genResults(){ var box = document.getElementById("gres"), W = window.WORLD; if (!box || !W) return;
+  var res = ""; if (genQ.length >= 2) { var q = genQ.toLowerCase(), n = 0; W.d.forEach(function(r, i){ if (n < 12 && r[0].toLowerCase().indexOf(q) >= 0) { n++; res += '<button type="button" class="btn sm ghost" data-act="genPick" data-x="' + i + '">' + esc(r[0] + "، " + cnName(r[1])) + '</button>'; } });
+    if (!res) res = '<span class="note">لا توجد نتائج</span>'; }
+  box.innerHTML = res; box.hidden = !res; }
+function worldLoad(){ if (window.WORLD || worldLoad.busy) return; worldLoad.busy = true;
+  var sc = document.createElement("script"); sc.src = "world.js?v=" + (A.VERSION || ""); sc.onload = function(){ worldLoad.busy = false; render(); }; sc.onerror = function(){ worldLoad.busy = false; worldLoad.err = true; render(); };
+  document.head.appendChild(sc); }
+var cnFmt = null;
+function cnName(iso){ try { cnFmt = cnFmt || new Intl.DisplayNames(["ar"], {type:"region"}); var n = cnFmt.of(iso); if (n && n !== iso) return n; } catch(e){} return (window.WORLD && window.WORLD.c[iso]) || iso; }
+function genPick(i){ var W = window.WORLD, r = W && W.d[i]; if (!r) return;
+  var c = S.custom; c.name = r[0] + "، " + cnName(r[1]); c.country = r[1]; c.lat = r[2]; c.lng = r[3]; c.tzName = W.tz[r[4]];
+  var now = Date.now(); c.tz = A.tzOffset ? A.tzOffset(c.tzName, now) : c.tz;
+  if (GEN_DEF[r[1]]) c.method = GEN_DEF[r[1]]; else if (c.method === "uq") c.method = "mwl";
+  c.asr = GEN_HANAFI[r[1]] ? "hanafi" : "std"; c.src = "calc";
+  A.save(); A.clearCache(); A.rebuild(); toast("تم اختيار " + r[0]); }
+function genCards(){
+  var c = S.custom, W = window.WORLD; if (!W) worldLoad();
+  var z = A.zp(Date.now()), d = A.dayTimes(z.Y, z.M, z.D);
+  var prev = '<div class="today">' + d.list.map(function(x){ return '<div><b>' + esc(PN[x.k]) + '</b><span>' + A.fmtT(x.A) + '</span></div>'; }).join("") + '</div>' +
+    '<p class="note">' + esc((c.name || "موقع مخصص") + " · " + (d.src === "table" ? "من الجدول المستورد" : "حساب فلكي") + (c.tzName ? " · المنطقة الزمنية " + c.tzName : "")) + '</p>';
+  var loc;
+  if (!W) loc = '<p class="note">' + (worldLoad.err ? "تعذر تحميل قائمة مدن العالم. يمكنك إدخال الإحداثيات يدوياً أدناه." : "جارٍ تحميل قائمة مدن العالم...") + '</p>';
+  else {
+    var isos = Object.keys(W.c).map(function(k){ return [k, cnName(k)]; }).sort(function(a, b){ return a[1].localeCompare(b[1], "ar"); });
+    var cc = c.country && W.c[c.country] ? c.country : "";
+    var cities = []; if (cc) W.d.forEach(function(r, i){ if (r[1] === cc) cities.push([i, r[0]]); });
+    var res = '<div class="row-end genres" id="gres" hidden></div>'; if (genQ.length >= 2) setTimeout(genResults, 0);
+    loc = '<label class="fld"><span><b>ابحث عن مدينة في العالم</b><small>بالإنجليزية، مثل: London أو Cairo أو Jakarta</small></span><input type="search" id="gq" dir="ltr" value="' + esc(genQ) + '" placeholder="City"></label>' + res +
+      '<label class="fld" for="gcountry"><span><b>الدولة</b></span><select id="gcountry"><option value="">— اختر الدولة —</option>' + isos.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === cc ? " selected" : "") + '>' + esc(x[1]) + '</option>'; }).join("") + '</select></label>' +
+      (cc ? '<label class="fld" for="gcity"><span><b>المدينة</b><small>' + cities.length + ' مدينة، مرتبة حسب عدد السكان</small></span><select id="gcity"><option value="">— اختر المدينة —</option>' + cities.map(function(x){ return '<option value="' + x[0] + '">' + esc(x[1]) + '</option>'; }).join("") + '</select></label>' : "");
+  }
+  return card("منشئ مواقيت الصلاة: الموقع", prev + loc +
+      '<div class="row-end">' + btn("📍 موقعي الحالي", "genGps", "ghost") + '</div>' +
+      txt("اسم الموقع", "custom.name") + '<div class="grid2">' + numIn("خط العرض", "custom.lat", -90, 90, 0.0001) + numIn("خط الطول", "custom.lng", -180, 180, 0.0001) + '</div>' +
+      txt("المنطقة الزمنية", "custom.tzName", "تُضبط تلقائياً مع المدينة، ويُحسب التوقيت الصيفي وحده. مثل: Europe/London. اتركها فارغة لاستخدام فرق ثابت") +
+      (c.tzName ? "" : numIn("فرق التوقيت الثابت عن غرينتش", "custom.tz", -720, 840, 15, "دقيقة", "180 = توقيت السعودية"))) +
+    card("طريقة الحساب والزوايا",
+      sel("طريقة الحساب", "custom.method", GEN_METHODS) +
+      (c.method === "custom" ? numIn("زاوية الفجر", "custom.fajr", 10, 22, 0.1, "°") + sel("العشاء", "custom.ishaBy", [["angle","بالزاوية"],["min","بدقائق بعد المغرب"]]) +
+        (c.ishaBy === "min" ? numIn("العشاء بعد المغرب", "custom.ishaMin", 60, 180, 5, "دقيقة") : numIn("زاوية العشاء", "custom.isha", 10, 22, 0.1, "°")) : "") +
+      numIn("المغرب بعد الغروب", "custom.maghribMin", 0, 15, 1, "دقيقة", "احتياط بعد غروب الشمس (0 = عند الغروب)") +
+      sel("العصر", "custom.asr", [["std","الجمهور: ظل الشيء مثله (شافعي، مالكي، حنبلي)"],["hanafi","الحنفي: ظل الشيء مثليه"]]) +
+      sel("العروض العالية (شمال أوروبا وغيرها)", "custom.high", [["angle","حسب الزاوية (الموصى به)"],["seventh","سُبع الليل"],["mid","منتصف الليل"],["none","بدون تعديل"]], "عندما لا تصل الشمس لزاوية الفجر أو العشاء صيفاً") +
+      '<p class="note">تعديل دقائق كل صلاة من «المواقيت والإقامة» ← تعديل لكل صلاة.</p>') +
+    card("الجدول السنوي",
+      sel("مصدر المواقيت", "custom.src", [["calc","الحساب الفلكي (أعلاه)"]].concat(c.table ? [["table","الجدول المستورد (" + Object.keys(c.table).length + " يوماً)"]] : [])) +
+      '<p class="note">المواقيت تُحسب داخل الجهاز ولا تحتاج إنترنت. يمكنك تصدير جدول السنة كاملة (ملف CSV يُفتح في Excel)، أو استيراد جدول رسمي من جهة محلية بنفس الأعمدة: التاريخ، الفجر، الشروق، الظهر، العصر، المغرب، العشاء.</p>' +
+      '<div class="row-end">' + btn(genMonth ? "إخفاء جدول الشهر" : "عرض جدول الشهر", "genMonth", "ghost") + btn("تصدير جدول السنة", "genExport", "ghost") +
+      '<label class="btn ghost">استيراد جدول<input type="file" id="gimp" accept=".csv,.txt,text/csv,text/plain" hidden></label>' + (c.table ? btn("حذف الجدول المستورد", "genDelTable", "ghost") : "") + '</div>' +
+      (genMonth ? genMonthTable() : ""));
+}
+function genMonthTable(){
+  var z = A.zp(Date.now()), n = new Date(Date.UTC(z.Y, z.M + 1, 0)).getUTCDate(), rows = "";
+  for (var D = 1; D <= n; D++) { var d = A.dayTimes(z.Y, z.M, D); rows += '<tr' + (D === z.D ? ' class="on"' : "") + '><td>' + D + '</td>' + d.list.map(function(x){ return '<td>' + A.fmtT(x.A) + '</td>'; }).join("") + '</tr>'; }
+  return '<div class="gtbl"><table><thead><tr><th>اليوم</th>' + ["fajr","sunrise","dhuhr","asr","maghrib","isha"].map(function(k){ return '<th>' + esc(PN[k]) + '</th>'; }).join("") + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+function genExport(){
+  var z = A.zp(Date.now()), Y = z.Y, out = ["date,fajr,sunrise,dhuhr,asr,maghrib,isha"], hh = function(ms){ var p = A.zp(ms); return A.two(p.h) + ":" + A.two(p.m); };
+  for (var t = Date.UTC(Y, 0, 1); new Date(t).getUTCFullYear() === Y; t += 86400000) { var dd = new Date(t), d = A.dayTimes(Y, dd.getUTCMonth(), dd.getUTCDate());
+    out.push(Y + "-" + A.two(dd.getUTCMonth() + 1) + "-" + A.two(dd.getUTCDate()) + "," + d.list.map(function(x){ return hh(x.A); }).join(",")); }
+  var nm = "prayer-times-" + String(S.custom.name || "custom").replace(/[^\w\u0600-\u06FF-]+/g, "-").slice(0, 40) + "-" + Y + ".csv";
+  dl(nm, "\ufeff" + out.join("\r\n"), "text/csv"); toast("تم تجهيز جدول " + Y + " (" + (out.length - 1) + " يوماً)");
+}
+function genImport(f){
+  var r = new FileReader();
+  r.onload = function(){ var tb = {}, n = 0;
+    String(r.result).replace(/^\ufeff/, "").split(/\r?\n/).forEach(function(line){
+      var p = line.split(/[,;\t]/).map(function(x){ return x.trim(); }); if (p.length < 7) return;
+      var dm = p[0].match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/) || p[0].match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if (!dm) return;
+      var M = dm[1].length === 4 ? +dm[2] : +dm[2], D = dm[1].length === 4 ? +dm[3] : +dm[1];
+      var tm = p.slice(1, 7).map(function(x){ var m = x.match(/(\d{1,2})[:.](\d{2})/); return m ? (+m[1])*60 + (+m[2]) : NaN; });
+      if (tm.some(isNaN) || M < 1 || M > 12 || D < 1 || D > 31) return;
+      for (var i = 1; i < 6; i++) if (tm[i] < tm[i - 1] && i >= 4) tm[i] += 0; // أوقات بعد منتصف الليل تُترك كما هي
+      if (tm[3] < 720 && tm[3] < tm[2]) tm[3] += 720; if (tm[4] < 720) tm[4] += 720; if (tm[5] < 720 && tm[5] > 180) tm[5] += 720; // ملفات بنظام 12 ساعة
+      tb[A.two(M) + "-" + A.two(D)] = tm; n++; });
+    if (n < 28) { toast("لم يُتعرّف على الملف. الأعمدة: التاريخ، الفجر، الشروق، الظهر، العصر، المغرب، العشاء"); return; }
+    S.custom.table = tb; S.custom.src = "table"; A.save(); A.clearCache(); A.rebuild(); render(); toast("تم استيراد " + n + " يوماً، والمواقيت الآن من الجدول"); };
+  r.readAsText(f);
+}
 
 R.times = function(){
   var z = A.zp(Date.now()), d = A.dayTimes(z.Y, z.M, z.D);
@@ -1332,6 +1423,7 @@ function linuxDesk(){
     "Exec=chromium-browser " + KFLAGS + " " + runLink().replace(/%/g, "%%") + "\nX-GNOME-Autostart-enabled=true\nX-GNOME-Autostart-Delay=15\n";
 }
 function dl(name, text, type){
+  var AN = window.RawayieAndroid; if (AN && AN.saveText) { try { AN.saveText(name, text, type || "text/plain"); return; } catch(e){} } // تطبيق أندرويد: يختار المستخدم مكان الحفظ
   var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type:type || "application/octet-stream"})); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
@@ -1470,6 +1562,10 @@ function render(){
 function onChange(e){
   var el = e.target;
   if (el.id === "calm") { calMonth = el.value; render(); return; }
+  if (el.id === "gcountry") { S.custom.country = el.value; A.save(); render(); return; }
+  if (el.id === "gcity") { if (el.value !== "") { genPick(+el.value); render(); } return; }
+  if (el.id === "gimp") { if (el.files[0]) genImport(el.files[0]); el.value = ""; return; }
+  if (/^custom\./.test(el.dataset.p || "")) setTimeout(function(){ A.clearCache(); A.rebuild(); if (el.dataset.p === "custom.method" || el.dataset.p === "custom.ishaBy" || el.dataset.p === "custom.tzName" || el.dataset.p === "custom.src" || el.dataset.p === "custom.on") render(); }, 0);
   if (el.dataset.p === "keepUnlock") setTimeout(function(){ keepSave(); lockSave(); render(); }, 0);
   if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
   if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
@@ -1633,6 +1729,20 @@ function onClick(e){
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
+    case "genPick": genQ = ""; genPick(+x); render(); break;
+    case "genMonth": genMonth = !genMonth; render(); break;
+    case "genExport": genExport(); break;
+    case "genDelTable": S.custom.table = null; S.custom.src = "calc"; A.save(); A.clearCache(); A.rebuild(); render(); toast("حُذف الجدول المستورد"); break;
+    case "genGps":
+      if (!navigator.geolocation) { toast("تحديد الموقع غير متاح في هذا الجهاز"); break; }
+      toast("جارٍ تحديد موقعك...");
+      navigator.geolocation.getCurrentPosition(function(pos){ var c = S.custom; c.lat = +pos.coords.latitude.toFixed(4); c.lng = +pos.coords.longitude.toFixed(4);
+        try { c.tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || c.tzName; } catch(e){}
+        var W = window.WORLD, best = -1, bd = 1e9; if (W) W.d.forEach(function(r, i){ var dd = Math.pow(r[2] - c.lat, 2) + Math.pow((r[3] - c.lng)*Math.cos(c.lat*Math.PI/180), 2); if (dd < bd) { bd = dd; best = i; } });
+        if (best >= 0 && bd < 0.5) { var r0 = W.d[best]; c.name = r0[0] + "، " + cnName(r0[1]); c.country = r0[1]; if (GEN_DEF[r0[1]]) c.method = GEN_DEF[r0[1]]; c.asr = GEN_HANAFI[r0[1]] ? "hanafi" : "std"; }
+        c.src = "calc"; A.save(); A.clearCache(); A.rebuild(); render(); toast("تم تحديد الموقع: " + (c.name || (c.lat + ", " + c.lng)));
+      }, function(err){ toast(err && err.code === 1 ? "رُفض إذن الموقع. اسمح به من إعدادات الجهاز" : "تعذر تحديد الموقع. اختر المدينة من القائمة"); }, {enableHighAccuracy:false, timeout:15000, maximumAge:600000});
+      break;
     case "mpwSend": case "mpwClear":
       var p1 = a === "mpwClear" ? "" : $("#mpw").value, p2 = a === "mpwClear" ? "" : $("#mspw").value;
       if (a === "mpwSend" && !p1 && !p2) { toast("اكتب كلمة سر جديدة أولاً"); return; }

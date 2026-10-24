@@ -57,6 +57,9 @@ public class MainActivity extends Activity {
     static final int REQ_OVERLAY = 12;
 
     private WebView web;
+    static final int REQ_GEO = 14, REQ_SAVE = 13;
+    private android.webkit.GeolocationPermissions.Callback geoCb; private String geoOrigin;
+    private String saveText, saveMime;
     private volatile boolean imeBlock = true;
 
     private FrameLayout splashView;
@@ -212,6 +215,7 @@ public class MainActivity extends Activity {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setGeolocationEnabled(true);
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false); // صوت الأذان والإقامة بدون لمس الشاشة
         s.setTextZoom(100);
@@ -247,6 +251,13 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
+            // الموقع الحالي (GPS أو الشبكة) لمنشئ المواقيت: يُطلب الإذن مرة واحدة
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback cb) {
+                if (Build.VERSION.SDK_INT < 23 || checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) { cb.invoke(origin, true, false); return; }
+                geoCb = cb; geoOrigin = origin;
+                requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_GEO);
+            }
             @Override
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
                 if (fileCb != null) fileCb.onReceiveValue(null);
@@ -365,6 +376,12 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (req == REQ_GEO && geoCb != null) { boolean ok = res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED; geoCb.invoke(geoOrigin, ok, false); geoCb = null; }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if (web != null) { web.onResume(); web.resumeTimers(); }
@@ -418,6 +435,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_SAVE) { // حفظ ملف (المواقيت السنوية أو نسخة الإعدادات) في المكان الذي اختاره المستخدم
+            boolean ok = false;
+            if (res == RESULT_OK && data != null && data.getData() != null && saveText != null) {
+                try (java.io.OutputStream os = getContentResolver().openOutputStream(data.getData())) { if (os != null) { os.write(saveText.getBytes("UTF-8")); ok = true; } } catch (Exception ignored) { }
+            }
+            saveText = null;
+            Toast.makeText(this, ok ? "تم حفظ الملف" : "لم يُحفظ الملف", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (req == REQ_FILE && fileCb != null) {
             Uri[] r = null;
             if (res == RESULT_OK && data != null) {
@@ -755,6 +781,14 @@ public class MainActivity extends Activity {
         // until: وقت إعادة التشغيل بساعة الجهاز (ملّي ثانية)
         @JavascriptInterface public boolean screenOff(long until) { return MainActivity.this.screenOff(until); }
         @JavascriptInterface public void screenOn() { runOnUiThread(MainActivity.this::screenOnNow); }
+        // حفظ ملف نصي: يختار المستخدم مكان الحفظ (التنزيلات أو ذاكرة USB)
+        @JavascriptInterface public void saveText(String name, String text, String mime) {
+            runOnUiThread(() -> { try {
+                saveText = text; saveMime = mime == null || mime.isEmpty() ? "text/plain" : mime;
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType(saveMime); i.putExtra(Intent.EXTRA_TITLE, name);
+                startActivityForResult(i, REQ_SAVE);
+            } catch (Exception e) { saveText = null; Toast.makeText(MainActivity.this, "هذا الجهاز لا يدعم حفظ الملفات", Toast.LENGTH_LONG).show(); } });
+        }
         @JavascriptInterface public void hideKeyboard() { runOnUiThread(MainActivity.this::hideIme); }
         @JavascriptInterface public String displayInfo() { return MainActivity.this.displayInfo(); }
         @JavascriptInterface public void setRotation(int deg) { runOnUiThread(() -> applyRotation(deg)); }
