@@ -170,15 +170,33 @@ var genMonth = false, genQ = "", genT = null;
 document.addEventListener("input", function(e){ if (!e.target || e.target.id !== "gq") return; genQ = e.target.value.trim(); clearTimeout(genT);
   genT = setTimeout(genResults, 300); });
 // نتائج البحث تتحدث في مكانها بدون إعادة رسم الصفحة (فلا يُغلق المحرر ولوحة المفاتيح)
+// يبحث بالعربية أو الإنجليزية: أسماء الدول (عربي وإنجليزي) وأسماء المدن (إنجليزي)
+function genNorm(v){ return String(v || "").toLowerCase().replace(/[ً-ْـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/^ال/, "").replace(/\s+ال/g, " ").replace(/\s+/g, " ").trim(); }
 function genResults(){ var box = document.getElementById("gres"), W = window.WORLD; if (!box || !W) return;
-  var res = ""; if (genQ.length >= 2) { var q = genQ.toLowerCase(), n = 0; W.d.forEach(function(r, i){ if (n < 12 && r[0].toLowerCase().indexOf(q) >= 0) { n++; res += '<button type="button" class="btn sm ghost" data-act="genPick" data-x="' + i + '">' + esc(r[0] + "، " + cnName(r[1])) + '</button>'; } });
-    if (!res) res = '<span class="note">لا توجد نتائج</span>'; }
+  var res = ""; if (genQ.length >= 2) { var q = genQ.toLowerCase(), qn = genNorm(genQ), n = 0, m = 0;
+    var hits = []; Object.keys(W.c).forEach(function(k){ var an = genNorm(cnName(k)), en = W.c[k].toLowerCase(), ia = an.indexOf(qn), ie = en.indexOf(q);
+      if (ia >= 0 || ie >= 0) hits.push([k, (ia === 0 || ie === 0) ? 0 : 1]); });
+    hits.sort(function(a, b){ return a[1] - b[1]; }); hits.slice(0, 8).forEach(function(h){ m++;
+      res += '<button type="button" class="btn sm" data-act="genCountry" data-x="' + h[0] + '">🌍 ' + esc(cnName(h[0])) + '</button>'; });
+    W.d.forEach(function(r, i){ if (n < 12 && r[0].toLowerCase().indexOf(q) >= 0) { n++; res += '<button type="button" class="btn sm ghost" data-act="genPick" data-x="' + i + '">' + esc(r[0] + "، " + cnName(r[1])) + '</button>'; } });
+    if (!res) res = '<span class="note">لا توجد نتائج. اكتب اسم الدولة بالعربية أو الإنجليزية، أو اسم المدينة بالإنجليزية</span>'; }
   box.innerHTML = res; box.hidden = !res; }
+function genCityHtml(cc){ var W = window.WORLD, cities = []; if (!W || !cc || !W.c[cc]) return "";
+  W.d.forEach(function(r, i){ if (r[1] === cc) cities.push([i, r[0]]); });
+  return '<label class="fld" for="gcity"><span><b>المدينة</b><small>' + cities.length + ' مدينة في ' + esc(cnName(cc)) + '، مرتبة حسب عدد السكان</small></span><select id="gcity"><option value="">— اختر المدينة —</option>' +
+    cities.map(function(x){ return '<option value="' + x[0] + '">' + esc(x[1]) + '</option>'; }).join("") + '</select></label>'; }
+// اختيار الدولة يملأ قائمة المدن في مكانها مباشرة (لا يعتمد على إعادة رسم الصفحة)
+function genCountry(cc){ var W = window.WORLD; if (!W) return; cc = W.c[cc] ? cc : "";
+  S.custom.country = cc; A.save();
+  var sel0 = document.getElementById("gcountry"); if (sel0 && sel0.value !== cc) sel0.value = cc;
+  var w = document.getElementById("gcitywrap"); if (w) w.innerHTML = genCityHtml(cc);
+  var c1 = document.getElementById("gcity"); if (c1) { try { c1.scrollIntoView({block:"center"}); } catch(e){} }
+  if (cc) toast("اختر المدينة من قائمة مدن " + cnName(cc)); }
 function worldLoad(){ if (window.WORLD || worldLoad.busy) return; worldLoad.busy = true;
   var sc = document.createElement("script"); sc.src = "world.js?v=" + (A.VERSION || ""); sc.onload = function(){ worldLoad.busy = false; render(); }; sc.onerror = function(){ worldLoad.busy = false; worldLoad.err = true; render(); };
   document.head.appendChild(sc); }
 var cnFmt = null;
-function cnName(iso){ try { cnFmt = cnFmt || new Intl.DisplayNames(["ar"], {type:"region"}); var n = cnFmt.of(iso); if (n && n !== iso) return n; } catch(e){} return (window.WORLD && window.WORLD.c[iso]) || iso; }
+function cnName(iso){ var W = window.WORLD; if (W && W.ar && W.ar[iso]) return W.ar[iso]; try { cnFmt = cnFmt || new Intl.DisplayNames(["ar"], {type:"region"}); var n = cnFmt.of(iso); if (n && n !== iso) return n; } catch(e){} return (window.WORLD && window.WORLD.c[iso]) || iso; }
 function genPick(i){ var W = window.WORLD, r = W && W.d[i]; if (!r) return;
   var c = S.custom; c.name = r[0] + "، " + cnName(r[1]); c.country = r[1]; c.lat = r[2]; c.lng = r[3]; c.tzName = W.tz[r[4]];
   var now = Date.now(); c.tz = A.tzOffset ? A.tzOffset(c.tzName, now) : c.tz;
@@ -193,13 +211,12 @@ function genCards(){
   var loc;
   if (!W) loc = '<p class="note">' + (worldLoad.err ? "تعذر تحميل قائمة مدن العالم. يمكنك إدخال الإحداثيات يدوياً أدناه." : "جارٍ تحميل قائمة مدن العالم...") + '</p>';
   else {
-    var isos = Object.keys(W.c).map(function(k){ return [k, cnName(k)]; }).sort(function(a, b){ return a[1].localeCompare(b[1], "ar"); });
+    var isos = Object.keys(W.c).map(function(k){ return [k, cnName(k)]; }).sort(function(a, b){ return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0; });
     var cc = c.country && W.c[c.country] ? c.country : "";
-    var cities = []; if (cc) W.d.forEach(function(r, i){ if (r[1] === cc) cities.push([i, r[0]]); });
     var res = '<div class="row-end genres" id="gres" hidden></div>'; if (genQ.length >= 2) setTimeout(genResults, 0);
-    loc = '<label class="fld"><span><b>ابحث عن مدينة في العالم</b><small>بالإنجليزية، مثل: London أو Cairo أو Jakarta</small></span><input type="search" id="gq" dir="ltr" value="' + esc(genQ) + '" placeholder="City"></label>' + res +
-      '<label class="fld" for="gcountry"><span><b>الدولة</b></span><select id="gcountry"><option value="">— اختر الدولة —</option>' + isos.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === cc ? " selected" : "") + '>' + esc(x[1]) + '</option>'; }).join("") + '</select></label>' +
-      (cc ? '<label class="fld" for="gcity"><span><b>المدينة</b><small>' + cities.length + ' مدينة، مرتبة حسب عدد السكان</small></span><select id="gcity"><option value="">— اختر المدينة —</option>' + cities.map(function(x){ return '<option value="' + x[0] + '">' + esc(x[1]) + '</option>'; }).join("") + '</select></label>' : "");
+    loc = '<label class="fld"><span><b>ابحث عن دولة أو مدينة</b><small>الدولة بالعربية أو الإنجليزية (مثل: مصر، تركيا، Egypt)، والمدينة بالإنجليزية (مثل: London، Cairo)</small></span><input type="search" id="gq" value="' + esc(genQ) + '" placeholder="دولة أو مدينة"></label>' + res +
+      '<label class="fld" for="gcountry"><span><b>الدولة</b><small>' + isos.length + ' دولة. في القائمة يمكنك التصفية بالحرف الأول</small></span><select id="gcountry"><option value="">— اختر الدولة —</option>' + isos.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === cc ? " selected" : "") + '>' + esc(x[1]) + '</option>'; }).join("") + '</select></label>' +
+      '<div id="gcitywrap">' + genCityHtml(cc) + '</div>';
   }
   return card("منشئ مواقيت الصلاة: الموقع", prev + loc +
       '<div class="row-end">' + btn("📍 موقعي الحالي", "genGps", "ghost") + '</div>' +
@@ -776,6 +793,7 @@ function pkTarget(el){
   return t;
 }
 function pkLabel(t){ var f = t.closest(".fld,.fcol,label"), b = f && f.querySelector("b"); return b ? b.textContent : (t.getAttribute("aria-label") || ""); }
+function pkFirst(v){ v = String(v || "").replace(/^[\s\u200f\u200e—-]+/, "").replace(/^ال(?=..)/, ""); var ch = v.charAt(0).toUpperCase(); return ch.replace(/[أإآٱ]/, "ا"); }
 function pkClose(){ if (PK.el) { PK.el.hidden = true; PK.el.innerHTML = ""; } var t = PK.t; PK.t = null; if (t) try { t.focus({preventScroll:true}); } catch(e){} }
 function pkSet(v){ var t = PK.t; if (!t) return; t.value = v; t.dispatchEvent(new Event("input", {bubbles:true})); t.dispatchEvent(new Event("change", {bubbles:true})); }
 function pkPal(){
@@ -793,6 +811,10 @@ function pkOpen(t){
   var host = $("#ed") && !$("#ed").hidden ? $("#ed") : panel; if (PK.el.parentNode !== host) host.appendChild(PK.el);
   var tag = t.tagName.toLowerCase(), ty = (t.type || "").toLowerCase(), h = '<div class="pkbox"><div class="pkh"><b>' + esc(pkLabel(t)) + '</b><button type="button" class="btn ghost sm" data-pk="x">إغلاق</button></div>';
   if (tag === "select") {
+    // القوائم الطويلة (الدول والمدن): شريط حروف للتصفية بالحرف الأول، يعمل بالريموت واللمس
+    if (t.options.length > 30) { var seen = {}, abc = [];
+      Array.prototype.forEach.call(t.options, function(o){ if (!o.value) return; var ch = pkFirst(o.textContent); if (ch && !seen[ch]) { seen[ch] = 1; abc.push(ch); } });
+      if (abc.length > 1) h += '<div class="pkabc"><button type="button" class="pkl on" data-pk="abc" data-v="">الكل</button>' + abc.map(function(ch){ return '<button type="button" class="pkl" data-pk="abc" data-v="' + esc(ch) + '">' + esc(ch) + '</button>'; }).join("") + '</div>'; }
     h += '<div class="pklist">' + Array.prototype.map.call(t.children, function(n){
       var one = function(o){ return '<button type="button" class="pkopt' + (o.value === t.value ? " on" : "") + '" data-pk="opt" data-v="' + esc(o.value) + '"' + (o.disabled ? " disabled" : "") + '>' + esc(o.textContent) + '</button>'; };
       return n.tagName === "OPTGROUP" ? '<div class="pkgrp">' + esc(n.label) + '</div>' + Array.prototype.map.call(n.children, one).join("") : one(n);
@@ -827,6 +849,9 @@ function pkShow(){
 function pkAct(a, v){
   var t = PK.t; if (!t) return;
   if (a === "x") { pkClose(); return; }
+  if (a === "abc") { $$(".pkl", PK.el).forEach(function(b){ b.classList.toggle("on", b.dataset.v === v); });
+    var first = null; $$(".pkopt", PK.el).forEach(function(b){ var o = !v || (b.dataset.v && pkFirst(b.textContent) === v); b.hidden = !o; if (o && !first && b.dataset.v) first = b; });
+    var l0 = PK.el.querySelector(".pklist"); if (l0) l0.scrollTop = 0; if (first) try { first.focus({preventScroll:true}); } catch(e){} return; }
   if (a === "opt" || a === "col") { pkSet(v); pkClose(); return; }
   if (a === "h") { PK.h = (PK.h + +v + 24) % 24; pkShow(); return; }
   if (a === "m") { var tm = PK.h * 60 + PK.m + +v; tm = (tm + 1440) % 1440; PK.h = Math.floor(tm / 60); PK.m = tm % 60; pkShow(); return; }
@@ -1562,7 +1587,7 @@ function render(){
 function onChange(e){
   var el = e.target;
   if (el.id === "calm") { calMonth = el.value; render(); return; }
-  if (el.id === "gcountry") { S.custom.country = el.value; A.save(); render(); return; }
+  if (el.id === "gcountry") { genCountry(el.value); return; }
   if (el.id === "gcity") { if (el.value !== "") { genPick(+el.value); render(); } return; }
   if (el.id === "gimp") { if (el.files[0]) genImport(el.files[0]); el.value = ""; return; }
   if (/^custom\./.test(el.dataset.p || "")) setTimeout(function(){ A.clearCache(); A.rebuild(); if (el.dataset.p === "custom.method" || el.dataset.p === "custom.ishaBy" || el.dataset.p === "custom.tzName" || el.dataset.p === "custom.src" || el.dataset.p === "custom.on") render(); }, 0);
@@ -1730,6 +1755,7 @@ function onClick(e){
     case "actOpen": close(); actOpen(); break;
     case "clkOpen": close(); clkOpen(); break;
     case "genPick": genQ = ""; genPick(+x); render(); break;
+    case "genCountry": genQ = ""; var gq0 = document.getElementById("gq"); if (gq0) gq0.value = ""; var gr0 = document.getElementById("gres"); if (gr0) { gr0.innerHTML = ""; gr0.hidden = true; } genCountry(x); break;
     case "genMonth": genMonth = !genMonth; render(); break;
     case "genExport": genExport(); break;
     case "genDelTable": S.custom.table = null; S.custom.src = "calc"; A.save(); A.clearCache(); A.rebuild(); render(); toast("حُذف الجدول المستورد"); break;
