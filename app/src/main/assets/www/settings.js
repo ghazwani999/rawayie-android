@@ -1110,11 +1110,24 @@ var DISP_REC = {"look.showCount":true, "look.bigCounter":true, "look.bigIqCnt":t
 function dispOri(){ var o = R.display.o; if (o) return o; try { return A.orient() === "P" ? "P" : "L"; } catch(e){ return "L"; } }
 function segBtns(act, opts, on){ return '<div class="seg m0" role="radiogroup">' + opts.map(function(o){ var a = String(o[0]) === String(on);
   return '<button type="button" role="radio" aria-checked="' + a + '" data-act="' + act + '" data-x="' + esc(o[0]) + '" class="' + (a ? "on" : "") + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>'; }
+// الواجهات الجاهزة: [الاسم، الوصف، لون الخلفية، لون الزخرفة، خلفية أفقية، خلفية رأسية، الزخرفة، التخطيط، شكل البطاقات، لون التمييز]
+var UI_SETS = [
+  ["الذهبي الملكي", "أسود فاخر، إطار ذهبي بنجوم ثمانية، بطاقات قِباب", "#1b1915", "#E7B65B", "hr05.jpg", "vr12.jpg", "gold", "cards", "dome", "#B8862B"],
+  ["الأخضر النبوي", "أخضر زمردي، أركان أرابيسك، بطاقات", "#063f3a", "#EBD1A0", "hr20.jpg", "vr10.jpg", "arabesque", "cards", "round", "#1E8466"],
+  ["ليالي رمضان", "أزرق ليلي، فوانيس معلّقة، بطاقات قِباب", "#0a4a86", "#F6D88B", "hr04.jpg", "vr08.jpg", "lantern", "cards", "dome", "#C99A2E"],
+  ["العثماني الأحمر", "أحمر عثماني، أركان أرابيسك، جدول", "#7a0b0b", "#EBD1A0", "hr00.jpg", "vr07.jpg", "arabesque", "std", "round", "#C9A24A"],
+  ["سماء النجوم", "أزرق داكن، نجوم إسلامية، جدول", "#05344a", "#BFD7EA", "hr10.jpg", "vr02.jpg", "stars", "std", "round", "#2A7FB8"],
+  ["الكلاسيكي", "بدون زخارف إضافية، جدول", "#1d2a3a", "#EBD1A0", "hr00.jpg", "vr07.jpg", "none", "std", "round", "#3B93E3"]];
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
-  return card("نمط الشاشة",
+  return card("واجهات إسلامية جاهزة", '<p class="note">اضغط على واجهة لتطبيقها بالكامل: الخلفية والزخرفة والتخطيط والألوان. يمكنك بعدها تعديل أي جزء منها</p><div class="uiset">' +
+      UI_SETS.map(function(u, i){ return '<button type="button" class="uis" data-act="uiSet" data-x="' + i + '" style="--a:' + u[2] + ';--b:' + u[3] + '"><i></i><b>' + esc(u[0]) + '</b><small>' + esc(u[1]) + '</small></button>'; }).join("") + '</div>') +
+    card("نمط الشاشة",
     '<div class="fld"><span><b>تخطيط الشاشة الرئيسية</b><small>البطاقات: الساعة كبيرة في المنتصف بين الشعار والعد التنازلي، والآية بعرض الشاشة، والصلوات في بطاقات بالأسفل (الأذان ثم الإقامة)، والشروق والضحى في الأعلى. يطبَّق في الاتجاه الأفقي فقط، والرأسي يبقى بالجدول</small></span>' +
-      segBtns("dispTpl", [["std","الأساسي (جدول)"],["cards","البطاقات"]], S.look.tpl === "cards" ? "cards" : "std") + '</div>') +
+      segBtns("dispTpl", [["std","الأساسي (جدول)"],["cards","البطاقات"]], S.look.tpl === "cards" ? "cards" : "std") + '</div>' +
+    sel("الزخرفة الإسلامية", "look.decor", [["none","بدون"],["gold","إطار ذهبي بنجوم ثمانية"],["arabesque","أركان أرابيسك"],["lantern","فوانيس معلّقة"],["stars","نجوم إسلامية متناثرة"]], "تُرسم بلون التمييز خلف النصوص، وتعمل مع كل الخلفيات والأنماط") +
+    (S.look.decor && S.look.decor !== "none" ? rangeIn("وضوح الزخرفة", "look.decorOp", 0.2, 1, 0.05, "%") : "") +
+    (S.look.tpl === "cards" ? sel("شكل البطاقات", "look.cardShape", [["round","مستطيل بزوايا دائرية"],["dome","قبة"]]) : "")) +
     card("العدّاد والعد التنازلي",
     tog("إظهار العد التنازلي", "look.showCount", "الوقت المتبقي للصلاة القادمة بجانب الشعار") +
     tog("تكبير عداد الوقت المتبقي للصلاة القادمة", "look.bigCounter") +
@@ -1806,6 +1819,8 @@ function onClick(e){
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
+    case "uiSet": var u = UI_SETS[+x]; if (u) { var L = S.look; L.bgL = u[4]; L.bgP = u[5]; L.customBg = ""; L.bgMode = "manual"; L.autoColor = true; L.decor = u[6]; L.tpl = u[7]; L.cardShape = u[8]; L.tcHi = u[9]; L.hiCustom = false;
+      L.bgHidden = (L.bgHidden || []).filter(function(f){ return f !== u[4] && f !== u[5]; }); commit(); render(); toast("تم تطبيق واجهة «" + u[0] + "»"); } break;
     case "dispTpl": S.look.tpl = x === "cards" ? "cards" : "std"; commit(); render(); break;
     case "dispRec": Object.keys(DISP_REC).forEach(function(k){ put(k, DISP_REC[k]); }); commit(); render(); toast("تم تطبيق القيم الموصى بها ✓"); break;
     case "wxRefresh": A.refreshWeather(); setTimeout(render, 1500); break;

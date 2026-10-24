@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.4"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -33,7 +33,7 @@ var DEF = {
   slides:{on:false, random:false, sec:15, every:60, items:[]},
   remind:{on:true, white:true, ashura:true, fri:true, friHour:true, show:"both"},
   boards:{on:false, rot:20, items:[]},
-  look:{tpl:"std", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
+  look:{tpl:"std", decor:"none", decorOp:0.85, cardShape:"round", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:true, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false,
@@ -607,8 +607,9 @@ function build(){
   }
   if (S.look.netStar) html += '<i class="nstar net" aria-hidden="true">★</i>'; // نجمة الاتصال: خضراء متصل، حمراء منقطع
   mainEl.innerHTML = html;
+  decorate();
   var TK = !boards && !P && S.look.tpl === "cards";
-  mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
+  mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.cardShape === "dome" ? " dome" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
     (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
     (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
   ui = {
@@ -698,6 +699,42 @@ function clockFace(){
   // مسار الدقائق فقط، والعلامة كل 5 دقائق أطول قليلاً (بدون مؤشرات الساعات الكبيرة حتى لا تتعارض مع العداد)
   h += '<text x="100" y="38" class="fnum">' + num("12") + '</text><text x="100" y="151" class="fnum">' + num("6") + '</text>';
   return h + '<path d="M28 92 A72 72 0 0 1 172 92 Q100 70 28 92 Z" class="fglass"/></svg>';
+}
+/* ===== الزخارف الإسلامية فوق الخلفية (خلف النصوص): إطار ذهبي، أركان أرابيسك، فوانيس معلّقة، نجوم ثمانية ===== */
+function star8(cx, cy, r, r2, cls){ var p = []; for (var i = 0; i < 16; i++) { var a = Math.PI/8*i - Math.PI/2, rr = i % 2 ? r2 : r; p.push((cx + rr*Math.cos(a)).toFixed(2) + "," + (cy + rr*Math.sin(a)).toFixed(2)); }
+  return '<polygon points="' + p.join(" ") + '" class="' + (cls || "") + '"/>'; }
+function rosette(sz){ // نجمة ثمانية (خاتم سليمان) مزخرفة
+  return '<svg viewBox="0 0 100 100" width="' + sz + '" height="' + sz + '" aria-hidden="true"><g class="dk">' +
+    '<rect x="22" y="22" width="56" height="56"/><rect x="22" y="22" width="56" height="56" transform="rotate(45 50 50)"/>' +
+    '<circle cx="50" cy="50" r="16"/>' + star8(50, 50, 13, 6, "df") + '<circle cx="50" cy="50" r="3" class="df"/></g></svg>'; }
+function arabesque(sz){ // ركن أرابيسك: أقواس ملتفة وأوراق ونجمة في الزاوية
+  return '<svg viewBox="0 0 200 200" width="' + sz + '" height="' + sz + '" aria-hidden="true"><g class="dk">' +
+    '<path d="M8 192 V40 Q8 8 40 8 H192"/><path d="M20 192 V52 Q20 20 52 20 H192"/>' +
+    '<path d="M20 110 C60 110 70 70 60 50 C50 30 30 40 36 56 C40 66 54 62 52 52"/>' +
+    '<path d="M110 20 C110 60 70 70 50 60 C30 50 40 30 56 36 C66 40 62 54 52 52"/>' +
+    '<path d="M20 160 C45 150 50 130 40 120"/><path d="M160 20 C150 45 130 50 120 40"/>' +
+    '<path d="M70 70 C95 80 110 110 100 140"/><path d="M70 70 C80 95 110 110 140 100"/>' +
+    '<path d="M100 140 q6 -16 18 -10 q-6 14 -18 10z" class="df"/><path d="M140 100 q-16 6 -10 18 q14 -6 10 -18z" class="df"/>' +
+    '</g>' + star8(30, 30, 16, 7, "df") + '</svg>'; }
+function lantern(h){ // فانوس رمضاني معلّق
+  return '<svg viewBox="0 0 60 200" height="' + h + '" aria-hidden="true"><g class="dk">' +
+    '<line x1="30" y1="0" x2="30" y2="62"/><circle cx="30" cy="66" r="4"/>' +
+    '<path d="M18 84 L30 70 L42 84 Z" class="df"/><rect x="14" y="84" width="32" height="6" rx="2" class="df"/>' +
+    '<path d="M16 90 L10 112 L14 150 L46 150 L50 112 L44 90 Z"/><path d="M30 90 V150 M13 112 H47"/>' +
+    '<path d="M20 96 L17 112 L19 144 M40 96 L43 112 L41 144"/>' +
+    '<rect x="12" y="150" width="36" height="6" rx="2" class="df"/><path d="M18 156 L30 172 L42 156 Z" class="df"/><line x1="30" y1="172" x2="30" y2="184"/><circle cx="30" cy="187" r="3" class="df"/></g>' +
+    '<ellipse cx="30" cy="122" rx="9" ry="16" class="dglow"/></svg>'; }
+function decorate(){
+  var old = document.getElementById("decor"); if (old) old.parentNode.removeChild(old);
+  var d = S.look.decor || "none"; if (d === "none") return;
+  var el = document.createElement("div"); el.id = "decor"; el.className = "decor d-" + d; el.setAttribute("aria-hidden", "true");
+  el.style.setProperty("--dop", S.look.decorOp == null ? .85 : +S.look.decorOp);
+  var c4 = function(f){ return ["tl", "tr", "bl", "br"].map(function(k){ return '<i class="dc4 ' + k + '">' + f + '</i>'; }).join(""); };
+  if (d === "gold") el.innerHTML = '<i class="fr1"></i><i class="fr2"></i>' + c4(rosette(layout === "P" ? 110 : 96));
+  else if (d === "arabesque") el.innerHTML = c4(arabesque(layout === "P" ? 230 : 210));
+  else if (d === "lantern") el.innerHTML = '<i class="lt l1">' + lantern(layout === "P" ? 300 : 250) + '</i><i class="lt l3">' + lantern(layout === "P" ? 300 : 250) + '</i>';
+  else if (d === "stars") { var h = ""; for (var i = 0; i < 9; i++) h += '<i class="st8 s' + i + '">' + rosette(40 + (i % 3)*22) + '</i>'; el.innerHTML = '<i class="fr2"></i>' + h; }
+  stage.insertBefore(el, mainEl);
 }
 var lastRowKey = "", lastDay = "";
 function renderTimes(ph){
