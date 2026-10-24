@@ -312,6 +312,33 @@ html{-webkit-tap-highlight-color:transparent}
 .decor~.main{z-index:1}
 /* البطاقات بشكل قبة */
 .tk.dome .card{border-radius:50% 50% var(--rowrad,22px) var(--rowrad,22px)/34% 34% var(--rowrad,22px) var(--rowrad,22px);padding-top:26px}
+/* الشاشة الثانية (المحتوى) */
+.sec2{gap:14px}
+.s2h{display:flex;align-items:center;justify-content:space-between;gap:24px;flex:none}
+.s2n{flex:1;min-width:0;text-align:start}.sec2 .mname{text-align:start;padding:0;line-height:1.25}.s2d{color:var(--fg2);line-height:1.3}
+.sec2 .clk{flex:none}.s2c{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-end;text-align:end;padding-left:100px}.nomenu .s2c{padding-left:0}
+.s2box{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;border-radius:28px;background:var(--rowbg,rgba(0,0,0,.25));overflow:hidden}
+.shadow .s2box{box-shadow:var(--rowsh)}
+.s2in{flex:1;min-height:0;display:flex;overflow:hidden}
+.s2in .sbox{text-shadow:0 2px 8px rgba(0,0,0,.35)}
+.s2dots{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:8px}
+.s2dots i{width:10px;height:10px;border-radius:50%;background:var(--fg2);opacity:.35}.s2dots i.on{opacity:1;background:var(--accraw)}
+.sec2 .cards{display:flex;gap:var(--rowgap,14px);flex:none}
+.sec2 .card{flex:1;min-width:0;border-radius:var(--rowrad,20px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;line-height:1.15}
+.sec2 .card .n{color:var(--acc);font-weight:700}.sec2 .card .a{color:var(--fg);direction:ltr}.sec2 .card .i{color:var(--acc);direction:ltr}
+.sec2 .card.hi{background:var(--hi)}
+#stage.tcards .sec2 .card{background:rgba(4,12,34,.32);border:2px solid rgba(255,255,255,.26);box-sizing:border-box}
+#stage.tcards .sec2 .card.hi{background:var(--tch)}#stage.tcards .sec2 .card .n{color:var(--tcn)}#stage.tcards .sec2 .card .i{color:var(--tci)}
+.L .sec2 .mname{font-size:calc(52px*var(--s-name,1)*var(--ts,1))}.L .s2d{font-size:calc(34px*var(--s-date,1)*var(--ts,1))}
+.L .sec2 .tm{font-size:calc(150px*var(--s-clock,1)*var(--ns,1))}.L .sec2 .ss{font-size:calc(56px*var(--s-clock,1)*var(--ns,1))}
+.L .sec2 .cv{font-size:calc(80px*var(--s-count,1)*var(--ns,1))}.L .sec2 .cl{font-size:calc(32px*var(--s-count,1)*var(--ts,1))}
+.L .sec2 .card .n{font-size:calc(30px*var(--s-pname,1)*var(--ts,1))}.L .sec2 .card .a{font-size:calc(52px*var(--s-ptime,1)*var(--ns,1))}.L .sec2 .card .i{font-size:calc(36px*var(--s-ptime,1)*var(--ns,1))}
+.P .s2h{flex-wrap:wrap}.P .s2n{flex:0 0 100%;text-align:center}.P .sec2 .mname{text-align:center}.P .s2c{align-items:center;text-align:center}
+.P .sec2 .mname{font-size:calc(56px*var(--s-name,1)*var(--ts,1))}.P .s2d{font-size:calc(36px*var(--s-date,1)*var(--ts,1))}
+.P .sec2 .tm{font-size:calc(170px*var(--s-clock,1)*var(--ns,1))}.P .sec2 .ss{font-size:calc(64px*var(--s-clock,1)*var(--ns,1))}
+.P .sec2 .cv{font-size:calc(80px*var(--s-count,1)*var(--ns,1))}.P .sec2 .cl{font-size:calc(32px*var(--s-count,1)*var(--ts,1))}
+.P .sec2 .cards{flex-wrap:wrap}.P .sec2 .card{flex:1 1 30%}
+.P .sec2 .card .n{font-size:calc(34px*var(--s-pname,1)*var(--ts,1))}.P .sec2 .card .a{font-size:calc(56px*var(--s-ptime,1)*var(--ns,1))}.P .sec2 .card .i{font-size:calc(40px*var(--s-ptime,1)*var(--ns,1))}
 /* الشاشات الكاملة */
 #ov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center;padding:70px;
   background:rgba(4,10,24,.74);color:#fff;--fg2:rgba(255,255,255,.75)}
@@ -1007,16 +1034,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610241619"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610241619"></script>
-<script charset="utf-8" src="data.js?v=2610241619"></script>
-<script charset="utf-8" src="i18n.js?v=2610241619"></script>
-<script charset="utf-8" src="version.js?v=2610241619"></script>
-<script charset="utf-8" src="app.js?v=2610241619"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610241619"></script>
-<script charset="utf-8" src="vendor/qr.js?v=2610241619"></script>
-<script charset="utf-8" src="lic-key.js?v=2610241619"></script>
-<script charset="utf-8" src="license.js?v=2610241619"></script>
-<script charset="utf-8" src="remote.js?v=2610241619"></script>
-<script charset="utf-8" src="offline.js?v=2610241619"></script>
-<script charset="utf-8" src="settings.js?v=2610241619"></script>
+<script charset="utf-8" src="compat.js?v=2610241633"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610241633"></script>
+<script charset="utf-8" src="data.js?v=2610241633"></script>
+<script charset="utf-8" src="i18n.js?v=2610241633"></script>
+<script charset="utf-8" src="version.js?v=2610241633"></script>
+<script charset="utf-8" src="app.js?v=2610241633"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610241633"></script>
+<script charset="utf-8" src="vendor/qr.js?v=2610241633"></script>
+<script charset="utf-8" src="lic-key.js?v=2610241633"></script>
+<script charset="utf-8" src="license.js?v=2610241633"></script>
+<script charset="utf-8" src="remote.js?v=2610241633"></script>
+<script charset="utf-8" src="offline.js?v=2610241633"></script>
+<script charset="utf-8" src="settings.js?v=2610241633"></script>

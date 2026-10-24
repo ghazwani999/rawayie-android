@@ -1120,7 +1120,17 @@ var UI_SETS = [
   ["الكلاسيكي", "بدون زخارف إضافية، جدول", "#1d2a3a", "#EBD1A0", "hr00.jpg", "vr07.jpg", "none", "std", "round", "#3B93E3"]];
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
-  return card("واجهات إسلامية جاهزة", '<p class="note">اضغط على واجهة لتطبيقها بالكامل: الخلفية والزخرفة والتخطيط والألوان. يمكنك بعدها تعديل أي جزء منها</p><div class="uiset">' +
+  var MU = S.multi || {};
+  return card("عدد الشاشات في المسجد",
+    '<div class="fld"><span><b>طريقة العرض</b><small>شاشتان: الأولى تعرض المواقيت كاملة، والثانية تعرض المحتوى (اللوحات والشرائح والتذكيرات والأذكار والإعلانات) بخط كبير مع الساعة والصلاة القادمة. شاشات الأذان والإقامة تظهر على الاثنتين</small></span>' +
+      segBtns("muMode", [["single","شاشة واحدة"],["dual","شاشتان"]], MU.mode === "dual" ? "dual" : "single") + '</div>' +
+    (MU.mode === "dual" ? '<div class="fld"><span><b>دور هذه الشاشة</b><small>اضبط الشاشة الأخرى على الدور الآخر من إعداداتها أو من صفحة تحريرها في الموقع</small></span>' +
+      segBtns("muRole", [["main","الأولى: المواقيت"],["second","الثانية: المحتوى"]], MU.role === "second" ? "second" : "main") + '</div>' +
+      (MU.role === "second" ? '<div class="subbox"><p class="note">المحتوى الذي يتناوب على الشاشة الثانية:</p>' +
+        tog("لوحات العرض", "multi.boards") + tog("الشرائح", "multi.slides") + tog("التذكيرات التلقائية", "multi.remind") +
+        tog("أذكار الصباح والمساء", "multi.adhkar", "الصباح من الفجر إلى الظهر، والمساء من العصر إلى العشاء") + tog("الذكر الثابت", "multi.hadith") + tog("إعلانات المسجد", "multi.news") +
+        numIn("مدة عرض كل محتوى", "multi.sec", 5, 120, 5, "ثانية") + '</div>' : "") : "")) +
+    card("واجهات إسلامية جاهزة", '<p class="note">اضغط على واجهة لتطبيقها بالكامل: الخلفية والزخرفة والتخطيط والألوان. يمكنك بعدها تعديل أي جزء منها</p><div class="uiset">' +
       UI_SETS.map(function(u, i){ return '<button type="button" class="uis" data-act="uiSet" data-x="' + i + '" style="--a:' + u[2] + ';--b:' + u[3] + '"><i></i><b>' + esc(u[0]) + '</b><small>' + esc(u[1]) + '</small></button>'; }).join("") + '</div>') +
     card("نمط الشاشة",
     '<div class="fld"><span><b>تخطيط الشاشة الرئيسية</b><small>البطاقات: الساعة كبيرة في المنتصف بين الشعار والعد التنازلي، والآية بعرض الشاشة، والصلوات في بطاقات بالأسفل (الأذان ثم الإقامة)، والشروق والضحى في الأعلى. يطبَّق في الاتجاه الأفقي فقط، والرأسي يبقى بالجدول</small></span>' +
@@ -1819,6 +1829,8 @@ function onClick(e){
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
+    case "muMode": S.multi = S.multi || {}; S.multi.mode = x === "dual" ? "dual" : "single"; commit(); render(); break;
+    case "muRole": S.multi = S.multi || {}; S.multi.role = x === "second" ? "second" : "main"; commit(); render(); toast(x === "second" ? "هذه الشاشة الآن للمحتوى" : "هذه الشاشة الآن للمواقيت"); break;
     case "uiSet": var u = UI_SETS[+x]; if (u) { var L = S.look; L.bgL = u[4]; L.bgP = u[5]; L.customBg = ""; L.bgMode = "manual"; L.autoColor = true; L.decor = u[6]; L.tpl = u[7]; L.cardShape = u[8]; L.tcHi = u[9]; L.hiCustom = false;
       L.bgHidden = (L.bgHidden || []).filter(function(f){ return f !== u[4] && f !== u[5]; }); commit(); render(); toast("تم تطبيق واجهة «" + u[0] + "»"); } break;
     case "dispTpl": S.look.tpl = x === "cards" ? "cards" : "std"; commit(); render(); break;

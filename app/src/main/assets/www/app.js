@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.4"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.5"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -31,6 +31,7 @@ var DEF = {
   tickerOn:true, marquee:true, newsSec:12, speed:110,
   fixedOn:true, fixedZekr:"اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي",
   slides:{on:false, random:false, sec:15, every:60, items:[]},
+  multi:{mode:"single", role:"main", sec:20, boards:true, slides:true, remind:true, adhkar:true, news:true, hadith:true},
   remind:{on:true, white:true, ashura:true, fri:true, friHour:true, show:"both"},
   boards:{on:false, rot:20, items:[]},
   look:{tpl:"std", decor:"none", decorOp:0.85, cardShape:"round", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
@@ -569,10 +570,18 @@ function build(){
   var P = layout === "P";
   stage.className = "stage " + layout + (S.look.ovGlass === false ? " noglass" : "") + (S.look.bigIqCnt ? " bigiq" : "");
   applyLook();
-  var boards = S.boards.on && S.boards.items.some(function(b){ return b.active; });
+  var SEC = isSecond();
+  var boards = !SEC && S.boards.on && S.boards.items.some(function(b){ return b.active; });
   var flag = "";
   var html;
-  if (boards) {
+  if (SEC) {
+    // الشاشة الثانية في المسجد: محتوى كبير متناوب (لوحات، شرائح، تذكيرات، أذكار، إعلانات) مع شريط علوي بالساعة والصلاة القادمة
+    html = '<div class="s2h"><div class="s2n"><div class="mname"></div><div class="s2d"><span class="dayn"></span> <span class="hij"></span></div></div>' +
+      '<div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span></div>' +
+      '<div class="s2c cnt"><div class="cv"></div><div class="cl"></div></div></div>' +
+      '<div class="s2box"><div class="s2in"></div><div class="s2dots"></div></div><div class="cards"></div>' +
+      (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>';
+  } else if (boards) {
     var clock0 = '<div class="clk"><span class="tm"></span><span class="ap"></span></div>';
     html = '<div class="hdr">' + logoHTML() + '<div class="mname"></div></div>' +
       '<div class="board"><img class="bimg" alt="" hidden><div class="bt"></div><div class="bb"></div></div>' +
@@ -608,15 +617,15 @@ function build(){
   if (S.look.netStar) html += '<i class="nstar net" aria-hidden="true">★</i>'; // نجمة الاتصال: خضراء متصل، حمراء منقطع
   mainEl.innerHTML = html;
   decorate();
-  var TK = !boards && !P && S.look.tpl === "cards";
-  mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.cardShape === "dome" ? " dome" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
+  var TK = !SEC && !boards && !P && S.look.tpl === "cards";
+  mainEl.className = "main" + (SEC ? " sec2" : "") + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.cardShape === "dome" ? " dome" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
     (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
     (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
   ui = {
     mname: $(".mname", mainEl), dayn: $(".dayn", mainEl), hij: $(".hij", mainEl), gre: $(".gre", mainEl), bdate: $(".bdate", mainEl),
     tm: $(".tm", mainEl), ap: $(".ap", mainEl), aps: mainEl.querySelectorAll(".ap"), ss: $(".ss", mainEl), cl: $(".cl", mainEl), cv: $(".cv", mainEl), cnt: $(".cnt", mainEl),
     rows: $(".rows", mainEl), cards: $(".cards", mainEl), fixed: $(".fixed", mainEl), tick: $(".tick", mainEl), foot: $(".foot", mainEl),
-    tks: $(".tks", mainEl), cpan: $(".cpan", mainEl), iqclk: $(".iqclk", mainEl), night: $(".nightbar", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
+    s2: $(".s2in", mainEl), s2dots: $(".s2dots", mainEl), tks: $(".tks", mainEl), cpan: $(".cpan", mainEl), iqclk: $(".iqclk", mainEl), night: $(".nightbar", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
   };
   ui.mname.textContent = S.mosque; fitText(ui.mname, .5);
   if (ui.fixed) ui.fixed.textContent = String(S.fixedZekr || "").trim() || DEF.fixedZekr; // إذا كان فارغاً يظهر الدعاء الافتراضي
@@ -893,6 +902,47 @@ function renderTicker(){
   }
 }
 
+/* ===== شاشتان في المسجد: الأولى للمواقيت، والثانية للمحتوى =====
+   كل جهاز يُضبط دوره من إعداداته (أو من صفحة تحرير شاشته في الموقع)، وشاشات الأذان والإقامة تظهر على الاثنتين */
+function isSecond(){ var M = S.multi || {}; return M.mode === "dual" && M.role === "second"; }
+var s2State = {i:-1, until:0, key:""};
+function secondItems(now){
+  var M = S.multi || {}, out = [], z = zp(now);
+  if (M.boards !== false) S.boards.items.forEach(function(b){ if (b.active) out.push({id:"b" + b.id, title:b.title || "", body:b.body || "", img:b.img || "", tSize:b.tSize || 110, bSize:b.bSize || 64, bg:"#000000", bgOp:0}); });
+  if (M.slides !== false) S.slides.items.forEach(function(x){ if (typeof x === "string") x = {id:x, img:x}; if (x.active !== false && (x.img || x.title || x.body)) { var c = {}; for (var k in x) c[k] = x[k]; c.full = false; c.bgOp = 0; out.push(c); } });
+  if (M.remind !== false) remindList(now).forEach(function(r){ out.push({id:r.id, title:r.title, body:r.body, tSize:110, bSize:66, bgOp:0}); });
+  if (M.adhkar !== false) { // أذكار الصباح من الفجر إلى الظهر، وأذكار المساء من العصر إلى العشاء
+    var d = dayTimes(z.Y, z.M, z.D), tm = {}; d.list.forEach(function(x){ tm[x.k] = x.A; });
+    var kind = now >= tm.fajr && now < tm.dhuhr ? "morning" : now >= tm.asr && now < tm.isha ? "evening" : "";
+    if (kind) (zkListOf(kind) || []).slice(0, 12).forEach(function(tx, i){ out.push({id:"z" + kind + i, title:kind === "morning" ? "أذكار الصباح" : "أذكار المساء", body:tx, tSize:84, bSize:zkSize(tx)*1.15, bgOp:0, lineH:1.8}); });
+  }
+  if (M.hadith !== false && S.fixedZekr) out.push({id:"fz", title:"", body:String(S.fixedZekr || ""), bSize:96, bgOp:0, lineH:1.7});
+  if (M.news !== false) newsToday().forEach(function(n){ if (String(n.id).indexOf("rm-") !== 0) out.push({id:"n" + n.id, title:"إعلان", body:n.text, tSize:84, bSize:80, bgOp:0}); });
+  if (!out.length) out.push({id:"def", title:S.mosque || "", body:String(S.fixedZekr || DEF.fixedZekr), tSize:110, bSize:80, bgOp:0});
+  return out;
+}
+// تصغير النص تلقائياً حتى يتسع المحتوى الطويل (مثل آية الكرسي) داخل المساحة
+function s2Fit(){
+  var box = ui.s2 && ui.s2.querySelector(".sbox"); if (!box) return;
+  var st = box.querySelector(".st"), sb = box.querySelector(".sb"), im = box.querySelector("img");
+  for (var n = 0; n < 40 && box.scrollHeight > box.clientHeight + 2; n++) {
+    if (sb) { var f = parseFloat(sb.style.fontSize) || 60; if (f > 26) sb.style.fontSize = (f*0.93).toFixed(1) + "px"; }
+    if (st) { var g = parseFloat(st.style.fontSize) || 90; if (g > 40 && (!sb || n % 2)) st.style.fontSize = (g*0.95).toFixed(1) + "px"; }
+    if (im && n > 20) im.style.height = Math.max(20, (parseFloat(im.style.height) || 55) - 4) + "%";
+  }
+}
+function secondScreen(now){
+  if (!ui.s2) return;
+  var items = secondItems(now), key = items.map(function(x){ return x.id; }).join("|");
+  if (key !== s2State.key) { s2State.key = key; s2State.until = 0; if (s2State.i >= items.length) s2State.i = -1; }
+  if (now < s2State.until && s2State.until - now < 200000) return; // تصحيح ساعة الجهاز للخلف لا يوقف التناوب
+  s2State.i = (s2State.i + 1) % items.length; var it = items[s2State.i];
+  s2State.until = now + Math.max(5, +(it.sec || (S.multi || {}).sec || 20))*1000;
+  var sl = {}; for (var k in it) sl[k] = it[k]; sl.full = false; sl.radius = 28; sl.pad = 56; sl.gap = 30; if (sl.bg == null) sl.bg = "#000000";
+  renderSlide(ui.s2, sl); s2Fit(); ui.s2.classList.remove("fade"); void ui.s2.offsetWidth; ui.s2.classList.add("fade");
+  if (ui.s2dots) ui.s2dots.innerHTML = items.length > 1 && items.length <= 24 ? items.map(function(x, i){ return '<i' + (i === s2State.i ? ' class="on"' : "") + '></i>'; }).join("") : "";
+}
+
 /* ===== الشرائح ولوحات العرض ===== */
 var slideState = {}, boardState = {};
 function slideList(){
@@ -950,7 +1000,7 @@ function slides(now){
   var fs = $("#fslide");
   var items = slideList();
   var stop = function(){ slideState.show = false; if (ui.slide) ui.slide.hidden = true; if (ui.zone) ui.zone.classList.remove("sliding"); if (fs) fs.hidden = true; stage.classList.remove("fsl"); };
-  if (!items.length) { stop(); return; }
+  if (!items.length || isSecond()) { stop(); return; } // الشاشة الثانية تعرض المحتوى في مساحتها الخاصة
   if (!ui.zone && !fs) return;
   if (slideState.show && now >= slideState.until) { stop(); slideState.next = now + S.slides.every*1000; }
   else if (!slideState.show && now >= slideState.next) {
@@ -1353,6 +1403,7 @@ function tick(force){
   safe("ticker", function(){ renderTicker(); });
   safe("slides", function(){ slides(now); });
   safe("boards", function(){ boards(now); });
+  safe("second", function(){ secondScreen(now); });
   safe("alerts", function(){ alerts(now, ph); });
   if (S.weather.on && now - wxAt > 30*60000) safe("weather", fetchWeather);
 }
