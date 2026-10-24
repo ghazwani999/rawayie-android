@@ -14,7 +14,7 @@ android {
         applicationId 'sa.rawayie.azan'
         minSdk 21
         targetSdk 35
-        versionCode 335
+        versionCode 336
         versionName '9.1'
     }
 

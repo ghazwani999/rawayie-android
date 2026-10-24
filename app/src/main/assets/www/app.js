@@ -682,6 +682,24 @@ function autoBg(now, ph){
   if (key !== S.look.bgKey) { S.look.bgKey = key; nextBg(m === "random" || !!S.look.bgShuffle, true); }
 }
 
+/* وجه ساعة حقيقية داخل دائرة الإقامة: أرقام الساعات وعلامات الدقائق وعقارب تتحرك بالوقت الحالي، والعداد فوقها */
+function clockFace(){
+  var h = '<svg class="face" viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="fcg" cx="50%" cy="38%" r="65%">' +
+    '<stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".7" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient></defs>' +
+    '<circle cx="100" cy="100" r="83" class="fdisc"/><circle cx="100" cy="100" r="83" class="frim"/>';
+  for (var i = 0; i < 60; i++) { var big = i % 5 === 0;
+    h += '<line x1="100" y1="' + (big ? 21.5 : 22.5) + '" x2="100" y2="' + (big ? 26.5 : 25) + '" class="' + (big ? "fth" : "ftm") + '" transform="rotate(' + (i*6) + ' 100 100)"/>'; }
+  // الرقمان 3 و9 مكان العداد في المنتصف (مثل الساعات ذات النافذة الرقمية)
+  for (var n = 1; n <= 12; n++) { if (n === 3 || n === 9) continue; var a = n*Math.PI/6, x = 100 + 64*Math.sin(a), y = 100 - 64*Math.cos(a);
+    h += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" class="fnum">' + num(String(n)) + '</text>'; }
+  return h + '<g class="fh"><line x1="100" y1="110" x2="100" y2="58"/></g><g class="fm"><line x1="100" y1="114" x2="100" y2="38"/></g>' +
+    '<g class="fs"><line x1="100" y1="120" x2="100" y2="30"/><circle cx="100" cy="100" r="3.2"/></g><circle cx="100" cy="100" r="1.4" class="fpin"/></svg>';
+}
+function faceHands(now){
+  var f = ovEl && ovEl.querySelector(".face"); if (!f) return;
+  var z = zp(now), s = z.s, m = z.m + s/60, hr = (z.h % 12) + m/60;
+  [[".fh", hr*30], [".fm", m*6], [".fs", s*6]].forEach(function(q){ var g = f.querySelector(q[0]); if (g) g.setAttribute("transform", "rotate(" + q[1].toFixed(2) + " 100 100)"); });
+}
 var lastRowKey = "", lastDay = "";
 function renderTimes(ph){
   var day = ph.today, rows = day.list.slice();
@@ -1072,7 +1090,7 @@ function overlayInner(now, ph){
       var ticks = ""; for (var q = 0; q < 60; q++) ticks += '<line x1="100" y1="' + (q % 5 ? 4 : 2) + '" x2="100" y2="' + (q % 5 ? 8 : 11) + '" transform="rotate(' + (q*6) + ' 100 100)"/>';
       // العنوان «الوقت المتبقي للإقامة» فوق العداد، وداخل الدائرة العداد فقط
       ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div>' +
-        (S.circle !== false ? '<div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><g class="rt">' + ticks + '</g>' +
+        (S.circle !== false ? '<div class="ring">' + clockFace() + '<svg viewBox="0 0 200 200" aria-hidden="true"><g class="rt">' + ticks + '</g>' +
           '<circle cx="100" cy="100" r="88" class="r0"/><circle cx="100" cy="100" r="88" class="r1"/><g class="rdot"><circle cx="188" cy="100" r="6.5"/></g></svg>' +
           '<div class="rin"><div class="o-cnt"></div></div></div>'
           : '<div class="o-cnt big"></div>') +
@@ -1087,6 +1105,7 @@ function overlayInner(now, ph){
       r1.setAttribute("stroke-dasharray", C.toFixed(2)); r1.setAttribute("stroke-dashoffset", off); r1.style.strokeDasharray = C.toFixed(2); r1.style.strokeDashoffset = off; tcls(r1, "red", red);
       var dot = $(".rdot", ovEl); if (dot) { var rot = "rotate(" + (frac*360).toFixed(2) + " 100 100)"; dot.setAttribute("transform", rot); dot.style.transform = "rotate(" + (frac*360).toFixed(2) + "deg)"; tcls(dot, "red", red); } }
     digits($(".o-clock", ovEl), fmtT(now, false, 1));
+    faceHands(now);
     return;
   }
   if (m === "iqnow" || m === "praying") {
