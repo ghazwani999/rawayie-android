@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "8.7"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "8.8"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -577,7 +577,7 @@ function build(){
       '<div class="board"><img class="bimg" alt="" hidden><div class="bt"></div><div class="bb"></div></div>' +
       '<div class="bstrip"><div class="bclk">' + clock0 + '<div class="bdate"></div></div><div class="cards"></div></div>' +
       (S.fixedOn ? '<div class="fixed"></div>' : "") + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
-  } else if (S.look.tpl === "cards") {
+  } else if (S.look.tpl === "cards" && !P) { // البطاقات للعرض الأفقي فقط، والرأسي يبقى بالجدول
     // نمط البطاقات: الساعة في المنتصف بين الشعار والعد التنازلي، والآية بعرض الشاشة، وبطاقات الصلوات بالأسفل (الأذان والإقامة)
     var wxk = '<div class="wx" hidden><span></span><img alt=""></div>';
     html = '<div class="tkh"><div class="tks"></div><div class="tkd"><div class="tkdl"><span class="dayn"></span><span class="hij"></span><span class="tkdot">·</span><span class="gre"></span></div><div class="mname"></div></div><div class="tkw">' + wxk + '</div></div>' +
@@ -605,7 +605,7 @@ function build(){
   }
   if (S.look.netStar) html += '<i class="nstar net" aria-hidden="true">★</i>'; // نجمة الاتصال: خضراء متصل، حمراء منقطع
   mainEl.innerHTML = html;
-  var TK = !boards && S.look.tpl === "cards";
+  var TK = !boards && !P && S.look.tpl === "cards";
   mainEl.className = "main" + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
     (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
     (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
