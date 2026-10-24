@@ -1099,7 +1099,10 @@ function segBtns(act, opts, on){ return '<div class="seg m0" role="radiogroup">'
   return '<button type="button" role="radio" aria-checked="' + a + '" data-act="' + act + '" data-x="' + esc(o[0]) + '" class="' + (a ? "on" : "") + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>'; }
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
-  return card("العدّاد والعد التنازلي",
+  return card("نمط الشاشة",
+    '<div class="fld"><span><b>تخطيط الشاشة الرئيسية</b><small>البطاقات: الساعة كبيرة في المنتصف بين الشعار والعد التنازلي، والآية بعرض الشاشة، والصلوات في بطاقات بالأسفل (الأذان ثم الإقامة)، والشروق والضحى في الأعلى</small></span>' +
+      segBtns("dispTpl", [["std","الأساسي (جدول)"],["cards","البطاقات"]], S.look.tpl === "cards" ? "cards" : "std") + '</div>') +
+    card("العدّاد والعد التنازلي",
     tog("إظهار العد التنازلي", "look.showCount", "الوقت المتبقي للصلاة القادمة بجانب الشعار") +
     tog("تكبير عداد الوقت المتبقي للصلاة القادمة", "look.bigCounter") +
     tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة") +
@@ -1790,6 +1793,7 @@ function onClick(e){
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
+    case "dispTpl": S.look.tpl = x === "cards" ? "cards" : "std"; commit(); render(); break;
     case "dispRec": Object.keys(DISP_REC).forEach(function(k){ put(k, DISP_REC[k]); }); commit(); render(); toast("تم تطبيق القيم الموصى بها ✓"); break;
     case "wxRefresh": A.refreshWeather(); setTimeout(render, 1500); break;
     case "nSave":

@@ -219,6 +219,51 @@ html{-webkit-tap-highlight-color:transparent}
 .boards .card .i small{font-family:var(--ft);font-size:18px}
 .L .boards .cards{height:200px}.L .boards .card .n{font-size:40px}.L .boards .card .a{font-size:58px}
 
+/* نمط البطاقات: الساعة في المنتصف، الشعار والعد التنازلي في دائرتين، بطاقات الصلوات بالأسفل */
+.L .main.tk{padding:22px 48px 14px}.P .main.tk{padding:30px 36px 22px}
+.tkh{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr) minmax(0,1fr);align-items:start;gap:16px;flex:none}
+.tks{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.tks div{display:flex;gap:12px;align-items:baseline;white-space:nowrap}.tks b{color:var(--acc);font-weight:700}.tks span{color:var(--fg);font-family:var(--fn);direction:ltr}
+.tkw{display:flex;justify-content:flex-end}
+.tkd{display:flex;flex-direction:column;align-items:center;min-width:0}
+.tkdl{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:0 16px;color:var(--acc);line-height:1.25;text-align:center}
+.tk .tkdl .dayn,.tk .tkdl .hij{display:inline;font-size:inherit;max-width:none}.tk .tkdl .gre{font-size:inherit}
+.tkdot{color:var(--fg2)}.tk.dalt .tkdot,.tk.dalt .tkdl .gre{display:none}
+.tk.noday .dayn,.tk.nodate .hij,.tk.nodate .gre,.tk.nodate .tkdot{display:none}
+.tk .mname{padding:0;margin-top:4px}
+.tkm{display:flex;align-items:center;justify-content:space-between;gap:24px;flex:1;min-height:0}
+.tk .center{flex:1;min-width:0}
+.tkc,.tke{border-radius:50%;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle,rgba(255,255,255,.16) 0,rgba(255,255,255,.06) 58%,rgba(255,255,255,0) 71%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.09)}
+.logolt .tkc{background:radial-gradient(circle,rgba(0,0,0,.24) 0,rgba(0,0,0,.12) 58%,rgba(0,0,0,0) 71%)}
+.tkc{gap:4px;overflow:hidden;padding:0 26px;box-sizing:border-box}
+.tk .cards{display:flex;gap:18px;flex:none}
+.tk .card{flex:1;min-width:0;border-radius:var(--rowrad,22px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--rowbg,rgba(255,255,255,.08));box-shadow:var(--rowsh,none);line-height:1.1;transition:background .4s,opacity .4s}
+.tk .card.hi{background:var(--hi)}
+.tk .card .n{color:var(--acc);font-weight:700}.tk .card .a{color:var(--fg);direction:ltr;white-space:nowrap}.tk .card .i{color:var(--acc);direction:ltr;white-space:nowrap}
+.tk .fixed{margin:4px 0 10px}
+.L .tk .tks,.L .tk .tkw{font-size:40px}.L .tk .wx{font-size:56px}.L .tk .wx img{width:56px;height:56px}
+.L .tk .tkdl{font-size:calc(54px*var(--s-date,1)*var(--ts,1))}.L .tk .mname{font-size:calc(46px*var(--s-name,1)*var(--ts,1))}
+.L .tkc,.L .tke{width:calc(330px*var(--emb2,1));height:calc(330px*var(--emb2,1))}
+.L .tk .cv{font-size:calc(104px*var(--s-count,1)*var(--ns,1))}.L .tk .cl{font-size:calc(34px*var(--s-count,1)*var(--ts,1))}
+.L .tk .tm{font-size:calc(240px*var(--s-clock,1)*var(--ns,1))}
+.L .tk .fixed{font-size:calc(52px*var(--s-fixed,1)*var(--ts,1))}
+.L .tk .cards{height:calc(270px*var(--s-rows,1))}
+.L .tk .card .n{font-size:calc(42px*var(--s-pname,1)*var(--ts,1))}.L .tk .card .a{font-size:calc(92px*var(--s-ptime,1)*var(--ns,1))}.L .tk .card .i{font-size:calc(66px*var(--s-ptime,1)*var(--ns,1))}
+.P .tkh{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:6px}.P .tkd{grid-column:1/-1;order:3}
+.P .tk .tks,.P .tk .tkw{font-size:34px}.P .tk .wx{font-size:50px}.P .tk .wx img{width:50px;height:50px}
+.P .tk .tkdl{font-size:calc(46px*var(--s-date,1)*var(--ts,1))}.P .tk .mname{font-size:calc(50px*var(--s-name,1)*var(--ts,1))}
+.P .tkm{flex-wrap:wrap;justify-content:space-around;align-content:center;gap:30px 20px}
+.P .tk .center{order:-1;flex:0 0 100%}
+.P .tkc,.P .tke{width:calc(360px*var(--emb2,1));height:calc(360px*var(--emb2,1))}
+.P .tk .cv{font-size:calc(112px*var(--s-count,1)*var(--ns,1))}.P .tk .cl{font-size:calc(38px*var(--s-count,1)*var(--ts,1))}
+.P .tk .tm{font-size:calc(250px*var(--s-clock,1)*var(--ns,1))}
+.P .tk .fixed{font-size:calc(50px*var(--s-fixed,1)*var(--ts,1))}
+.P .tk .cards{flex-wrap:wrap;gap:16px}
+.P .tk .card{flex:1 1 30%;height:calc(250px*var(--s-rows,1))}
+.P .tk .card .n{font-size:calc(42px*var(--s-pname,1)*var(--ts,1))}.P .tk .card .a{font-size:calc(84px*var(--s-ptime,1)*var(--ns,1))}.P .tk .card .i{font-size:calc(60px*var(--s-ptime,1)*var(--ns,1))}
+.nocnt .tkc{visibility:hidden}
+
 /* الشاشات الكاملة */
 #ov{position:absolute;top:0;right:0;bottom:0;left:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center;padding:70px;
   background:rgba(4,10,24,.74);color:#fff;--fg2:rgba(255,255,255,.75)}
@@ -896,16 +941,16 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 <div id="set" hidden></div>
 <div id="toast" role="status" hidden></div>
 </div>
-<script charset="utf-8" src="compat.js?v=2610241031"></script>
-<script charset="utf-8" src="bg/removed.js?v=2610241031"></script>
-<script charset="utf-8" src="data.js?v=2610241031"></script>
-<script charset="utf-8" src="i18n.js?v=2610241031"></script>
-<script charset="utf-8" src="version.js?v=2610241031"></script>
-<script charset="utf-8" src="app.js?v=2610241031"></script>
-<script charset="utf-8" src="vendor/nacl.min.js?v=2610241031"></script>
-<script charset="utf-8" src="vendor/qr.js?v=2610241031"></script>
-<script charset="utf-8" src="lic-key.js?v=2610241031"></script>
-<script charset="utf-8" src="license.js?v=2610241031"></script>
-<script charset="utf-8" src="remote.js?v=2610241031"></script>
-<script charset="utf-8" src="offline.js?v=2610241031"></script>
-<script charset="utf-8" src="settings.js?v=2610241031"></script>
+<script charset="utf-8" src="compat.js?v=2610241059"></script>
+<script charset="utf-8" src="bg/removed.js?v=2610241059"></script>
+<script charset="utf-8" src="data.js?v=2610241059"></script>
+<script charset="utf-8" src="i18n.js?v=2610241059"></script>
+<script charset="utf-8" src="version.js?v=2610241059"></script>
+<script charset="utf-8" src="app.js?v=2610241059"></script>
+<script charset="utf-8" src="vendor/nacl.min.js?v=2610241059"></script>
+<script charset="utf-8" src="vendor/qr.js?v=2610241059"></script>
+<script charset="utf-8" src="lic-key.js?v=2610241059"></script>
+<script charset="utf-8" src="license.js?v=2610241059"></script>
+<script charset="utf-8" src="remote.js?v=2610241059"></script>
+<script charset="utf-8" src="offline.js?v=2610241059"></script>
+<script charset="utf-8" src="settings.js?v=2610241059"></script>
