@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.6"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.7"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -670,10 +670,10 @@ function preloadNextBg(){
 }
 
 /* الضغط على صلاة الفجر يغيّر الخلفية */
-function nextBg(random, keepCustom){
+function nextBg(random, keepCustom, back){
   var o = orient(), list = bgList(o), cur = o === "P" ? S.look.bgP : S.look.bgL, i = 0;
   for (var j = 0; j < list.length; j++) if (list[j][0] === cur) i = j;
-  var n = (i + 1) % list.length;
+  var n = back ? (i - 1 + list.length) % list.length : (i + 1) % list.length; // للخلف بالضغط على وقت الفجر
   if (random && list.length > 1) { do { n = Math.floor(Math.random()*list.length); } while (n === i); }
   var f = list[n][0];
   if (o === "P") S.look.bgP = f; else S.look.bgL = f;
@@ -1426,7 +1426,8 @@ function start(){
   stage = $("#stage"); ovEl = $("#ov"); mainEl = $("#main");
   addEventListener("resize", fit);
   loadCustomLogo();
-  mainEl.addEventListener("click", function(e){ if (e.target.closest('[data-k="fajr"]')) { if (!S.pass || S.sup.fajrBg) nextBg(); }
+  // الضغط على اسم صلاة الفجر: الخلفية التالية، والضغط على وقت الفجر (الأذان أو الإقامة): الخلفية السابقة
+  mainEl.addEventListener("click", function(e){ if (e.target.closest('[data-k="fajr"]')) { if (!S.pass || S.sup.fajrBg) nextBg(false, false, !!e.target.closest(".c2,.c3,.a,.i")); }
     else if (e.target.closest(".hij") && S.dateMode !== "both") { dateNext = Date.now() + (+S.dateSec)*1000; switchDate(); } });
   var mb = $("#menu"); if (mb) mb.addEventListener("click", function(e){ e.stopPropagation(); if (window.SETTINGS) window.SETTINGS.open(); });
   fit();
