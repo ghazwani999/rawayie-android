@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "8.5"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "8.6"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -366,6 +366,8 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&
 var natKey = "";
 function rotCSS(){
   var r = (((+S.look.rot || 0) % 360) + 360) % 360, AN = window.RawayieAndroid;
+  // المعاينة والإدارة من الموقع: تُعرض الشاشة معتدلة كما يراها المصلون، لا مدوّرة كما تُرسل لجهاز مركّب بالعرض
+  if (window.RAWAYIE_PREVIEW && !AN) return 0;
   if (!AN || !AN.setRotation || window.RAWAYIE_PREVIEW) return r;
   var want = S.look.sysRot === true ? r : -1;
   if (AN.setStatusBar) { var sb = S.look.phoneBar !== false; if (rotCSS.sb !== sb) { rotCSS.sb = sb; try { AN.setStatusBar(sb); } catch(e){} } }
@@ -405,6 +407,7 @@ function orient(){
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }
   if (S.look.orient === "portrait") return "P";
   if (S.look.orient === "landscape") return "L";
+  if (window.RAWAYIE_PREVIEW && !window.RawayieAndroid) { var r0 = (((+S.look.rot || 0) % 360) + 360) % 360; if (r0 === 90 || r0 === 270) return "P"; }
   return h >= w ? "P" : "L";
 }
 function fit(){
