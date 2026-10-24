@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.0"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.1"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -1063,18 +1063,19 @@ function overlayInner(now, ph){
     key += (lastMin ? "L" : "") + (hadith ? "H" : "") + (wt ? "T" : "") + (lb ? "B" : "");
     if (lb) { // آخر دقيقة: عداد كبير على شاشة سوداء
       if (ovKey !== key) { ovKey = key; ovEl.className = "on iq lastblk";
-        ovEl.innerHTML = '<div class="o-sub">' + esc(t("iqama")) + " " + esc(p.name) + '</div><div class="o-cnt huge"></div>' +
+        ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt huge"></div>' +
           (S.notifyOn ? '<div class="o-msg"><img src="img/nophone.png" alt="">' + esc(S.notifyMsg) + '</div>' : ""); }
       var cb = $(".o-cnt", ovEl); digits(cb, dur(left)); tcls(cb, "red", S.red90 && left <= 90);
       return;
     }
     if (ovKey !== key) { ovKey = key; ovEl.className = "on iq wait" + (wt ? " wt" : "");
       var ticks = ""; for (var q = 0; q < 60; q++) ticks += '<line x1="100" y1="' + (q % 5 ? 4 : 2) + '" x2="100" y2="' + (q % 5 ? 8 : 11) + '" transform="rotate(' + (q*6) + ' 100 100)"/>';
-      ovEl.innerHTML = '<div class="o-sub">' + esc(t("iqama")) + " " + esc(p.name) + '</div>' +
+      // العنوان «الوقت المتبقي للإقامة» فوق العداد، وداخل الدائرة العداد فقط
+      ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div>' +
         (S.circle !== false ? '<div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><g class="rt">' + ticks + '</g>' +
           '<circle cx="100" cy="100" r="88" class="r0"/><circle cx="100" cy="100" r="88" class="r1"/><g class="rdot"><circle cx="188" cy="100" r="6.5"/></g></svg>' +
-          '<div class="rin"><div class="o-lbl">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt"></div><div class="o-at">' + esc(t("iqama")) + " " + fmtT(p.I) + '</div></div></div>'
-          : '<div class="o-sub sm">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt big"></div>') +
+          '<div class="rin"><div class="o-cnt"></div></div></div>'
+          : '<div class="o-cnt big"></div>') +
         (wt ? waitTimesHTML(ph, p) : "") +
         (hadith ? '<div class="o-hadith">' + esc(S.hadithText) + '</div>' : "") +
         (lastMin && S.notifyOn ? '<div class="o-msg"><img src="img/nophone.png" alt="">' + esc(S.notifyMsg) + '</div>' : "") + '<div class="o-clock sm"></div>' + ver; }
