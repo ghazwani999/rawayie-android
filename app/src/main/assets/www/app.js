@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.1"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.2"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -15,7 +15,7 @@ var DEF = {
   hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
   offPrayer:false, offSleep:false, lockMin:15, sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
-  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
+  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
   snd:{azan:"short", iqama:"short", beep:true, vol:1},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -682,23 +682,23 @@ function autoBg(now, ph){
   if (key !== S.look.bgKey) { S.look.bgKey = key; nextBg(m === "random" || !!S.look.bgShuffle, true); }
 }
 
-/* وجه ساعة حقيقية داخل دائرة الإقامة: أرقام الساعات وعلامات الدقائق وعقارب تتحرك بالوقت الحالي، والعداد فوقها */
+/* وجه ساعة حائط واقعية داخل دائرة الإقامة (بدون عقارب حتى لا تتعارض مع العداد):
+   إطار معدني، ميناء متدرج، مسار دقائق مزدوج، مؤشرات ساعات بارزة، الرقمان 12 و6، وانعكاس زجاج */
 function clockFace(){
-  var h = '<svg class="face" viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="fcg" cx="50%" cy="38%" r="65%">' +
-    '<stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".7" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient></defs>' +
-    '<circle cx="100" cy="100" r="83" class="fdisc"/><circle cx="100" cy="100" r="83" class="frim"/>';
-  for (var i = 0; i < 60; i++) { var big = i % 5 === 0;
-    h += '<line x1="100" y1="' + (big ? 21.5 : 22.5) + '" x2="100" y2="' + (big ? 26.5 : 25) + '" class="' + (big ? "fth" : "ftm") + '" transform="rotate(' + (i*6) + ' 100 100)"/>'; }
-  // الرقمان 3 و9 مكان العداد في المنتصف (مثل الساعات ذات النافذة الرقمية)
-  for (var n = 1; n <= 12; n++) { if (n === 3 || n === 9) continue; var a = n*Math.PI/6, x = 100 + 64*Math.sin(a), y = 100 - 64*Math.cos(a);
-    h += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" class="fnum">' + num(String(n)) + '</text>'; }
-  return h + '<g class="fh"><line x1="100" y1="110" x2="100" y2="58"/></g><g class="fm"><line x1="100" y1="114" x2="100" y2="38"/></g>' +
-    '<g class="fs"><line x1="100" y1="120" x2="100" y2="30"/><circle cx="100" cy="100" r="3.2"/></g><circle cx="100" cy="100" r="1.4" class="fpin"/></svg>';
-}
-function faceHands(now){
-  var f = ovEl && ovEl.querySelector(".face"); if (!f) return;
-  var z = zp(now), s = z.s, m = z.m + s/60, hr = (z.h % 12) + m/60;
-  [[".fh", hr*30], [".fm", m*6], [".fs", s*6]].forEach(function(q){ var g = f.querySelector(q[0]); if (g) g.setAttribute("transform", "rotate(" + q[1].toFixed(2) + " 100 100)"); });
+  var h = '<svg class="face" viewBox="0 0 200 200" aria-hidden="true"><defs>' +
+    '<linearGradient id="fcm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".28" stop-color="#b9b9b9"/><stop offset=".5" stop-color="#f2f2f2"/><stop offset=".74" stop-color="#7d7d7d"/><stop offset="1" stop-color="#d6d6d6"/></linearGradient>' +
+    '<radialGradient id="fcd" cx="50%" cy="42%" r="62%"><stop offset="0" stop-color="#2a2a30"/><stop offset=".75" stop-color="#141418"/><stop offset="1" stop-color="#050506"/></radialGradient>' +
+    '<radialGradient id="fcs" cx="50%" cy="50%" r="50%"><stop offset=".86" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>' +
+    '<linearGradient id="fcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>' +
+    '<circle cx="100" cy="100" r="84" class="fbez"/>' +
+    '<circle cx="100" cy="100" r="81.5" class="fdisc"/><circle cx="100" cy="100" r="81.5" class="fshade"/>' +
+    '<circle cx="100" cy="100" r="77.5" class="ftrack"/><circle cx="100" cy="100" r="73" class="ftrack"/>';
+  for (var i = 0; i < 60; i++) if (i % 5) h += '<line x1="100" y1="22.5" x2="100" y2="27" class="ftm" transform="rotate(' + (i*6) + ' 100 100)"/>';
+  for (var k = 0; k < 12; k++) { if (k === 3 || k === 9) continue; var w = k % 3 ? 2.6 : 3.6, ln = k % 3 ? 10 : 13;
+    if (k === 0) h += '<rect x="' + (100 - 4.6) + '" y="27.5" width="3.4" height="' + ln + '" rx=".8" class="fidx" /><rect x="' + (100 + 1.2) + '" y="27.5" width="3.4" height="' + ln + '" rx=".8" class="fidx"/>';
+    else h += '<rect x="' + (100 - w/2) + '" y="27.5" width="' + w + '" height="' + ln + '" rx=".8" class="fidx" transform="rotate(' + (k*30) + ' 100 100)"/>'; }
+  h += '<text x="100" y="49" class="fnum">' + num("12") + '</text><text x="100" y="151" class="fnum">' + num("6") + '</text>';
+  return h + '<path d="M28 92 A72 72 0 0 1 172 92 Q100 70 28 92 Z" class="fglass"/></svg>';
 }
 var lastRowKey = "", lastDay = "";
 function renderTimes(ph){
@@ -1078,7 +1078,7 @@ function overlayInner(now, ph){
     var left = Math.max(0, Math.ceil((p.I - now)/1000)), tot = Math.max(1, (p.I - waitStart)/1000), frac = Math.max(0, Math.min(1, left/tot));
     var lastMin = left <= 60, hadith = S.hadithOn && left <= S.hadithSec;
     var wt = !!S.iqTimes, lb = lastMin && !!S.lastMinBlack;
-    key += (lastMin ? "L" : "") + (hadith ? "H" : "") + (wt ? "T" : "") + (lb ? "B" : "");
+    key += (S.ringStyle || "") + (lastMin ? "L" : "") + (hadith ? "H" : "") + (wt ? "T" : "") + (lb ? "B" : "");
     if (lb) { // آخر دقيقة: عداد كبير على شاشة سوداء
       if (ovKey !== key) { ovKey = key; ovEl.className = "on iq lastblk";
         ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt huge"></div>' +
@@ -1090,7 +1090,7 @@ function overlayInner(now, ph){
       var ticks = ""; for (var q = 0; q < 60; q++) ticks += '<line x1="100" y1="' + (q % 5 ? 4 : 2) + '" x2="100" y2="' + (q % 5 ? 8 : 11) + '" transform="rotate(' + (q*6) + ' 100 100)"/>';
       // العنوان «الوقت المتبقي للإقامة» فوق العداد، وداخل الدائرة العداد فقط
       ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div>' +
-        (S.circle !== false ? '<div class="ring">' + clockFace() + '<svg viewBox="0 0 200 200" aria-hidden="true"><g class="rt">' + ticks + '</g>' +
+        (S.circle !== false ? '<div class="ring' + (S.ringStyle === "plain" ? "" : " clk3") + '">' + (S.ringStyle === "plain" ? "" : clockFace()) + '<svg viewBox="0 0 200 200" aria-hidden="true"><g class="rt">' + ticks + '</g>' +
           '<circle cx="100" cy="100" r="88" class="r0"/><circle cx="100" cy="100" r="88" class="r1"/><g class="rdot"><circle cx="188" cy="100" r="6.5"/></g></svg>' +
           '<div class="rin"><div class="o-cnt"></div></div></div>'
           : '<div class="o-cnt big"></div>') +
@@ -1105,7 +1105,6 @@ function overlayInner(now, ph){
       r1.setAttribute("stroke-dasharray", C.toFixed(2)); r1.setAttribute("stroke-dashoffset", off); r1.style.strokeDasharray = C.toFixed(2); r1.style.strokeDashoffset = off; tcls(r1, "red", red);
       var dot = $(".rdot", ovEl); if (dot) { var rot = "rotate(" + (frac*360).toFixed(2) + " 100 100)"; dot.setAttribute("transform", rot); dot.style.transform = "rotate(" + (frac*360).toFixed(2) + "deg)"; tcls(dot, "red", red); } }
     digits($(".o-clock", ovEl), fmtT(now, false, 1));
-    faceHands(now);
     return;
   }
   if (m === "iqnow" || m === "praying") {
