@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "9.2"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "9.3"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -31,6 +31,7 @@ var DEF = {
   tickerOn:true, marquee:true, newsSec:12, speed:110,
   fixedOn:true, fixedZekr:"اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي",
   slides:{on:false, random:false, sec:15, every:60, items:[]},
+  remind:{on:true, white:true, ashura:true, fri:true, friHour:true, show:"both"},
   boards:{on:false, rot:20, items:[]},
   look:{tpl:"std", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
@@ -781,12 +782,56 @@ function inSched(o, z){
 }
 function newsToday(){
   var z = zp(Date.now()), k = dkey(z.Y, z.M, z.D);
-  return S.news.filter(function(n){
+  var list = S.news.filter(function(n){
     if (!n.text || !inSched(n, z)) return false;
     if (n.type === "week") return (n.days || []).indexOf(z.dow) >= 0;
     if (n.type === "date") return n.date === k;
     return true;
   });
+  var R0 = S.remind || {};
+  if (R0.show !== "slide") remindList(Date.now()).forEach(function(r){ list.unshift({id:r.id, text:r.title + ": " + r.line}); });
+  return list;
+}
+/* ===== التذكيرات التلقائية حسب التقويم الهجري =====
+   الأيام البيض (13 و14 و15 من كل شهر)، تاسوعاء وعاشوراء، فضائل الجمعة (من مغرب الخميس إلى عصر الجمعة)، وآخر ساعة من الجمعة (من العصر إلى المغرب).
+   تظهر في شريط الإعلانات و/أو كشريحة، وتعمل بدون إنترنت */
+var remCache = {k:"", v:[]};
+function remindList(now){
+  var R0 = S.remind || {}; if (R0.on === false) return [];
+  var z = zp(now), ck = dkey(z.Y, z.M, z.D) + "|" + z.h + "|" + Math.floor(z.m/5) + JSON.stringify(R0) + S.hijriAdj;
+  if (remCache.k === ck) return remCache.v;
+  var out = [], h = hijri(z.Y, z.M, z.D), d = h.day, mo = h.month, mn = h.monthName, day = dayTimes(z.Y, z.M, z.D), tm = {};
+  day.list.forEach(function(x){ tm[x.k] = x; });
+  var asrA = tm.asr ? tm.asr.A : 0, mgA = tm.maghrib ? tm.maghrib.A : 0;
+  var add = function(id, title, line, body){ out.push({id:"rm-" + id, title:title, line:line, body:body || line}); };
+  if (R0.white !== false) {
+    var hw = "قال ﷺ: «صَوْمُ ثَلَاثَةِ أَيَّامٍ مِنْ كُلِّ شَهْرٍ صَوْمُ الدَّهْرِ كُلِّهِ» متفق عليه";
+    if (mo === 9) {} // رمضان: الصيام فرض طوال الشهر فلا تذكير
+    else if (mo === 12) { // 13 ذي الحجة من أيام التشريق ولا يُصام
+      if (d === 12) add("w", "صيام الأيام البيض", "في ذي الحجة تُصام أيام 14 و15 فقط، لأن 13 من أيام التشريق ولا يُصام", "في ذي الحجة تُصام أيام 14 و15\nأما 13 ذي الحجة فمن أيام التشريق ولا يُصام\n" + hw);
+      else if (d === 13) add("w", "صيام الأيام البيض", "يُصام غداً الرابع عشر من ذي الحجة، واليوم من أيام التشريق ولا يُصام", "يُصام غداً 14 ذي الحجة وبعده 15\nاليوم من أيام التشريق ولا يُصام\n" + hw);
+      else if (d === 14) add("w", "صيام الأيام البيض", "اليوم الرابع عشر من ذي الحجة من الأيام البيض، وغداً آخرها", "اليوم 14 ذي الحجة، وغداً 15 آخر الأيام البيض\n" + hw);
+      else if (d === 15) add("w", "صيام الأيام البيض", "اليوم آخر الأيام البيض", hw);
+    } else if (d === 12) add("w", "صيام الأيام البيض", "تبدأ غداً: 13 و14 و15 من " + mn, "تبدأ غداً: 13 و14 و15 من " + mn + "\n" + hw);
+    else if (d === 13) add("w", "صيام الأيام البيض", "اليوم أول الأيام البيض من " + mn + "، وغداً الثاني", "اليوم 13 " + mn + " أول الأيام البيض\n" + hw);
+    else if (d === 14) add("w", "صيام الأيام البيض", "اليوم ثاني الأيام البيض، وغداً آخرها", "اليوم 14 " + mn + "، وغداً 15 آخر الأيام البيض\n" + hw);
+    else if (d === 15) add("w", "صيام الأيام البيض", "اليوم آخر الأيام البيض من " + mn, hw);
+  }
+  if (R0.ashura !== false && mo === 1 && d >= 7 && d <= 10) {
+    var ha = "قال ﷺ: «صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ» رواه مسلم\nويُستحب صيام التاسع معه";
+    var al = d === 7 ? "بعد غدٍ تاسوعاء، ثم يوم عاشوراء: يُستحب صيام التاسع والعاشر من محرم" : d === 8 ? "غداً تاسوعاء وبعده يوم عاشوراء: يُستحب صيام التاسع والعاشر من محرم" :
+      d === 9 ? "اليوم تاسوعاء، وغداً يوم عاشوراء" : "اليوم يوم عاشوراء";
+    add("a", "صيام يوم عاشوراء", al, al + "\n" + ha);
+  }
+  if (R0.fri !== false && ((z.dow === 4 && mgA && now >= mgA) || (z.dow === 5 && (!asrA || now < asrA)))) {
+    add("f", "فضائل يوم الجمعة", "قراءة سورة الكهف، والإكثار من الصلاة على النبي ﷺ، والاغتسال والتطيّب والتبكير إلى الصلاة",
+      "قراءة سورة الكهف\nالإكثار من الصلاة على النبي ﷺ\nالاغتسال والتطيّب والتبكير إلى الصلاة\nقال ﷺ: «أَكْثِرُوا عَلَيَّ مِنَ الصَّلَاةِ يَوْمَ الْجُمُعَةِ وَلَيْلَةَ الْجُمُعَةِ»");
+  }
+  if (R0.friHour !== false && z.dow === 5 && asrA && mgA && now >= asrA && now < mgA) {
+    add("h", "آخر ساعة من يوم الجمعة", "ساعة إجابة، فأكثروا من الدعاء حتى غروب الشمس",
+      "ساعة إجابة، فأكثروا من الدعاء\nقال ﷺ: «يَوْمُ الْجُمُعَةِ ثِنْتَا عَشْرَةَ سَاعَةً... فَالْتَمِسُوهَا آخِرَ سَاعَةٍ بَعْدَ الْعَصْرِ» رواه أبو داود والنسائي");
+  }
+  remCache = {k:ck, v:out}; return out;
 }
 function renderTicker(){
   if (!ui.tick) return;
@@ -814,8 +859,11 @@ function renderTicker(){
 /* ===== الشرائح ولوحات العرض ===== */
 var slideState = {}, boardState = {};
 function slideList(){
-  return S.slides.items.map(function(x){ return typeof x === "string" ? {id:x, img:x, imgMode:"contain"} : x; })
-    .filter(function(x){ return x.active !== false && (x.img || x.title || x.body); });
+  var own = S.slides.on ? S.slides.items.map(function(x){ return typeof x === "string" ? {id:x, img:x, imgMode:"contain"} : x; })
+    .filter(function(x){ return x.active !== false && (x.img || x.title || x.body); }) : [];
+  var R0 = S.remind || {};
+  if (R0.show !== "ticker") remindList(Date.now()).forEach(function(r){ own.unshift({id:r.id, title:r.title, body:r.body, tSize:92, bSize:52, lineH:1.7, bg:"#000000", bgOp:.55}); });
+  return own;
 }
 var SLIDE_DEF = {title:"", body:"", img:"", imgMode:"contain", tSize:96, bSize:60, tFont:"", bFont:"", tColor:"#EBD1A0", bColor:"#ffffff",
   bg:"#000000", bgOp:0.35, align:"center", valign:"center", lineH:1.6, gap:24, pad:48, imgH:55, radius:24, full:false, sec:0, active:true};
@@ -865,7 +913,7 @@ function slides(now){
   var fs = $("#fslide");
   var items = slideList();
   var stop = function(){ slideState.show = false; if (ui.slide) ui.slide.hidden = true; if (ui.zone) ui.zone.classList.remove("sliding"); if (fs) fs.hidden = true; stage.classList.remove("fsl"); };
-  if (!S.slides.on || !items.length) { stop(); return; }
+  if (!items.length) { stop(); return; }
   if (!ui.zone && !fs) return;
   if (slideState.show && now >= slideState.until) { stop(); slideState.next = now + S.slides.every*1000; }
   else if (!slideState.show && now >= slideState.next) {
@@ -1336,7 +1384,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
   setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
-  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
+  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 
