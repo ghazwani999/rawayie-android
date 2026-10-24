@@ -1,7 +1,7 @@
 /* روائع الأذان - نسخة الويب: المحرك والشاشة */
 (function(){
 "use strict";
-var VERSION = String(window.RWS_VERSION || "8.6"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
+var VERSION = String(window.RWS_VERSION || "8.7"); // يُكتب تلقائياً من رقم إصدار الإضافة في version.js
 var LS_KEY = "rawayie-screen-v1";
 var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
@@ -416,7 +416,9 @@ function fit(){
   var rs = document.documentElement.style; rs.setProperty("--sat", si.t + "px"); rs.setProperty("--sab", si.b + "px"); rs.setProperty("--sal", si.l + "px"); rs.setProperty("--sar", si.r + "px");
   if (r === 90 || r === 270) { var x = vw; vw = vh; vh = x; }
   // ملء الشاشة بالكامل: يتمدد ارتفاع التصميم حسب نسبة الجهاز (جوال، تابلت، تلفاز 4:3 أو 21:9) فلا تظهر أشرطة سوداء
-  if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = o === "P" ? Math.min(2600, Math.max(1440, W*vh/vw)) : Math.min(1440, Math.max(800, W*vh/vw)); // بدون تقريب: يملأ الشاشة تماماً حتى آخر بكسل
+  // اتجاه التصميم عكس اتجاه النافذة (معاينة شاشة مدوّرة في الموقع، أو رأسي مفروض على شاشة عرضية): تُؤخذ نسبة الشاشة المقلوبة فلا تنضغط الصفوف
+  var av = vw, ah = vh; if (vw && vh && (o === "P") !== (vh >= vw)) { av = vh; ah = vw; }
+  if ((S.look.fitMode || "fill") === "fill" && vw && vh) H = o === "P" ? Math.min(2600, Math.max(1440, W*ah/av)) : Math.min(1440, Math.max(800, W*ah/av)); // بدون تقريب: يملأ الشاشة تماماً حتى آخر بكسل
   var sc = Math.min(vw/W, vh/H);
   // مساحة الكاميرا وشريط الحالة داخل الشاشة (بوحدات التصميم) حسب اتجاه التدوير
   var q = r === 180 ? [si.b, si.l, si.t, si.r] : r === 90 ? [si.l, si.b, si.r, si.t] : r === 270 ? [si.r, si.t, si.l, si.b] : [si.t, si.r, si.b, si.l];

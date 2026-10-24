@@ -26,7 +26,10 @@ if (window.RAWAYIE_PREVIEW) { (function(){
         if (MG) { if (first) { first = false; open1(); } else if (window.SETTINGS && window.SETTINGS.refresh) window.SETTINGS.refresh(); } })
       .catch(function(e){ say((MG ? "إدارة: " : "معاينة: ") + (e.message || e), true); });
   };
-  var open1 = function(){ setTimeout(function(){ try { if (window.SETTINGS) window.SETTINGS.open(); } catch(e){} }, 300); };
+  // الإدارة من الموقع: تُعرض الشاشة أولاً للمعاينة، والإعدادات بزر «إعدادات الشاشة» (أو مباشرة مع ‎&open=1)
+  var open1 = function(){ if (/[?&]open=1(&|$)/.test(location.search)) setTimeout(function(){ try { if (window.SETTINGS) window.SETTINGS.open(); } catch(e){} }, 300); };
+  if (MG) { var mgb = document.createElement("button"); mgb.type = "button"; mgb.className = "mgbtn"; mgb.textContent = "⚙ إعدادات الشاشة";
+    mgb.addEventListener("click", function(){ try { if (window.SETTINGS) window.SETTINGS.open(); } catch(e){} }); document.body.appendChild(mgb); }
   /* الحفظ في الموقع: الوسائط المضافة هنا (صور وأصوات) تُرفع أولاً ثم تُحفظ الإعدادات باسم المدير */
   var MID = /^m[0-9a-z]{6,16}$/, applying = false;
   var walk = function(o, fn){ if (!o || typeof o !== "object") return; for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) { var v = o[k]; if (typeof v === "string") { var n = fn(v); if (n !== v) o[k] = n; } else walk(v, fn); } };
