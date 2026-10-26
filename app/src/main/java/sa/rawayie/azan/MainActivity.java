@@ -280,6 +280,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        initOta();
         applyDisplayMode();
         if (saved != null) web.restoreState(saved);
         else web.loadUrl(START);
@@ -294,6 +295,47 @@ public class MainActivity extends Activity {
         tv.setBackgroundColor(Color.BLACK); int p = Math.round(32 * getResources().getDisplayMetrics().density); tv.setPadding(p, p, p, p);
         setContentView(tv);
         ui.postDelayed(this::recreate, 30000);
+    }
+
+    /* ===== تحديث ملفات الشاشة من الموقع (Ota.java) =====
+       عند التشغيل بعد دقيقة، ثم كل 3 ساعات: إذا كان في الموقع إصدار أحدث من ملفات الشاشة يُنزَّل المختلف فقط،
+       ثم تُبلَّغ الشاشة فتعيد التحميل خارج أوقات الأذان والإقامة والصلاة (نفس آلية checkVersion في app.js) */
+    private static volatile Ota ota;
+    private static final java.util.concurrent.atomic.AtomicBoolean otaLoop = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static volatile MainActivity current;
+
+    private void initOta() {
+        current = this;
+        try {
+            if (ota == null) {
+                String bv = Ota.verFrom(getAssets().open("www/version.js"));
+                final android.content.res.AssetManager am = getApplicationContext().getAssets();
+                ota = new Ota(getApplicationContext().getFilesDir(), p -> am.open(p), bv, BuildConfig.VERSION_CODE);
+            }
+        } catch (Throwable t) { ota = null; return; }
+        if (!otaLoop.compareAndSet(false, true)) return;
+        final android.content.Context app = getApplicationContext();
+        Thread th = new Thread(() -> {
+            String site = null;
+            try { site = Ota.siteFrom(app.getAssets().open("www/index.html")); } catch (Throwable ignored) { }
+            if (site == null) site = "https://rawayie.sa";
+            try { Thread.sleep(60000); } catch (InterruptedException e) { return; }
+            while (true) {
+                String v = null;
+                try { v = ota.check(site); } catch (Throwable ignored) { }
+                if (v != null) notifyWeb();
+                try { Thread.sleep(3 * 3600000L); } catch (InterruptedException e) { return; }
+            }
+        }, "rawayie-ota");
+        th.setDaemon(true); th.setPriority(Thread.MIN_PRIORITY);
+        th.start();
+    }
+
+    /** الشاشة تقرأ version.js الجديد وتعيد التحميل في وقت مناسب */
+    private static void notifyWeb() {
+        final MainActivity a = current;
+        if (a == null) return;
+        a.ui.post(() -> { try { if (a.web != null) a.web.evaluateJavascript("try{window.APP&&APP.checkVersion&&APP.checkVersion()}catch(e){}", null); } catch (Throwable ignored) { } });
     }
 
     /* ===== تقديم ملفات التطبيق من assets/www ===== */
@@ -319,7 +361,8 @@ public class MainActivity extends Activity {
         String mime = MIME.containsKey(ext) ? MIME.get(ext) : "application/octet-stream";
         boolean text = mime.startsWith("text/") || mime.endsWith("javascript") || mime.endsWith("json") || mime.endsWith("+xml");
         try {
-            InputStream in = getAssets().open("www/" + path);
+            java.io.File of = ota != null ? ota.find(path) : null; // تحديث منزّل من الموقع أولاً، ثم الملفات المضمّنة
+            InputStream in = of != null ? new java.io.FileInputStream(of) : getAssets().open("www/" + path);
             Map<String, String> h = new HashMap<>();
             h.put("Access-Control-Allow-Origin", "*");
             h.put("Cache-Control", "no-cache");
@@ -401,6 +444,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         ui.removeCallbacksAndMessages(null);
+        if (current == this) current = null;
         if (web != null) { try { ((android.view.ViewGroup) web.getParent()).removeView(web); } catch (Exception ignored) { } web.destroy(); web = null; }
         super.onDestroy();
     }
