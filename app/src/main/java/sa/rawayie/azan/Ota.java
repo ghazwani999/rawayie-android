@@ -39,6 +39,7 @@ final class Ota {
     private final Assets assets;
     private final String bundledVer;
     private final int apkCode;
+    static volatile String userAgent = "Mozilla/5.0 (Linux; Android) RawayieAndroid";
     private volatile File activeDir;
     private volatile String activeVer;
 
@@ -189,17 +190,30 @@ final class Ota {
         HttpURLConnection c = (HttpURLConnection) new URL(u).openConnection();
         c.setConnectTimeout(15000); c.setReadTimeout(60000); c.setUseCaches(false);
         c.setRequestProperty("Cache-Control", "no-cache");
-        c.setInstanceFollowRedirects(true);
+        c.setRequestProperty("User-Agent", userAgent); // بعض جدران الحماية في الاستضافات ترفض وكيل Dalvik الافتراضي
+        c.setRequestProperty("Accept", "*/*");
+        c.setInstanceFollowRedirects(false);
         return c;
     }
+    /** التحويلات تُتبع يدوياً (ومنها http إلى https التي لا يتبعها أندرويد وحده)، حتى 5 مرات */
     private static byte[] httpBytes(String u) {
-        HttpURLConnection c = null;
-        try {
-            c = open(u);
-            if (c.getResponseCode() != 200) return null;
-            return readAll(c.getInputStream());
-        } catch (Exception e) { return null; }
-        finally { if (c != null) c.disconnect(); }
+        for (int hop = 0; hop < 5; hop++) {
+            HttpURLConnection c = null;
+            try {
+                c = open(u);
+                int code = c.getResponseCode();
+                if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                    String loc = c.getHeaderField("Location");
+                    if (loc == null || loc.isEmpty()) return null;
+                    u = new URL(new URL(u), loc).toString();
+                    continue;
+                }
+                if (code != 200) return null;
+                return readAll(c.getInputStream());
+            } catch (Exception e) { return null; }
+            finally { if (c != null) c.disconnect(); }
+        }
+        return null;
     }
     private static String httpText(String u) { byte[] b = httpBytes(u); return b == null ? null : new String(b, UTF8); }
     private static byte[] readAll(InputStream in) throws IOException {

@@ -298,11 +298,19 @@ public class MainActivity extends Activity {
     }
 
     /* ===== تحديث ملفات الشاشة من الموقع (Ota.java) =====
-       عند التشغيل بعد دقيقة، ثم كل 3 ساعات: إذا كان في الموقع إصدار أحدث من ملفات الشاشة يُنزَّل المختلف فقط،
+       بعد 20 ثانية من التشغيل، ثم كل 30 دقيقة، وعند عودة الشاشة للواجهة (مرة كل 5 دقائق على الأكثر):
+       إذا كان في الموقع إصدار أحدث من ملفات الشاشة يُنزَّل المختلف فقط،
        ثم تُبلَّغ الشاشة فتعيد التحميل خارج أوقات الأذان والإقامة والصلاة (نفس آلية checkVersion في app.js) */
     private static volatile Ota ota;
     private static final java.util.concurrent.atomic.AtomicBoolean otaLoop = new java.util.concurrent.atomic.AtomicBoolean(false);
     private static volatile MainActivity current;
+    private static final Object otaLock = new Object();
+    private static volatile boolean otaKicked = false;
+    private static volatile long otaLast = 0;
+    static final long OTA_EVERY = 30 * 60000L, OTA_MIN_GAP = 5 * 60000L;
+
+    /** طلب تحقق مبكر (عند عودة الشاشة للواجهة) */
+    static void otaKick() { synchronized (otaLock) { otaKicked = true; otaLock.notifyAll(); } }
 
     private void initOta() {
         current = this;
@@ -311,6 +319,7 @@ public class MainActivity extends Activity {
                 String bv = Ota.verFrom(getAssets().open("www/version.js"));
                 final android.content.res.AssetManager am = getApplicationContext().getAssets();
                 ota = new Ota(getApplicationContext().getFilesDir(), p -> am.open(p), bv, BuildConfig.VERSION_CODE);
+                Ota.userAgent = "Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + ") RawayieAndroid/" + BuildConfig.VERSION_NAME;
             }
         } catch (Throwable t) { ota = null; return; }
         if (!otaLoop.compareAndSet(false, true)) return;
@@ -319,12 +328,23 @@ public class MainActivity extends Activity {
             String site = null;
             try { site = Ota.siteFrom(app.getAssets().open("www/index.html")); } catch (Throwable ignored) { }
             if (site == null) site = "https://rawayie.sa";
-            try { Thread.sleep(60000); } catch (InterruptedException e) { return; }
+            try { Thread.sleep(20000); } catch (InterruptedException e) { return; }
             while (true) {
+                otaLast = System.currentTimeMillis();
                 String v = null;
                 try { v = ota.check(site); } catch (Throwable ignored) { }
                 if (v != null) notifyWeb();
-                try { Thread.sleep(3 * 3600000L); } catch (InterruptedException e) { return; }
+                long due = otaLast + OTA_EVERY;
+                try {
+                    synchronized (otaLock) {
+                        while (true) {
+                            long now = System.currentTimeMillis();
+                            if (now >= due) break;
+                            if (otaKicked) { otaKicked = false; if (now - otaLast >= OTA_MIN_GAP) break; }
+                            otaLock.wait(Math.min(due - now, 60000L));
+                        }
+                    }
+                } catch (InterruptedException e) { return; }
             }
         }, "rawayie-ota");
         th.setDaemon(true); th.setPriority(Thread.MIN_PRIORITY);
@@ -428,6 +448,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (web != null) { web.onResume(); web.resumeTimers(); }
+        otaKick(); // الشاشة عادت للواجهة: تحقق من تحديث ملفات الشاشة
         hideBars();
         // رجوع بعد إطفاء الشاشة (بالمنبّه أو بالريموت): الإضاءة الطبيعية
         if (dimmed && getSharedPreferences("rawayie", MODE_PRIVATE).getLong("offUntil", 0) < System.currentTimeMillis()) screenOnNow();
