@@ -236,7 +236,10 @@ public class MainActivity extends Activity {
             @Override public void onPageFinished(WebView v, String url) { ui.postDelayed(MainActivity.this::hideSplash, 2500); }
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
-                return serve(req.getUrl());
+                WebResourceResponse r = serve(req.getUrl());
+                if (r != null) return r;
+                MediaCache mc = media; // صور وأصوات من الموقع: تُحفظ على الجهاز وتُعرض منه بدون إنترنت
+                return mc != null ? mc.serve(req.getUrl(), req.getMethod()) : null;
             }
 
             @Override
@@ -311,9 +314,32 @@ public class MainActivity extends Activity {
 
     /** طلب تحقق مبكر (عند عودة الشاشة للواجهة) */
     static void otaKick() { synchronized (otaLock) { otaKicked = true; otaLock.notifyAll(); } }
+    private static volatile boolean otaForce = false;
+    /** تحقق عاجل (عودة الإنترنت أو طلب الشاشة): خلال ثوانٍ، بدون انتظار مهلة الخمس دقائق */
+    static void otaNow() { synchronized (otaLock) { otaKicked = true; otaForce = true; otaLock.notifyAll(); } }
+    static volatile MediaCache media;
+    private static volatile boolean netCb = false;
+    /* عودة الإنترنت (المساجد بلا إنترنت: يُوصل دقائق عند الزيارة): تحقق فوري من التحديث، وتُبلَّغ الشاشة لتزامن فوراً */
+    private void watchNetwork() {
+        if (netCb || Build.VERSION.SDK_INT < 21) return;
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
+            if (cm == null) return;
+            android.net.NetworkRequest rq = new android.net.NetworkRequest.Builder().addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
+            cm.registerNetworkCallback(rq, new android.net.ConnectivityManager.NetworkCallback() {
+                @Override public void onAvailable(android.net.Network n) {
+                    final MainActivity a = current;
+                    if (a != null) a.ui.postDelayed(() -> { otaNow(); try { if (a.web != null) a.web.evaluateJavascript("try{window.REMOTE&&REMOTE.netUp&&REMOTE.netUp()}catch(e){}", null); } catch (Throwable ignored) { } }, 4000);
+                }
+            });
+            netCb = true;
+        } catch (Throwable ignored) { }
+    }
 
     private void initOta() {
         current = this;
+        if (media == null) { try { media = new MediaCache(getApplicationContext().getFilesDir()); } catch (Throwable ignored) { } }
+        watchNetwork();
         try {
             if (ota == null) {
                 String bv = Ota.verFrom(getAssets().open("www/version.js"));
@@ -340,7 +366,9 @@ public class MainActivity extends Activity {
                         while (true) {
                             long now = System.currentTimeMillis();
                             if (now >= due) break;
-                            if (otaKicked) { otaKicked = false; if (now - otaLast >= OTA_MIN_GAP) break; }
+                            if (otaKicked) { otaKicked = false;
+                                if (otaForce) { otaForce = false; due = Math.min(due, otaLast + 15000L); continue; } // عاجل: بعد 15 ثانية على الأقل من آخر محاولة
+                                if (now - otaLast >= OTA_MIN_GAP) break; }
                             otaLock.wait(Math.min(due - now, 60000L));
                         }
                     }
@@ -855,6 +883,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void screenOn() { runOnUiThread(MainActivity.this::screenOnNow); }
         // حفظ ملف نصي: يختار المستخدم مكان الحفظ (التنزيلات أو ذاكرة USB)
         /** حالة التحديث التلقائي لملفات الشاشة: الإصدار المعتمد ونتيجة آخر تحقق ووقته (JSON) */
+        /** الشاشة تطلب تحققاً فورياً من تحديث ملفاتها (بعد عودة الاتصال بالموقع) */
+        @JavascriptInterface public void otaCheck() { otaNow(); }
+        @JavascriptInterface public String mediaInfo() { MediaCache m = media; return m != null ? m.info() : "{}"; }
         @JavascriptInterface public String otaInfo() {
             Ota o = ota; if (o == null) return "{}";
             return "{\"ver\":\"" + o.version() + "\",\"st\":\"" + o.status.replace("\"", "'") + "\",\"at\":" + o.statusAt + ",\"apk\":" + BuildConfig.VERSION_CODE + "}";

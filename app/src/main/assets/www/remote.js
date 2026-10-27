@@ -230,7 +230,7 @@ function pollSync(){
     if (!j.has) return push();                                             // أول ربط: ترفع الشاشة إعداداتها
     if (j.config && (j.config.rev || 0) !== (S.remote.rev || 0)) applyCfg(j.config);
     return handleCmd(j.cmd);
-  }).then(ok).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); }); // موقع بإضافة قديمة: الطريقة السابقة
+  }).then(function(){ ok(); netOk(); }).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); netFail(); }); // موقع بإضافة قديمة: الطريقة السابقة
 }
 function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
@@ -266,6 +266,85 @@ function showMsg(c, left){
 }
 function hideMsg(){ var el = document.getElementById("rmsg"); if (el) el.hidden = true; var sg = document.getElementById("stage"); if (sg) sg.classList.remove("rmsgon"); clearTimeout(msgT); }
 
+
+/* ===== المزامنة عند الاتصال (المساجد بلا إنترنت) =====
+   تُوصل الشاشة بالإنترنت دقائق عند زيارة المسجد ثم يُفصل. عند عودة الاتصال بعد انقطاع:
+   تُجلب الإعدادات والترخيص وتحديث ملفات التطبيق وصور الإعلانات وأصواتها فوراً،
+   ويظهر شريط «جارٍ التحديث...» ثم «تم التحديث ✓ يمكنك فصل الإنترنت». */
+var NS = {on:false, el:null, t:null, failAt:0, gen:0};
+function lsN(k){ try { return +localStorage.getItem(k) || 0; } catch(e){ return 0; } }
+function lsS(k, v){ try { if (v) localStorage.setItem(k, String(v)); else localStorage.removeItem(k); } catch(e){} }
+var lastOk = lsN("rws-lastok");
+function nsShow(txt, kind, ms){
+  var sg = document.getElementById("stage") || document.body; if (!sg) return;
+  if (!NS.el || !sg.contains(NS.el)) { NS.el = document.createElement("div"); NS.el.id = "netsync"; sg.appendChild(NS.el); }
+  NS.el.className = "netsync " + (kind || ""); NS.el.textContent = txt; NS.el.hidden = false;
+  clearTimeout(NS.t); if (ms) NS.t = setTimeout(function(){ if (NS.el) NS.el.hidden = true; }, ms);
+}
+function nsAN(){ return window.RawayieAndroid || null; }
+function nsOta(){ var AN = nsAN(), o = null; try { if (AN && AN.otaInfo) o = JSON.parse(AN.otaInfo()); } catch(e){} return o; }
+function vcmp(a, b){ a = String(a || "0").split("."); b = String(b || "0").split("."); for (var i = 0; i < Math.max(a.length, b.length); i++) { var x = +a[i] || 0, y = +b[i] || 0; if (x !== y) return x > y ? 1 : -1; } return 0; }
+function waitFor(test, ms){ return new Promise(function(res){ var t0 = Date.now(); (function lp(){ if (test() || Date.now() - t0 > ms) return res(); setTimeout(lp, 2000); })(); }); }
+// تنزيل الصور والأصوات المرفوعة من الموقع حتى تبقى محفوظة في الجهاز وتعمل بدون إنترنت
+function nsMedia(){
+  var l = []; try { l = window.OFFLINE && window.OFFLINE.needed ? window.OFFLINE.needed() : []; } catch(e){}
+  l = l.filter(function(u){ return /^(https?:)?\/\//.test(u); });
+  var done = 0, chain = Promise.resolve();
+  l.forEach(function(u){ chain = chain.then(function(){ return fetch(u, {mode:"no-cors", cache:"reload"}).then(function(){ done++; }, function(){}); }); });
+  return chain.then(function(){ return {n:l.length, ok:done}; });
+}
+function licLine(){
+  try { var s = window.LICENSE.status(); if (s.expired) return "الترخيص غير فعّال";
+    if (s.trial) return "تجربة متبقي " + s.leftDays + " يوم";
+    if (s.active) return s.until ? "الترخيص حتى " + new Date(s.until).toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", {year:"numeric", month:"numeric", day:"numeric"}) : "الترخيص مفعّل"; } catch(e){}
+  return "";
+}
+function nsRun(t0, cont){
+  NS.on = true; var gen = ++NS.gen; lsS("rws-netsync", t0);
+  nsShow("تم الاتصال بالموقع · جارٍ تحديث الشاشة... لا تفصل الإنترنت", "busy");
+  var AN = nsAN(), hasOta = !!(AN && AN.otaCheck), m = {n:0, ok:0};
+  if (hasOta && !cont) { try { AN.otaCheck(); } catch(e){} }
+  var lic = window.LICENSE && window.LICENSE.check ? window.LICENSE.check().catch(function(){}) : Promise.resolve();
+  state.stAt = 0; // تُرسل حالة الشاشة الآن (الإصدار والترخيص) فتظهر محدّثة في لوحة الإدارة
+  return lic.then(function(){ return nsMedia().then(function(r){ m = r; }); })
+    .then(function(){ return hasOta ? waitFor(function(){ var o = nsOta(); return o && +o.at >= t0; }, 150000) : null; })
+    .then(function(){ return pollSync(); })
+    .then(function(){
+      if (gen !== NS.gen) return;
+      var o = hasOta ? nsOta() : null;
+      if (o && o.ver && vcmp(o.ver, A.VERSION) > 0) { // نُزّل إصدار جديد: يُطبَّق بإعادة تحميل الشاشة ثم يكتمل الشريط
+        nsShow("تم تنزيل الإصدار " + o.ver + " · يُطبَّق الآن... لا تفصل الإنترنت", "busy");
+        try { A.checkVersion(); } catch(e){}
+        setTimeout(function(){ if (gen === NS.gen && NS.on) nsDone(m, o); }, 5 * 60000);
+        return;
+      }
+      nsDone(m, o);
+    });
+}
+function nsDone(m, o){
+  NS.on = false; lsS("rws-netsync", 0);
+  var err = state.status !== "ok";
+  if (err) { nsShow("تعذر إكمال التحديث من الموقع · أبقِ الإنترنت دقيقة أخرى", "bad", 60000); return; }
+  var parts = ["تم تحديث الشاشة ✓", "الإصدار " + A.VERSION, licLine()];
+  if (m && m.n) parts.push("الصور والأصوات " + m.ok + "/" + m.n);
+  if (o && /^err:/.test(String(o.st || ""))) parts.push("تعذر تحديث ملفات التطبيق");
+  nsShow(parts.filter(Boolean).join(" · ") + " · يمكنك فصل الإنترنت", "ok", 120000);
+}
+// تُستدعى بعد كل مزامنة ناجحة أو فاشلة
+function netOk(){
+  var now = Date.now(), prev = lastOk;
+  if (now - lastOk > 120000) { lastOk = now; lsS("rws-lastok", now); }
+  var pend = lsN("rws-netsync"), fa = NS.failAt; NS.failAt = 0;
+  if (NS.on || window.RAWAYIE_PREVIEW) return;
+  if (pend && now - pend < 15 * 60000) { nsRun(pend, true); return; } // متابعة بعد إعادة التحميل بالإصدار الجديد
+  if ((prev && now - prev > 20 * 60000) || (fa && now - fa > 10 * 60000)) nsRun(now, false);
+}
+function netFail(){
+  if (!NS.failAt) NS.failAt = Date.now();
+  clearTimeout(NS.rt); NS.rt = setTimeout(function(){ if (state.status === "fail") poll(); }, 20000); // بدون اتصال: محاولة كل 20 ثانية حتى يعود
+}
+function netUp(){ if (S.remote.on && base()) { clearTimeout(NS.rt); NS.rt = setTimeout(poll, 1500); } }
+addEventListener("online", netUp);
 function start(){
   clearInterval(state.timer);
   if (S.remote.on && base() && S.remote.pair && !S.remote.key) { state.status = "wait"; pairNow().then(function(){ start(); }, function(e){ fail(e); state.timer = setTimeout(start, 60000); }); return; }
@@ -355,7 +434,7 @@ function linkSession(site, cb){
   return {stop:function(){ alive = false; clearTimeout(timer); }, renew:function(){ if (alive) start(); }};
 }
 
-window.REMOTE = {activate:activate, linkSession:linkSession, wpSite:wpSite, start:start, poll:poll, push:push, state:state, url:url, test:function(){
+window.REMOTE = {activate:activate, linkSession:linkSession, wpSite:wpSite, start:start, poll:poll, push:push, state:state, url:url, netUp:netUp, test:function(){
   return req("GET", "/status").then(function(){ ok(); return true; }).catch(function(e){ fail(e); throw e; }); }};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
