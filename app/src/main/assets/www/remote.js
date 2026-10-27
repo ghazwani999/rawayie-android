@@ -213,15 +213,20 @@ function statusBody(){
   return {name:S.mosque, city:ci.name, code:S.remote.code, lastSeen:Date.now(),
     version:A.VERSION, rev:S.remote.rev, orient:A.orient() === "P" ? "رأسي" : "أفقي", rot:+(S.look.rot || 0),
     screen:innerWidth + "×" + innerHeight, time:A.two(z.h) + ":" + A.two(z.m), dev:devId(),
-    err:(A.lastErr ? A.lastErr() : "").slice(0, 200), lic:(window.LICENSE ? window.LICENSE.info() : null), ua:navigator.userAgent.slice(0, 160)};
+    err:(A.lastErr ? A.lastErr() : "").slice(0, 200), lic:(window.LICENSE ? window.LICENSE.info() : null), ua:navigator.userAgent.slice(0, 160), ota:otaInfo()};
 }
-function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left].join("|"); }
+/* تطبيق أندرويد: حالة التحديث التلقائي لملفات الشاشة (الإصدار المعتمد ونتيجة آخر تحقق) وإصدار التطبيق نفسه */
+function otaInfo(){ var AN = window.RawayieAndroid; if (!AN) return null; var o = null;
+  try { if (AN.otaInfo) o = JSON.parse(AN.otaInfo()); } catch(e){}
+  o = o || {}; try { if (AN.version) o.apkName = String(AN.version()); } catch(e){} return o; }
+function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left, b.ota && b.ota.st].join("|"); }
 function pollSync(){
   var b = statusBody(), now = Date.now(), sendSt = !state.stAt || now - state.stAt > 5*60000 || statusSig(b) !== state.stSig;
   var body = {rev:S.remote.rev || 0, cmdAt:S.remote.lastCmd || 0}; if (sendSt) body.status = b;
   return req("POST", "/sync", body).then(function(j){
     if (!j) return;
     if (sendSt) { state.stAt = now; state.stSig = statusSig(b); }
+    if (j.slot !== undefined && +j.slot !== +(S.remote.slot || 0)) { S.remote.slot = +j.slot || 0; origSave(); try { A.rebuild(); } catch(e){} } // رقم هذا الجهاز بين شاشات المسجد
     if (!j.has) return push();                                             // أول ربط: ترفع الشاشة إعداداتها
     if (j.config && (j.config.rev || 0) !== (S.remote.rev || 0)) applyCfg(j.config);
     return handleCmd(j.cmd);

@@ -480,11 +480,18 @@ public class MainActivity extends Activity {
                     public void onReceiveValue(String v) {
                         if ("1".equals(v)) return;
                         long now = System.currentTimeMillis();
-                        if (now - lastBack < 2500) { finish(); return; }
+                        if (now - lastBack < 2500) { lastBack = 0; askExit(); return; }
                         lastBack = now;
                         Toast.makeText(MainActivity.this, "اضغط رجوع مرة أخرى للخروج من الشاشة", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    /* الخروج: الشاشة المرتبطة بالموقع لا تُغلق إلا بكلمة سر المدير (RWS_EXIT في settings.js يطلبها ثم يستدعي exit).
+       ملفات شاشة قديمة بدون RWS_EXIT: يخرج كما كان */
+    private void askExit() {
+        if (web == null) { finish(); return; }
+        web.evaluateJavascript("(function(){try{return window.RWS_EXIT?RWS_EXIT():'go'}catch(e){return 'go'}})()", v -> { if (v == null || "\"go\"".equals(v) || "null".equals(v)) finish(); });
     }
 
     // زر القائمة في الريموت يفتح الإعدادات
@@ -847,6 +854,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean screenOff(long until) { return MainActivity.this.screenOff(until); }
         @JavascriptInterface public void screenOn() { runOnUiThread(MainActivity.this::screenOnNow); }
         // حفظ ملف نصي: يختار المستخدم مكان الحفظ (التنزيلات أو ذاكرة USB)
+        /** حالة التحديث التلقائي لملفات الشاشة: الإصدار المعتمد ونتيجة آخر تحقق ووقته (JSON) */
+        @JavascriptInterface public String otaInfo() {
+            Ota o = ota; if (o == null) return "{}";
+            return "{\"ver\":\"" + o.version() + "\",\"st\":\"" + o.status.replace("\"", "'") + "\",\"at\":" + o.statusAt + ",\"apk\":" + BuildConfig.VERSION_CODE + "}";
+        }
         @JavascriptInterface public void saveText(String name, String text, String mime) {
             runOnUiThread(() -> { try {
                 saveText = text; saveMime = mime == null || mime.isEmpty() ? "text/plain" : mime;

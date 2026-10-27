@@ -97,7 +97,10 @@ var WP_SEC = {mosque:"mosque", times:"times", calendar:"times", friday:"times", 
 function manageSecs(){ var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
 function allowed(sec){ if (sec === "home") return true;
   if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
-    return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0)); } if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
+    return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0)); } if (siteLocked()) { sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && devSecs().indexOf(sec) >= 0; }
+  if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
+/* الأقسام المسموح تعديلها من جهاز المسجد وهو مرتبط بالموقع وبدون كلمة سر (يحددها المدير من الموقع) */
+function devSecs(){ return Array.isArray(S.devSecs) ? S.devSecs : ["rotate", "sounds"]; }
 function firstAllowed(){ for (var i = 0; i < SECTIONS.length; i++) if (allowed(SECTIONS[i][0])) return SECTIONS[i][0]; return ""; }
 function anyAllowed(){ return !!firstAllowed(); }
 
@@ -497,7 +500,7 @@ function schedText(x){
   var p = [];
   if (x.d1 || x.d2) p.push((x.d1 ? "من " + x.d1 : "") + (x.d2 ? " إلى " + x.d2 : ""));
   if (x.wd && x.wd.length) p.push("أيام: " + x.wd.map(function(d){ return DAYS[d]; }).join("، "));
-  if (x.t1 || x.t2) p.push("الساعة " + (x.t1 || "00:00") + " - " + (x.t2 || "24:00"));
+  if (x.t1 || x.t2) p.push("الساعة " + hm12(x.t1 || "00:00") + " - " + hm12(x.t2 || "24:00"));
   return p.length ? " · " + p.join(" · ") : "";
 }
 var newsEdit = null;
@@ -842,7 +845,8 @@ function pkOpen(t){
     var tv = (t.value || "00:00").split(":"); PK.h = +tv[0] || 0; PK.m = +tv[1] || 0;
     h += '<div class="pktime" dir="ltr"><div class="pkcol"><button type="button" class="pkst" data-pk="h" data-v="1">▲</button><b id="pkh"></b><button type="button" class="pkst" data-pk="h" data-v="-1">▼</button></div><b class="pksep">:</b>' +
       '<div class="pkcol"><button type="button" class="pkst" data-pk="m" data-v="1">▲</button><b id="pkm"></b><button type="button" class="pkst" data-pk="m" data-v="-1">▼</button></div>' +
-      '<div class="pkcol sm"><button type="button" class="pkst" data-pk="m" data-v="10">+10</button><button type="button" class="pkst" data-pk="m" data-v="-10">−10</button></div></div>' +
+      '<div class="pkcol sm"><button type="button" class="pkst" data-pk="m" data-v="10">+10</button><button type="button" class="pkst" data-pk="m" data-v="-10">−10</button></div>' +
+      '<div class="pkcol sm"><button type="button" class="pkst pkap" data-pk="ap" data-v="am">ص</button><button type="button" class="pkst pkap" data-pk="ap" data-v="pm">م</button></div></div>' +
       '<div class="row-end">' + (t.value ? '<button type="button" class="btn ghost" data-pk="clr">مسح</button>' : "") + '<button type="button" class="btn" data-pk="ok">تم</button></div>';
   } else if (ty === "date") {
     var d0 = t.value ? t.value.split("-") : null, nw = new Date(); PK.y = d0 ? +d0[0] : nw.getFullYear(); PK.mo = d0 ? +d0[1] : nw.getMonth() + 1; PK.d = d0 ? +d0[2] : nw.getDate();
@@ -856,7 +860,8 @@ function pkOpen(t){
 function two2(n){ return (n < 10 ? "0" : "") + n; }
 function pkShow(){
   var g = function(id){ return document.getElementById(id); };
-  if (g("pkh")) { g("pkh").textContent = two2(PK.h); g("pkm").textContent = two2(PK.m); }
+  if (g("pkh")) { g("pkh").textContent = String((PK.h % 12) || 12); g("pkm").textContent = two2(PK.m);
+    $$(".pkap", PK.el).forEach(function(b){ b.classList.toggle("on", (b.dataset.v === "pm") === (PK.h >= 12)); }); }
   if (g("pky")) { var dim = new Date(PK.y, PK.mo, 0).getDate(); if (PK.d > dim) PK.d = dim; g("pky").textContent = PK.y; g("pkmo").textContent = two2(PK.mo); g("pkd").textContent = two2(PK.d); }
 }
 function pkAct(a, v){
@@ -867,6 +872,7 @@ function pkAct(a, v){
     var l0 = PK.el.querySelector(".pklist"); if (l0) l0.scrollTop = 0; if (first) try { first.focus({preventScroll:true}); } catch(e){} return; }
   if (a === "opt" || a === "col") { pkSet(v); pkClose(); return; }
   if (a === "h") { PK.h = (PK.h + +v + 24) % 24; pkShow(); return; }
+  if (a === "ap") { if (v === "pm" && PK.h < 12) PK.h += 12; if (v === "am" && PK.h >= 12) PK.h -= 12; pkShow(); return; }
   if (a === "m") { var tm = PK.h * 60 + PK.m + +v; tm = (tm + 1440) % 1440; PK.h = Math.floor(tm / 60); PK.m = tm % 60; pkShow(); return; }
   if (a === "y") { PK.y += +v; pkShow(); return; }
   if (a === "mo") { PK.mo = ((PK.mo - 1 + +v + 12) % 12) + 1; pkShow(); return; }
@@ -1121,12 +1127,17 @@ var UI_SETS = [
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
   var MU = S.multi || {};
-  return card("عدد الشاشات في المسجد",
-    '<div class="fld"><span><b>طريقة العرض</b><small>شاشتان: الأولى تعرض المواقيت كاملة، والثانية تعرض المحتوى (اللوحات والشرائح والتذكيرات والأذكار والإعلانات) بخط كبير مع الساعة والصلاة القادمة. شاشات الأذان والإقامة تظهر على الاثنتين</small></span>' +
-      segBtns("muMode", [["single","شاشة واحدة"],["dual","شاشتان"]], MU.mode === "dual" ? "dual" : "single") + '</div>' +
-    (MU.mode === "dual" ? '<div class="fld"><span><b>دور هذه الشاشة</b><small>اضبط الشاشة الأخرى على الدور الآخر من إعداداتها أو من صفحة تحريرها في الموقع</small></span>' +
-      segBtns("muRole", [["main","الأولى: المواقيت"],["second","الثانية: المحتوى"]], MU.role === "second" ? "second" : "main") + '</div>' +
-      (MU.role === "second" ? '<div class="subbox"><p class="note">المحتوى الذي يتناوب على الشاشة الثانية:</p>' +
+  var mySl = A.mySlot ? A.mySlot() : 0, adsS = +MU.adsSlot || 2, slotIn = mySl || window.RAWAYIE_MANAGE;
+  return card("الشاشات في المسجد",
+    '<div class="fld"><span><b>طريقة العرض</b><small>إذا كان في المسجد أكثر من شاشة: إما أن تعرض كلها نفس المحتوى، أو تكون واحدة للإعلانات (اللوحات والشرائح والتذكيرات والأذكار والإعلانات بخط كبير مع الساعة والصلاة القادمة) والباقي للمواقيت والصلاة. شاشات الأذان والإقامة تظهر على الكل</small></span>' +
+      segBtns("muMode", [["single","نفس المحتوى على كل الشاشات"],["dual","شاشة للإعلانات والباقي للمواقيت"]], MU.mode === "dual" ? "dual" : "single") + '</div>' +
+    (MU.mode === "dual" ? (slotIn
+      ? '<div class="fld"><span><b>شاشة الإعلانات</b><small>' + (mySl ? "هذا الجهاز هو «الشاشة " + mySl + "» في هذا المسجد، ويعرض الآن " + (mySl === adsS ? "الإعلانات والمحتوى" : "المواقيت والصلاة") + ". " : "") +
+          'رقم كل شاشة يظهر في بطاقة المسجد بالموقع حسب ترتيب تفعيلها، والباقي يعرض المواقيت والصلاة</small></span>' +
+        segBtns("muAds", [1, 2, 3, 4].map(function(n){ return [String(n), "الشاشة " + n]; }), String(adsS)) + '</div>'
+      : '<div class="fld"><span><b>دور هذه الشاشة</b><small>هذه الشاشة غير مرتبطة بالموقع: اضبط الشاشة الأخرى على الدور الآخر من إعداداتها</small></span>' +
+        segBtns("muRole", [["main","المواقيت والصلاة"],["second","الإعلانات والمحتوى"]], MU.role === "second" ? "second" : "main") + '</div>') +
+      ((slotIn ? true : MU.role === "second") ? '<div class="subbox"><p class="note">المحتوى الذي يتناوب على شاشة الإعلانات:</p>' +
         tog("لوحات العرض", "multi.boards") + tog("الشرائح", "multi.slides") + tog("التذكيرات التلقائية", "multi.remind") +
         tog("أذكار الصباح والمساء", "multi.adhkar", "الصباح من الفجر إلى الظهر، والمساء من العصر إلى العشاء") + tog("الذكر الثابت", "multi.hadith") + tog("إعلانات المسجد", "multi.news") +
         numIn("مدة عرض كل محتوى", "multi.sec", 5, 120, 5, "ثانية") + '</div>' : "") : "")) +
@@ -1388,7 +1399,13 @@ R.perms = function(){
     '<label class="fld" for="mpw"><span><b>كلمة سر المدير الجديدة</b><small>اتركها فارغة لعدم التغيير</small></span><input type="password" id="mpw" autocomplete="new-password"></label>' +
     '<label class="fld" for="mspw"><span><b>كلمة سر المشرف الجديدة</b><small>اتركها فارغة لعدم التغيير. يجب أن تختلف عن كلمة سر المدير</small></span><input type="password" id="mspw" autocomplete="new-password"></label>' +
     '<div class="row-end">' + btn("إلغاء كلمات السر", "mpwClear", "ghost") + btn("إرسال للشاشة", "mpwSend") + '</div>') : "";
-  if (window.RAWAYIE_MANAGE) return pwCards + card("بقاء الدخول مفتوحاً",
+  if (window.RAWAYIE_MANAGE) return pwCards + card("التعديل من جهاز المسجد بدون كلمة سر",
+    '<p class="note">الشاشة المرتبطة بالموقع لا تفتح من الجهاز إلا هذه الأقسام. اختر ما يحتاج تعديله أمام الشاشة نفسها، والباقي يبقى من الموقع فقط. قسما «الإدارة عن بعد» و«الصلاحيات» لا يُفتحان من الجهاز أبداً بدون كلمة سر المدير.</p>' +
+    '<div class="perms">' + secs.map(function(s){ var on = devSecs().indexOf(s[0]) >= 0;
+      return '<label class="pchk"><input type="checkbox" data-devsec="' + s[0] + '"' + (on ? " checked" : "") + '><span>' + esc(PERM_LABEL[s[0]] || s[1]) + '</span></label>'; }).join("") + '</div>' +
+    tog("فتح كل الإعدادات من الجهاز بدون كلمة سر", "devOpen", "غير مستحسن: يفتح كل الأقسام لأي شخص أمام الشاشة"),
+    "المقترح: «تدوير وملاءمة الشاشة» و«الأصوات» فقط، لأنهما يخصان الجهاز وتركيبه") +
+    card("بقاء الدخول مفتوحاً",
     tog("تذكّر الدخول في جهاز المسجد", "keepUnlock", "تُدخل كلمة السر في الشاشة مرة واحدة فقط ولا تُطلب بعدها حتى القفل يدوياً أو تغيير كلمة السر") +
     (S.keepUnlock ? "" : numIn("طلب كلمة السر مرة أخرى بعد عدم الاستخدام", "lockMin", 0, 720, 5, "دقيقة", "0 = تُطلب عند كل فتح للإعدادات"))) +
     card("حساب مشرف المسجد", txt("اسم المشرف", "sup.name")) + permsCard(secs) + ctlCard();
@@ -1602,7 +1619,7 @@ function render(){
   $$("button[data-sec]", nav).forEach(function(b){ b.hidden = !allowed(b.dataset.sec); b.classList.toggle("on", b.dataset.sec === cur); });
   $$(".ngrp", nav).forEach(function(g){ g.hidden = !$$("button[data-sec]", g).some(function(b){ return !b.hidden; }); });
   var cs = $("#curs"); if (cs) { var sc0 = secOf(cur); cs.textContent = sc0 ? "· " + sc0[1] : ""; }
-  var who = $("#who"); if (who) who.textContent = S.pass ? (role === "admin" ? "مدير الشاشة" : (S.sup.name || "مشرف المسجد")) : "";
+  var who = $("#who"); if (who) who.textContent = siteLocked() ? "تعديل محدود من الجهاز، والباقي من الموقع" : S.pass ? (role === "admin" ? "مدير الشاشة" : (S.sup.name || "مشرف المسجد")) : "";
   if (!anyAllowed()) { body.innerHTML = '<h2>لا توجد صلاحيات</h2><p class="note">لم يحدد مدير الشاشة أي قسم لهذا الحساب.</p>'; return; }
   if (cur === "home") { body.innerHTML = homeHTML(); var hq = $("#sq", body); if (hq) hq.addEventListener("input", function(){ searchRun(hq.value); }); return; }
   var sc1 = secOf(cur);
@@ -1634,6 +1651,7 @@ function onChange(e){
   if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
   if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
   if (el.dataset.sp) { onSlInput(e); return; }
+  if (el.dataset.devsec) { var ds = devSecs().slice(); var dx = ds.indexOf(el.dataset.devsec); if (el.checked && dx < 0) ds.push(el.dataset.devsec); if (!el.checked && dx >= 0) ds.splice(dx, 1); S.devSecs = ds; A.save(); return; }
   if (el.dataset.perm) { var ss = S.sup.sections || []; var ix = ss.indexOf(el.dataset.perm); if (el.checked && ix < 0) ss.push(el.dataset.perm); if (!el.checked && ix >= 0) ss.splice(ix, 1); S.sup.sections = ss; A.save(); return; }
   if (el.id === "txt") { txTarget = el.value; render(); return; }
   if (el.id === "txs") { var a0 = $("#tarea"), items0 = txSplitText(a0.value); txSplit = el.value; a0.value = txJoin(items0); txCount(); return; }
@@ -1830,6 +1848,7 @@ function onClick(e){
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
     case "muMode": S.multi = S.multi || {}; S.multi.mode = x === "dual" ? "dual" : "single"; commit(); render(); break;
+    case "muAds": S.multi = S.multi || {}; S.multi.adsSlot = +x || 2; commit(); render(); toast("شاشة الإعلانات الآن: الشاشة " + (+x || 2)); break;
     case "muRole": S.multi = S.multi || {}; S.multi.role = x === "second" ? "second" : "main"; commit(); render(); toast(x === "second" ? "هذه الشاشة الآن للمحتوى" : "هذه الشاشة الآن للمواقيت"); break;
     case "uiSet": var u = UI_SETS[+x]; if (u) { var L = S.look; L.bgL = u[4]; L.bgP = u[5]; L.customBg = ""; L.bgMode = "manual"; L.autoColor = true; L.decor = u[6]; L.tpl = u[7]; L.cardShape = u[8]; L.tcHi = u[9]; L.hiCustom = false;
       L.bgHidden = (L.bgHidden || []).filter(function(f){ return f !== u[4] && f !== u[5]; }); commit(); render(); toast("تم تطبيق واجهة «" + u[0] + "»"); } break;
@@ -1916,11 +1935,33 @@ function saveBoard(x){
 }
 
 /* ===== الفتح والإغلاق ===== */
+/* شاشة مرتبطة بالموقع وبدون كلمة سر مدير: الإعدادات تُدار من الموقع فقط، فلا يفتحها أحد من جهاز المسجد.
+   يفتحها المدير بوضع كلمة سر من الموقع (تحرير الشاشة ← الصلاحيات)، أو بالسماح بها هناك (devOpen) */
+function siteLocked(){
+  if (window.RAWAYIE_MANAGE || window.RAWAYIE_PREVIEW || S.pass || S.devOpen === true) return false;
+  var R = S.remote || {}; return !!(R.on && R.key && /\/wp-json\/|[?&]rest_route=/.test(R.server || ""));
+}
+/* الخروج من تطبيق أندرويد (زر الرجوع مرتين): الشاشة المرتبطة بالموقع لا تُغلق إلا بكلمة سر المدير.
+   تطبيق أندرويد 9.9.4 فما فوق يسأل هذه الدالة قبل الإغلاق: "go" = اخرج الآن، غير ذلك = انتظر */
+var exitReq = false;
+window.RWS_EXIT = function(){
+  var R = S.remote || {}, linked = !!(R.on && R.key && /\/wp-json\/|[?&]rest_route=/.test(R.server || ""));
+  if (!linked || S.devOpen === true) return "go";
+  if (!S.pass) { toast("الخروج من الشاشة مقفل. يضع مدير الموقع كلمة سر من: تحرير الشاشة ← الصلاحيات"); return "wait"; }
+  if (unlocked && role === "admin" && lockValid()) return "go";
+  exitReq = true; open(); toast("اكتب كلمة سر المدير للخروج من الشاشة"); return "wait";
+};
 function open(){
   if (window.RAWAYIE_PREVIEW && !window.RAWAYIE_MANAGE) return; // المعاينة للعرض فقط، والتعديل من لوحة المدير
   if (!panel) build();
   sIndex = null;
   panel.hidden = false; document.body.classList.add("setopen");
+  var mg = $("#mgd"), lk = siteLocked() && !devSecs().length; // لا قسم مسموح: رسالة فقط
+  if (mg) mg.hidden = !lk;
+  var sva = $("#saveall"); if (sva) sva.hidden = lk;
+  if (lk) { $("#lock").hidden = true; $("#setwrap").hidden = true; var AN = window.RawayieAndroid, ab = $("#mgdAuto");
+    if (ab) { var need = false; try { need = !!(AN && AN.canAutostart && AN.requestAutostart && !AN.canAutostart()); } catch(e){} ab.hidden = !need; }
+    return; }
   if (S.pass && !unlocked) keepLoad();
   if (S.pass && unlocked && !lockValid()) unlocked = false;
   if (S.pass && unlocked) lastAct = Date.now();
@@ -1940,10 +1981,15 @@ function lockSave(){ try { if (unlocked && S.pass && lockMin() > 0) sessionStora
 function lockValid(){ if (!S.pass || !unlocked) return unlocked; if (S.keepUnlock) return true; var m = lockMin(); if (!m) return false; if (Date.now() - (lastAct || 0) > m*60000) { unlocked = false; lockSave(); return false; } return true; }
 (function(){ if (keepLoad()) return; try { var o = JSON.parse(sessionStorage.getItem(LKS) || "null"); if (o && S.pass && Date.now() - o.at < lockMin()*60000 && (o.role === "admin" || (o.role === "sup" && S.sup.pass))) { unlocked = true; role = o.role; lastAct = o.at; } } catch(e){} })();
 ["keydown", "pointerdown", "touchstart", "wheel"].forEach(function(ev){ document.addEventListener(ev, function(){ if (unlocked && S.pass && panel && !panel.hidden) { var n = Date.now(); if (n - lastAct > 20000) { lastAct = n; lockSave(); } else lastAct = n; } }, {capture:true, passive:true}); });
-function close(){ if (S.pass) { if ((S.keepUnlock || lockMin() > 0) && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
+function close(){ exitReq = false; if (S.pass) { if ((S.keepUnlock || lockMin() > 0) && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
   panel = $("#set");
   panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+    '<div id="mgd" class="lock" hidden><h2>إعدادات هذه الشاشة تُدار من الموقع</h2>' +
+    '<p class="note">لا يمكن تعديل الإعدادات من جهاز المسجد. التعديل من الموقع: «شاشاتي» للمشرف، و«شاشات المساجد» للمدير، ويصل للشاشة خلال دقيقة.</p>' +
+    '<p class="note">لفتحها من هذا الجهاز: يضع مدير الموقع كلمة سر للشاشة من تحرير الشاشة ← الصلاحيات.</p>' +
+    '<button type="button" class="btn" id="mgdAuto" hidden>السماح بالتشغيل التلقائي بعد إعادة تشغيل الجهاز</button>' +
+    '<button type="button" class="btn ghost" data-act="close">إغلاق</button></div>' +
     '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button><button type="button" class="lkforgot" id="lkforgot">نسيت كلمة السر؟</button><p class="note" id="lkhelp" hidden></p></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
@@ -1984,10 +2030,12 @@ function build(){
     h.hidden = false;
     h.textContent = linked ? "هذه الشاشة مرتبطة بموقع الإدارة: اطلب من مدير الموقع فتح بطاقة الشاشة والضغط على «إعادة تعيين كلمة السر»، فتُلغى كلمة السر خلال دقيقة وتضبط كلمة جديدة."
       : "هذه الشاشة غير مرتبطة بموقع الإدارة، فلا يمكن إلغاء كلمة السر عن بعد. الحل الوحيد: إعدادات الجهاز ← التطبيقات ← روائع الأذان ← مسح البيانات، وتُحذف معها كل إعدادات الشاشة. للمساعدة: واتساب " + (L.wa || "") + " مع رقم الجهاز " + (L.idText || "") + "."; });
+  $("#mgdAuto").addEventListener("click", function(){ try { window.RawayieAndroid.requestAutostart(); } catch(e){} });
   $("#lock").addEventListener("submit", function(e){ e.preventDefault();
     var v = $("#lockpw").value;
-    if (v === S.pass) { unlocked = true; role = "admin"; lastAct = Date.now(); lockSave(); keepSave(); }
-    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; lastAct = Date.now(); lockSave(); keepSave(); }
+    if (v === S.pass) { unlocked = true; role = "admin"; lastAct = Date.now(); lockSave(); keepSave();
+      if (exitReq) { exitReq = false; $("#lockpw").value = ""; try { window.RawayieAndroid.exit(); } catch(e2){} return; } }
+    else if (S.sup.pass && v === S.sup.pass) { unlocked = true; role = "sup"; lastAct = Date.now(); lockSave(); keepSave(); if (exitReq) { exitReq = false; toast("الخروج من الشاشة بكلمة سر المدير فقط"); } }
     else { $("#lockerr").hidden = false; return; }
     $("#lockpw").value = ""; $("#lockerr").hidden = true; open(); });
 }
@@ -2120,4 +2168,27 @@ document.addEventListener("mouseup", function(e){ if (e.button === 3) { e.preven
 document.addEventListener("auxclick", function(e){ if (e.button === 3) e.preventDefault(); }, true);
 document.addEventListener("contextmenu", function(e){ if (panel && !panel.hidden) { e.preventDefault(); stepBack(); } }, true);
 window.SETTINGS = {open:open, close:close, back:back, stepBack:stepBack, refresh:function(){ if (panel && !panel.hidden) render(); }};
+})();
+
+/* ===== الوقت بنظام 12 ساعة (ص / م) في كل حقول الوقت =====
+   الحقل يبقى يحفظ الوقت كما هو (16:00)، ويظهر فوقه بنظام 12 ساعة (4:00 م) مهما كانت لغة المتصفح */
+function hm12(v){ v = String(v || ""); if (!/^\d{1,2}:\d{2}/.test(v)) return v; var p = v.split(":"), h = +p[0], m = p[1].slice(0, 2);
+  if (h === 24) return "12:" + m + " م"; return ((h % 12) || 12) + ":" + m + " " + (h < 12 ? "ص" : "م"); }
+(function(){
+  if (window.__t12) return; window.__t12 = true;
+  var css = document.createElement("style");
+  css.textContent = ".t12w{position:relative;display:inline-block;max-width:100%}.t12w>input[type=time]{color:transparent!important;-webkit-text-fill-color:transparent}" +
+    ".t12w>input[type=time]::-webkit-datetime-edit{opacity:0}.t12v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font:inherit;font-weight:700;white-space:nowrap;direction:rtl}" +
+    ".t12v.empty{opacity:.55;font-weight:400}";
+  (document.head || document.documentElement).appendChild(css);
+  function show(inp){ var v = inp.parentNode && inp.parentNode.querySelector(".t12v"); if (!v) return; var t = hm12(inp.value); v.textContent = t || "--:-- "; v.classList.toggle("empty", !t); }
+  function wrap(inp){ if (inp.dataset.t12) return; inp.dataset.t12 = "1"; var w = document.createElement("span"); w.className = "t12w";
+    inp.parentNode.insertBefore(w, inp); w.appendChild(inp); var v = document.createElement("span"); v.className = "t12v"; v.setAttribute("aria-hidden", "true"); w.appendChild(v); show(inp); }
+  function scan(root){ Array.prototype.forEach.call((root || document).querySelectorAll ? (root || document).querySelectorAll('input[type="time"]') : [], wrap); }
+  var q = false; function later(){ if (q) return; q = true; (window.requestAnimationFrame || setTimeout)(function(){ q = false; scan(document); }); }
+  ["input", "change"].forEach(function(ev){ document.addEventListener(ev, function(e){ var t = e.target; if (t && t.type === "time") show(t); }, true); });
+  if (window.MutationObserver) new MutationObserver(later).observe(document.documentElement, {childList:true, subtree:true});
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", later); else later();
+  // تغيير القيمة من الكود (مثل نافذة اختيار الوقت): يُحدَّث النص كل ثانية للحقول الظاهرة
+  setInterval(function(){ Array.prototype.forEach.call(document.querySelectorAll(".t12w>input[type=time]"), show); }, 1000);
 })();

@@ -7,13 +7,13 @@ var PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 var ALL = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
 
 var DEF = {
-  lang:"ar", mosque:"مسجد الحي", addr:"", alerts:[], ann:{on:true, azan:"حان الآن موعد أذان صلاة {الصلاة}، وذلك في {المسجد}", iqama:"حان الآن موعد إقامة صلاة {الصلاة}"}, splash:{on:true, sec:6, text:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", name:true, sub:""}, city:"dammam",
+  lang:"ar", mosque:"تطبيق روائع الأذان للمساجد", addr:"", alerts:[], ann:{on:true, azan:"حان الآن موعد أذان صلاة {الصلاة}، وذلك في {المسجد}", iqama:"حان الآن موعد إقامة صلاة {الصلاة}"}, splash:{on:true, sec:6, text:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", name:true, sub:""}, city:"dammam",
   custom:{on:false, lat:26.4207, lng:50.0888, tz:180, tzName:"", method:"uq", name:"", country:"", fajr:18, isha:17, ishaMin:90, ishaBy:"angle", maghribMin:0, asr:"std", high:"angle", src:"calc", table:null},
   adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, shift:0, summer:false, ramadan30:false, hijriAdj:0,
   iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
   hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
-  offPrayer:false, offSleep:false, lockMin:15, sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
+  offPrayer:false, offSleep:false, lockMin:15, devOpen:false, devSecs:["rotate","sounds"], sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
@@ -31,7 +31,7 @@ var DEF = {
   tickerOn:true, marquee:true, newsSec:12, speed:110,
   fixedOn:true, fixedZekr:"اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي",
   slides:{on:false, random:false, sec:15, every:60, items:[]},
-  multi:{mode:"single", role:"main", sec:20, boards:true, slides:true, remind:true, adhkar:true, news:true, hadith:true},
+  multi:{mode:"single", role:"main", adsSlot:2, sec:20, boards:true, slides:true, remind:true, adhkar:true, news:true, hadith:true},
   remind:{on:true, white:true, ashura:true, fri:true, friHour:true, show:"both"},
   boards:{on:false, rot:20, items:[]},
   look:{tpl:"std", decor:"none", decorOp:0.85, cardShape:"round", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
@@ -357,6 +357,9 @@ function leftFor(name){
   if (S.lang === "ar") return /^ال/.test(name) ? "المتبقي لل" + name.slice(2) : "المتبقي ل" + name;
   return t("left_for") + " " + name;
 }
+
+// الاسم الافتراضي القديم «مسجد الحي» في شاشة لم تُفعَّل بعد: يصبح اسم التطبيق حتى يأتي اسم المسجد من التفعيل
+if (S.mosque === "مسجد الحي" && !(S.remote && S.remote.on && S.remote.server)) { S.mosque = DEF.mosque; try { save(); } catch(e){} }
 
 /* ===== العرض ===== */
 var $ = function(s, r){ return (r || document).querySelector(s); };
@@ -904,7 +907,12 @@ function renderTicker(){
 
 /* ===== شاشتان في المسجد: الأولى للمواقيت، والثانية للمحتوى =====
    كل جهاز يُضبط دوره من إعداداته (أو من صفحة تحرير شاشته في الموقع)، وشاشات الأذان والإقامة تظهر على الاثنتين */
-function isSecond(){ var M = S.multi || {}; return M.mode === "dual" && M.role === "second"; }
+/* شاشتان أو أكثر في المسجد بدورين: شاشة الإعلانات (المحتوى) والباقي للمواقيت.
+   الجهاز المرتبط بالموقع يعرف رقمه (الشاشة 1، الشاشة 2...) فيأخذ دوره تلقائياً حسب «شاشة الإعلانات» (adsSlot)،
+   فتبقى إعدادات المسجد واحدة لكل أجهزته. الجهاز غير المرتبط: الدور المختار يدوياً فيه (role) */
+function mySlot(){ var R = S.remote || {}; return R.on && R.server && +R.slot > 0 ? +R.slot : 0; }
+function isSecond(){ var M = S.multi || {}; if (M.mode !== "dual") return false; var n = mySlot();
+  return n ? n === (+M.adsSlot || 2) : M.role === "second"; }
 var s2State = {i:-1, until:0, key:""};
 function secondItems(now){
   var M = S.multi || {}, out = [], z = zp(now);
@@ -1470,7 +1478,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   previewBlack:function(ms, sleep, kind){ previewSleep = !!sleep; previewKind = kind || ""; previewBlackUntil = Date.now() + ms; if (ovEl) { ovKey = ""; ovEl.dataset.bl = "~"; } },
   previewAnn:function(mode){ previewAnnMode = mode; previewAnnUntil = Date.now() + 8000; },
   orient:function(){ return orient(); },
-  dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
+  mySlot:mySlot, isSecond:isSecond, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
   setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
   clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};

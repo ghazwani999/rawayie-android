@@ -39,6 +39,7 @@ final class Ota {
     private final Assets assets;
     private final String bundledVer;
     private final int apkCode;
+    static volatile int lastCode = 0; // آخر رمز HTTP (0 = لا اتصال)
     static volatile String userAgent = "Mozilla/5.0 (Linux; Android) RawayieAndroid";
     private volatile File activeDir;
     private volatile String activeVer;
@@ -72,24 +73,30 @@ final class Ota {
         activeDir = d; activeVer = v;
     }
 
+    /* نتيجة آخر تحقق، تُرسل للموقع مع حالة الشاشة: ok | none | err:<السبب> | wait-apk, ووقتها */
+    volatile String status = "";
+    volatile long statusAt = 0;
+    private String done(String st, String ret) { status = st; statusAt = System.currentTimeMillis(); return ret; }
+
     /**
      * يتحقق من الموقع وينزّل إصداراً أحدث إن وُجد.
      * @return رقم الإصدار الجديد إذا اعتُمد، وإلا null
      */
     String check(String site) {
-        if (site == null || site.isEmpty()) return null;
+        if (site == null || site.isEmpty()) return done("err:site", null);
+        String cur = "";
         try {
             String man = httpText(site.replaceAll("/+$", "") + "/?rest_route=/rawayie/v1/app/manifest&apk=" + apkCode);
-            if (man == null) return null;
+            if (man == null) return done("err:manifest:" + lastCode, null);
             String[] lines = man.split("\n");
             // السطر الأول:  RWSAPP <TAB> الإصدار <TAB> رابط مجلد الملفات <TAB> أقل versionCode مطلوب
             String[] head = lines[0].trim().split("\t");
-            if (head.length < 3 || !"RWSAPP".equals(head[0])) return null;
+            if (head.length < 3 || !"RWSAPP".equals(head[0])) return done("err:manifest-format", null);
             String ver = head[1].trim(), base = head[2].trim();
             int minApk = head.length > 3 ? parseInt(head[3].trim()) : 0;
-            if (!ver.matches("[0-9]+(\\.[0-9]+)*") || !base.startsWith("http")) return null;
-            if (cmp(ver, version()) <= 0) return null;   // لا جديد
-            if (minApk > apkCode) return null;           // يحتاج تطبيقاً أحدث: يُنتظر تحديث APK
+            if (!ver.matches("[0-9]+(\\.[0-9]+)*") || !base.startsWith("http")) return done("err:manifest-format", null);
+            if (cmp(ver, version()) <= 0) return done("none", null);   // لا جديد
+            if (minApk > apkCode) return done("wait-apk:" + ver, null); // يحتاج تطبيقاً أحدث: يُنتظر تحديث APK
             if (!base.endsWith("/")) base += "/";
 
             List<String[]> files = new ArrayList<>();
@@ -98,13 +105,13 @@ final class Ota {
                 if (p.length < 2 || p[0].isEmpty() || p[0].contains("..") || p[0].startsWith("/")) continue;
                 files.add(p);
             }
-            if (files.isEmpty()) return null;
+            if (files.isEmpty()) return done("err:empty", null);
 
             File tmp = new File(root, "tmp-" + ver);
             wipe(tmp); tmp.mkdirs();
             long total = 0;
             for (String[] p : files) {
-                String path = p[0], sha = p[1].toLowerCase();
+                String path = p[0], sha = p[1].toLowerCase(); cur = path;
                 boolean index = "index.html".equals(path);
                 if (!index) {
                     if (sha.equals(assetSha(path))) continue;                       // مطابق للمضمّن
@@ -112,9 +119,10 @@ final class Ota {
                     if (prev != null && sha.equals(sha1(new FileInputStream(prev)))) { copy(new FileInputStream(prev), new File(tmp, path)); continue; }
                 }
                 byte[] b = httpBytes(base + encPath(path));
-                if (b == null || !sha.equals(hex(MessageDigest.getInstance("SHA-1").digest(b)))) { wipe(tmp); return null; }
+                if (b == null) { wipe(tmp); return done("err:download:" + lastCode + ":" + path, null); }
+                if (!sha.equals(hex(MessageDigest.getInstance("SHA-1").digest(b)))) { wipe(tmp); return done("err:hash:" + path, null); }
                 total += b.length;
-                if (total > MAX_TOTAL) { wipe(tmp); return null; }
+                if (total > MAX_TOTAL) { wipe(tmp); return done("err:too-big", null); }
                 if (index) b = patchIndex(new String(b, UTF8), site).getBytes(UTF8);
                 File o = new File(tmp, path); o.getParentFile().mkdirs();
                 OutputStream os = new FileOutputStream(o); try { os.write(b); } finally { os.close(); }
@@ -124,7 +132,7 @@ final class Ota {
             // اعتماد الإصدار دفعة واحدة، ثم حذف الإصدارات القديمة
             File dst = new File(root, "v-" + ver);
             wipe(dst);
-            if (!tmp.renameTo(dst)) { wipe(tmp); return null; }
+            if (!tmp.renameTo(dst)) { wipe(tmp); return done("err:disk", null); }
             File at = new File(root, "active.tmp");
             writeText(at, ver);
             if (!at.renameTo(new File(root, "active.txt"))) { writeText(new File(root, "active.txt"), ver); at.delete(); }
@@ -133,9 +141,9 @@ final class Ota {
             File[] ls = root.listFiles();
             if (ls != null) for (File f : ls) if (f.isDirectory() && !f.equals(dst)) wipe(f);
             if (old != null && !old.equals(dst)) wipe(old);
-            return ver;
+            return done("ok:" + ver, ver);
         } catch (Throwable t) {
-            return null;
+            return done("err:" + t.getClass().getSimpleName() + (cur.isEmpty() ? "" : ":" + cur), null);
         }
     }
 
@@ -201,7 +209,7 @@ final class Ota {
             HttpURLConnection c = null;
             try {
                 c = open(u);
-                int code = c.getResponseCode();
+                int code = c.getResponseCode(); lastCode = code;
                 if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
                     String loc = c.getHeaderField("Location");
                     if (loc == null || loc.isEmpty()) return null;
@@ -210,7 +218,7 @@ final class Ota {
                 }
                 if (code != 200) return null;
                 return readAll(c.getInputStream());
-            } catch (Exception e) { return null; }
+            } catch (Exception e) { lastCode = 0; return null; }
             finally { if (c != null) c.disconnect(); }
         }
         return null;
