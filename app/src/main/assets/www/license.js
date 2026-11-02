@@ -135,7 +135,7 @@ function fetchLic(){
       if (res.ok && j && j.lic) {
         if (!window.RWS_PK && !st.pk && j.pk) st.pk = String(j.pk); // نسخة محلية بدون ملف المفتاح: يُعتمد مفتاح أول اتصال ناجح ويثبت بعده
         var p = parse(j.lic);
-        if (p) { st.lic = j.lic; st.denied = null; save(); refresh(); return true; }
+        if (p) { st.lic = j.lic; st.denied = null; if (j.wa !== undefined) st.wa = String(j.wa || ""); if (j.sub !== undefined) st.sub = String(j.sub || ""); save(); refresh(); return true; }
         return false;
       }
       // رفض صريح من الموقع (إيقاف، انتهاء، جهاز آخر، رمز غير صحيح): يتوقف الترخيص فوراً
@@ -169,6 +169,9 @@ function tick(){
 var ov = null, badge = null, ovKey = "";
 function stage(){ return document.getElementById("stage"); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+// رقم واتساب التجديد من إعدادات الموقع (صفحة الاشتراك)، وإلا الرقم الافتراضي
+function waNum(){ return st.wa || WA; }
+function waIntl(){ var d = String(waNum()).replace(/\D/g, ""); if (/^00/.test(d)) d = d.slice(2); if (/^05/.test(d)) d = "966" + d.slice(1); else if (/^5\d{8}$/.test(d)) d = "966" + d; return d || WA_INTL; }
 function daysText(n){ return n <= 1 ? "يوم واحد" : n === 2 ? "يومان" : n + " أيام"; }
 function siteKnown(){ var R = window.REMOTE; return (R && R.wpSite && R.wpSite()) || (S.remote && S.remote.site) || ""; }
 function render(){
@@ -177,9 +180,9 @@ function render(){
   if (ov && !sg.contains(ov)) { if (ov._stop) ov._stop(); ov = null; }
   document.body.classList.toggle("licon", s.expired);
   // شريط صغير: تجربة، أو تحقق أول مرة، أو قرب انتهاء مدة العمل بدون إنترنت
-  var bt = s.trial ? "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · رقم الجهاز " + s.idText + " · للتفعيل واتساب " + WA
+  var bt = s.trial ? "نسخة تجريبية · متبقي " + daysText(s.leftDays) + " · رقم الجهاز " + s.idText + (st.sub ? " · للاشتراك: " + st.sub : "") + " · واتساب " + waNum()
     : s.pending ? "جارٍ التحقق من ترخيص الشاشة من موقع الإدارة..."
-    : s.active && s.until && s.leftDays <= 7 ? "ينتهي ترخيص الشاشة بعد " + daysText(s.leftDays) + " · للتجديد واتساب " + WA
+    : s.active && s.until && s.leftDays <= 7 ? "ينتهي ترخيص الشاشة بعد " + daysText(s.leftDays) + (st.sub ? " · للتجديد: " + st.sub : "") + " · واتساب " + waNum()
     : (s.active || s.trial) && s.offlineDays <= 3 ? "تعذر الاتصال بموقع الإدارة · تعمل الشاشة " + daysText(s.offlineDays) + " أخرى بدون إنترنت" : "";
   if (bt) {
     if (!badge) { badge = document.createElement("div"); badge.className = "licbadge"; sg.appendChild(badge); }
@@ -196,7 +199,8 @@ function render(){
       ov.innerHTML = '<div class="licbox"><div class="licinfo"><img class="liclogo" src="img/mark.png" alt="">' +
         '<div class="lict">' + esc(s.msg || (s.linked ? "هذه الشاشة غير مفعّلة" : "هذه الشاشة غير مرتبطة بموقع الإدارة")) + '</div>' +
         '<div class="licm">' + (oldOnly ? "هذه الشاشة كانت مفعّلة سابقاً: اكتب عنوان موقع الإدارة واضغط «تفعيل» بدون كود" : "تواصل معنا لتفعيل تطبيق روائع الأذان، ثم أدخل كود التفعيل (6 أرقام) الذي يصلك") + '</div>' +
-        '<a class="licwa" href="https://wa.me/' + WA_INTL + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + WA + '</b></a>' +
+        '<a class="licwa" href="https://wa.me/' + waIntl() + '" target="_blank" rel="noopener"><span>واتساب</span><b dir="ltr">' + esc(waNum()) + '</b></a>' +
+        (st.sub ? '<div class="licsub">الاشتراك والتجديد: <b dir="ltr">' + esc(st.sub) + '</b></div>' : '') +
         '<div class="licid"><span>رقم الجهاز</span><b dir="ltr">' + esc(s.idText) + '</b><small>أرسله مع طلب التفعيل</small></div></div>' +
         '<form class="licf" autocomplete="off">' + (site && window.REMOTE && window.REMOTE.linkSession ? '<div class="lqtabs" role="tablist"><button type="button" data-m="qr" class="on">ربط بالجوال (QR)</button><button type="button" data-m="code">كود التفعيل</button></div><div class="licqr"></div>' : "") + '<div class="licman">' + (site ? "" : '<input class="licsite" type="url" dir="ltr" autocomplete="url" placeholder="عنوان موقع الإدارة" aria-label="عنوان موقع الإدارة">') +
         '<div class="licdl">كود التفعيل</div>' +

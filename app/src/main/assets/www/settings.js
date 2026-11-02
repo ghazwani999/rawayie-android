@@ -31,33 +31,31 @@ function btn(label, act, cls, data){ return '<button type="button" class="btn ' 
 /* الأقسام مرتبة في مجموعات: [المفتاح، الاسم، الوصف، الأيقونة، المجموعة] */
 var GROUPS = [["base","المسجد والمواقيت"],["prayer","شاشات الصلاة"],["content","المحتوى المعروض"],["look","المظهر والعرض"],["sys","النظام والتحكم"]];
 var SECTIONS = [
+  ["opts","الخيارات","الخيارات العامة: الساعة والأرقام، العد التنازلي، ترتيب الجدول، وأسفل الشاشة","sliders","base"],
   ["mosque","المسجد والموقع","اسم المسجد والمدينة وطريقة حساب المواقيت","pin","base"],
-  ["times","المواقيت والإقامة","دقائق الإقامة وتعديل الأوقات والتاريخ الهجري","clock","base"],
-  ["calendar","تقويم المواقيت","عرض مواقيت أي يوم وتعديلها يدوياً","cal","base"],
+  ["times","المواقيت والأذان والإقامة","دقائق الإقامة وتعديل الأوقات، وشاشة الأذان وعداد الإقامة ورسالة الجوال والحديث","clock","base"],
+  ["calendar","تقويم أم القرى","عرض مواقيت أي يوم وتعديلها يدوياً","cal","base"],
   ["friday","الجمعة والعيد","الخطبة وصلاة الجمعة وصلاة العيد","mosq","base"],
-  ["screens","شاشات الأذان والإقامة","رسالة الأذان وشاشة الأذان وعداد انتظار الإقامة","bell","prayer"],
   ["hide","الإخفاء ووضع السكون","الشاشة السوداء أثناء الصلاة والإخفاء ليلاً وضحى","moon","prayer"],
   ["sounds","الأصوات","صوت الأذان والإقامة والتنبيهات","sound","prayer"],
   ["adhkar","الأذكار","أذكار بعد الصلاة والصباح والمساء ومدة كل ذكر","beads","content"],
-  ["news","الإعلانات والرسائل","شريط الإعلانات والرسائل العاجلة المجدولة","mega","content"],
+  ["news","الإعلانات","إعلانات أسفل الشاشة (الشريط المتحرك) وأعلى الشاشة (الشرائح) والرسائل العاجلة","mega","content"],
   ["texts","محرر النصوص","الأدعية والأحاديث والنصوص الثابتة","text","content"],
-  ["slides","الشرائح","صور وشرائح تُعرض بالتناوب على الشاشة","img","content"],
   ["boards","لوحات العرض","لوحات معلومات بملء الشاشة","board","content"],
-  ["display","خيارات العرض","العدادات والأذان والإقامة والجدول والساعة في مكان واحد","sliders","look"],
+  ["display","الواجهة والشاشات","الواجهات الجاهزة وتخطيط الشاشة والزخرفة وعدد الشاشات في المسجد","board","look"],
   ["look","الخلفية والألوان","صورة الخلفية وتغييرها تلقائياً وألوان النصوص","palette","look"],
-  ["hilite","تمييز الصلاة القادمة","إظهار السطر المميز ولونه ونصوصه أو إطار حوله","hl","look"],
+  ["hilite","ألوان الجدول","نمط الجدول وألوانه وتمييز الصلاة القادمة والظل خلف الصلوات","hl","look"],
+  ["layout","التاريخ","التاريخ الهجري والميلادي وطريقة عرضه وشكله","cal","look"],
   ["fonts","الخطوط والأحجام","نوع الخط وحجم كل عنصر على الشاشة","font","look"],
-  ["layout","الساعة والجدول","شكل الساعة وجدول المواقيت وما يظهر أسفل الشاشة","table","look"],
   ["rotate","تدوير وملاءمة الشاشة","اتجاه الشاشة وملء الشاشة وأزرار التحكم","rot","look"],
-  ["shadow","ظل الصلوات","الظل والإطار خلف جدول الصلوات","shade","look"],
   ["weather","حالة الطقس","درجة الحرارة وحالة الجو على الشاشة","sun","look"],
   ["remote","الإدارة عن بعد","تفعيل الشاشة بكود وربطها بلوحة المدير","wifi","sys"],
   ["perms","الصلاحيات","كلمة سر المدير وحساب مشرف المسجد","lock","sys"],
   ["general","التشغيل والنسخ الاحتياطي","تفعيل التطبيق وبداية التشغيل والعمل بدون إنترنت وحفظ الإعدادات","gear","sys"]
 ];
 /* أقسام فرعية تتبع صلاحية القسم الأصلي للمشرف */
-var PERM_OF = {hide:"screens", hilite:"look", fonts:"look", layout:"look", display:"look"};
-var PERM_LABEL = {screens:"شاشات الأذان والإقامة والإخفاء", look:"المظهر (الخلفية والخطوط والساعة)"};
+var PERM_OF = {opts:"look", hide:"screens", hilite:"look", fonts:"look", layout:"look", display:"look"};
+var PERM_LABEL = {times:"المواقيت والإقامة", news:"إعلانات أسفل الشاشة (الشريط)", slides:"إعلانات أعلى الشاشة (الشرائح)", screens:"شاشات الأذان والإقامة والإخفاء", look:"المظهر (الخلفية والخطوط والساعة)"};
 var ICONS = {
   pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -93,9 +91,13 @@ var ADMIN_ONLY = {perms:1, general:1, remote:1};
 /* وضع الإدارة من الموقع: أقسام الجهاز نفسه لا تظهر (الربط وكلمة السر والتشغيل)، ومشرف الموقع يرى أقسامه المسموحة فقط */
 var MANAGE_HIDE = {}; // كل أقسام التطبيق تظهر في الموقع، وما يخص الجهاز نفسه يظهر كبطاقة توضيح
 var WP_SEC = {mosque:"mosque", times:"times", calendar:"times", friday:"times", screens:"screens", hide:"screens", sounds:"screens", adhkar:"adhkar", news:"news", texts:"texts", slides:"slides", boards:"slides",
-  display:"look", look:"look", hilite:"look", fonts:"look", layout:"look", shadow:"look", weather:"look", rotate:"rotate"};
+  opts:"look", display:"look", look:"look", hilite:"look", fonts:"look", layout:"look", shadow:"look", weather:"look", rotate:"rotate"};
 function manageSecs(){ var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
-function allowed(sec){ if (sec === "home") return true;
+/* أقسام مدمجة: «الإعلانات» = الشريط السفلي + الشرائح، و«المواقيت والأذان والإقامة» = المواقيت + شاشات الأذان والإقامة.
+   يظهر القسم إذا سُمح بأي جزء منه، وكل جزء يظهر حسب صلاحيته */
+var MERGED = {news:["news","slides"], times:["times","screens"]};
+function allowed(sec){ if (MERGED[sec]) return MERGED[sec].some(allowedOne); return allowedOne(sec); }
+function allowedOne(sec){ if (sec === "home") return true;
   if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
     return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0)); } if (siteLocked()) { sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && devSecs().indexOf(sec) >= 0; }
   if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
@@ -119,7 +121,14 @@ R.rotate = function(){
   var r = +S.look.rot || 0, o = S.look.orient || "auto";
   var R4 = [[0,"الوضع الطبيعي","بدون تدوير"],[90,"تدوير يمين","90° مع عقارب الساعة"],[180,"مقلوب","180°"],[270,"تدوير يسار","90° عكس عقارب الساعة"]];
   var O3 = [["auto","تلقائي","حسب مقاس الشاشة"],["portrait","رأسي","طولي دائماً"],["landscape","أفقي","عرضي دائماً"]];
-  return card("تدوير الشاشة",
+  var vOn = r === 90 || r === 270;
+  return card("العرض العمودي",
+    '<div class="vrow"><span class="vlab"><i class="vdot' + (vOn ? " on" : "") + '"></i><b>العرض العمودي</b><small>' + (vOn ? (r === 90 ? "مفعّل: تدوير يمين ↷" : "مفعّل: تدوير يسار ↶") : "متوقف") + '</small></span>' +
+    '<span class="vbtns"><button type="button" class="btn' + (r === 90 ? "" : " ghost") + '" data-act="setRot" data-x="90" title="تدوير يمين">↷</button>' +
+    '<button type="button" class="btn' + (r === 270 ? "" : " ghost") + '" data-act="setRot" data-x="270" title="تدوير يسار">↶</button>' +
+    '<button type="button" class="btn' + (vOn ? " ghost" : "") + '" data-act="setRot" data-x="0">إيقاف</button></span></div>',
+    "لتلفاز أفقي مركّب بشكل عمودي: اختر اتجاه التدوير حسب تركيب الشاشة. إذا ظهرت مقلوبة اختر السهم الآخر") +
+  card("تدوير الشاشة",
     '<div class="rots">' + R4.map(function(x){ return '<button type="button" class="rot' + (x[0] === r ? " on" : "") + '" data-act="setRot" data-x="' + x[0] + '" aria-pressed="' + (x[0] === r) + '">' +
       '<span class="rscr" style="transform:rotate(' + x[0] + 'deg)"><i></i><em>↑</em></span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join("") + '</div>' +
     '<div class="row-end">' + btn("تدوير 90° ↻", "rotStep", "ghost") + '</div>' + rotNativeHTML(r),
@@ -131,8 +140,9 @@ R.rotate = function(){
     sel("طريقة ملء الشاشة", "look.fitMode", [["fill","ملء كامل بدون أشرطة سوداء (يتكيف مع أي شاشة)"],["fit","الحفاظ على النسبة الأصلية (قد تظهر أشرطة)"]], "الملء الكامل يناسب الجوال والتابلت وشاشات 4:3 و21:9") +
     '<div class="row-end">' + btn("ملء الشاشة الآن", "fsNow", "ghost") + '</div>') +
   card("اتجاه التصميم",
-    '<div class="rots o3">' + O3.map(function(x){ return '<button type="button" class="rot' + (x[0] === o ? " on" : "") + '" data-act="setOri" data-x="' + x[0] + '" aria-pressed="' + (x[0] === o) + '"><span class="rscr ' + x[0] + '"><i></i></span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join("") + '</div>',
-    "الوضع الرأسي يعرض الصلوات في جدول طولي، والأفقي يعرضها بجانب الساعة.") +
+    tog("إجباري: الاتجاه حسب الشاشة دائماً", "look.oriLock", "الشاشة الطولية تعرض التصميم الرأسي والعرضية الأفقي. أي تغيير يدوي من زر التدوير أو الريموت يرجع للاتجاه الصحيح تلقائياً بعد دقيقة") +
+    (S.look.oriLock === false ? '<div class="rots o3">' + O3.map(function(x){ return '<button type="button" class="rot' + (x[0] === o ? " on" : "") + '" data-act="setOri" data-x="' + x[0] + '" aria-pressed="' + (x[0] === o) + '"><span class="rscr ' + x[0] + '"><i></i></span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join("") + '</div>' : ""),
+    "الوضع الرأسي يعرض الصلوات في جدول طولي، والأفقي يعرضها بجانب الساعة. أوقف «إجباري» لاختيار رأسي أو أفقي يدوياً") +
   hdmiCard() +
   card("أزرار التحكم على الشاشة",
     sel("شريط الاختصارات أعلى الشاشة", "look.scMode", [["move","يظهر عند تحريك الفأرة أو اللمس"],["always","ظاهر دائماً"],["hidden","مخفي"]], "أزرار: الإعدادات، ملء الشاشة، تدوير الشاشة، تفعيل الصوت") +
@@ -155,7 +165,7 @@ R.mosque = function(){
     card("موقع المسجد",
       '<label class="fld"><span><b>المدينة</b><small>مواقيت أم القرى الرسمية لـ 118 مدينة سعودية</small></span><input type="search" id="csearch" placeholder="ابحث عن المدينة" aria-label="ابحث عن المدينة"></label>' +
       '<label class="fld" for="city"><span><b>اختر المدينة</b></span><select id="city" data-p="city" data-t="str">' + opts + '</select></label>' +
-      txt("الحي أو العنوان", "addr", "مثل: حي النزهة. يظهر مع اسم المدينة أسفل الشاشة") + tog("إظهار موقع المسجد أسفل الشاشة", "look.showLoc", "بجانب إصدار التطبيق") +
+      txt("الحي أو العنوان", "addr", "مثل: حي النزهة. يظهر مع اسم المدينة أسفل الشاشة") +
       tog("موقع مخصص (أي مدينة في العالم)", "custom.on", "منشئ مواقيت الصلاة: اختر الدولة والمدينة أو موقعك الحالي، وطريقة الحساب والزوايا")) +
     (S.custom.on ? genCards() : "");
 };
@@ -284,7 +294,6 @@ R.times = function(){
       tog("إضافة ساعة واحدة لأوقات الصلاة في الصيف", "summer") +
       tog("أضف 30 دقيقة إلى العشاء في رمضان", "ramadan30", "تقويم أم القرى يضيفها تلقائياً، وهذا الخيار للحساب الفلكي بطرق أخرى")) +
     card("ضبط التاريخ الهجري", numIn("تعديل التاريخ الهجري", "hijriAdj", -2, 2, 1, "يوم")) +
-    card("عرض التاريخ", tog("إظهار اسم اليوم", "look.showDay") + tog("إظهار التاريخ", "look.showDate", "الهجري والميلادي") + sel("طريقة العرض", "dateMode", [["alt","تبديل بين الهجري والميلادي في نفس المكان"],["hijri","الهجري فقط"],["greg","الميلادي فقط"],["both","الهجري أعلى والميلادي بجانب الشعار"]]) + numIn("مدة عرض كل تاريخ", "dateSec", 3, 60, 1, "ثانية"), "يمكن أيضاً الضغط على التاريخ في الشاشة للتبديل يدوياً") +
     '<div class="row-end">' + btn("إعادة الإعدادات الافتراضية للمواقيت", "resetTimes", "ghost") + '</div>';
 };
 
@@ -341,15 +350,31 @@ R.screens = function(){
       '<div class="row-end">' + btn("استعادة النص الافتراضي", "annReset", "ghost") + btn("معاينة الأذان", "annPrevA", "ghost") + btn("معاينة الإقامة", "annPrevI", "ghost") + '</div>' : ""),
     "مثال: حان الآن موعد أذان صلاة الظهر، وذلك في مسجد الحي") +
   card("شاشة الأذان",
-    tog("إظهار شاشة الأذان", "azanScreen") + numIn("مدة الأذان", "azanDur", 1, 10, 1, "دقيقة") + tog("إظهار دعاء ما بعد الأذان", "duaAfterAzan")) +
+    tog("إظهار شاشة الأذان", "azanScreen") + tog("إظهار دعاء ما بعد الأذان", "duaAfterAzan") + numIn("مدة الأذان", "azanDur", 1, 10, 1, "دقيقة")) +
   card("شاشة الإقامة",
     tog("العد التنازلي للإقامة آخر دقيقة فقط", "lastMinOnly", "عند تفعيله لا تظهر شاشة انتظار الإقامة إلا في آخر دقيقة قبل الإقامة") +
     '<p class="note warn" id="lmwarn"' + (S.lastMinOnly ? "" : " hidden") + '>⚠ مفعّل الآن: لن تظهر شاشة انتظار الإقامة بعد الأذان، وتبقى الشاشة الرئيسية ظاهرة، ثم يظهر العداد في آخر دقيقة فقط قبل الإقامة. لإظهار العداد طوال فترة الانتظار أوقف هذا الخيار.</p>' + tog("إظهار الوقت المتبقي للإقامة داخل دائرة", "circle") + (S.circle !== false ? sel("شكل الدائرة", "ringStyle", [["clock","ساعة حائط واقعية"],["plain","الشكل العادي"]], "الساعة بدون عقارب، والعداد في منتصفها") : "") +
     tog("إظهار أوقات الصلوات أثناء انتظار الإقامة", "iqTimes", "أوقات الأذان فقط (بدون أوقات الإقامة) أسفل العداد، مع تمييز الصلاة الحالية") +
     tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") +
-    tog("رسالة التنبيه بالصوت عند آخر دقيقة قبل الإقامة", "notifyOn") + txt("رسالة التنبيه", "notifyMsg") +
+    tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة") +
+    tog("تكبير العداد على شاشة سوداء عند آخر دقيقة", "lastMinBlack", "قبل الإقامة بدقيقة يملأ العداد شاشة سوداء")) +
+  card("رسالة إغلاق الجوال",
+    tog("رسالة التنبيه بالصوت عند آخر دقيقة قبل الإقامة", "notifyOn") + (S.notifyOn ? tog("إظهار رسالة إغلاق الجوال طوال وقت انتظار الإقامة", "notifyAll", "عند إيقافه تظهر في آخر دقيقة فقط، والصوت يبقى في آخر دقيقة") : "") + txt("رسالة التنبيه", "notifyMsg") +
+    (S.notifyOn ? '<div class="subbox"><p class="note">شكل رسالة إغلاق الجوال على شاشة الإقامة</p>' +
+      rangeIn("حجم الرسالة", "nm.size", 0.6, 1.6, 0.05, "%") +
+      tog("إطار حول الرسالة", "nm.frame") +
+      (S.nm && S.nm.frame === false ? "" : rangeIn("سماكة الإطار", "nm.frameW", 0, 8, 1, "px") + colorIn("لون الإطار", "nm.frameColor") + rangeIn("تعتيم خلفية الرسالة", "nm.bg", 0, 0.9, 0.05, "%")) +
+      rangeIn("ظل الرسالة", "nm.shadow", 0, 1, 0.05, "%", "يوضح الرسالة فوق الخلفيات الفاتحة") + '</div>' : "") +
+    "") +
+  card("الحديث قبل الإقامة",
     tog("عرض حديث الرسول ﷺ قبل الإقامة", "hadithOn") + numIn("توقيت عرض الحديث", "hadithSec", 10, 600, 5, "ثانية قبل الإقامة") + txt("نص الحديث", "hadithText", "", true)) +
-  "";
+  card("عند الإقامة",
+    tog("عرض شاشة الإقامة قبل الشاشة السوداء", "iqNowOn", "رسالة «حان الآن موعد الإقامة» ثم تُخفى الشاشة أثناء الصلاة") +
+    (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "")) +
+  card("ساعة ومظهر شاشات الأذان والإقامة",
+    tog("الساعة أعلى شاشات الأذان والإقامة والأذكار", "look.ovClock", "الوقت الحالي أعلى الشاشة أثناء الأذان وانتظار الإقامة والأذكار") +
+    tog("شاشات شبه شفافة للأذان والإقامة والأذكار", "look.ovGlass", "تظهر الخلفية خلفها. عند الإيقاف تكون بلون ثابت") +
+    (S.look.ovClock !== false ? tog("إظهارها في شاشة انتظار الإقامة", "look.ovClkWait", "تظهر فوق عداد الإقامة مباشرة") + tog("إظهار الثواني في هذه الساعة", "look.ovSec") + rangeIn("حجم هذه الساعة", "look.ovClkSize", 0.5, 2, 0.05, "%") : ""));
 };
 /* إطفاء الشاشة فعلياً (تطبيق أندرويد): بدل الشاشة السوداء تنطفئ الشاشة تماماً وتعود وحدها بعد الصلاة */
 function offCard(){
@@ -471,18 +496,83 @@ R.sounds = function(){
     tog("صوت تنبيه قبل الإقامة بدقيقة", "snd.beep") +
     numIn("مستوى الصوت", "snd.vol", 0, 1, 0.1) +
     '<div class="row-end">' + btn("تجربة الأذان", "test", "ghost", "azan") + btn("تجربة الإقامة", "test", "ghost", "iqama") + btn("تجربة التنبيه", "test", "ghost", "beep") + '</div>',
-    "تمنع المتصفحات تشغيل الصوت قبل أول لمسة. بعد فتح الشاشة اضغط زر «تفعيل الصوت» مرة واحدة.");
+    "تمنع المتصفحات تشغيل الصوت قبل أول لمسة. بعد فتح الشاشة اضغط زر «تفعيل الصوت» مرة واحدة.") + remCard();
 };
+/* التنبيهات الصوتية المجدولة: قبل/بعد صلاة أو عند منتصف الليل والثلث الأخير */
+var REM_REF = [["fajr","الفجر"],["sunrise","الشروق"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"],["mid","منتصف الليل"],["third","الثلث الأخير من الليل"]];
+var REM_SND = [["beep","صوت تنبيه قصير"],["iqama","صوت الإقامة"],["azan","صوت الأذان"],["none","بدون صوت (رسالة فقط)"]];
+function remText(r){ var nm = (A.REM_NAMES || {})[r.ref] || r.ref, night = r.ref === "mid" || r.ref === "third";
+  var w = +r.min ? (r.when === "after" ? "بعد " : "قبل ") + (night ? "" : (r.at === "iqama" ? "إقامة " : "أذان ")) + nm + " بـ " + r.min + " دقيقة" : (night ? "عند " + nm : "عند " + (r.at === "iqama" ? "إقامة " : "أذان ") + nm);
+  return w; }
+function ayItems(){ var A0 = S.ayat; if (!A0.items) { A0.items = String(A0.list || "").split(/\n+/).map(function(x){ return x.trim(); }).filter(Boolean).map(function(x, i){ return {id:"a" + Date.now().toString(36) + i, t:x, sec:+A0.sec || 10}; }); } return A0.items; }
+function ayCard(){
+  var L = ayItems(), secs = [5,10,15,20,30,45,60,90,120];
+  var sopt = function(v){ var o = secs.indexOf(+v) < 0 ? secs.concat([+v]).sort(function(a,b){ return a-b; }) : secs; return o.map(function(n){ return '<option value="' + n + '"' + (n === +v ? " selected" : "") + '>' + n + ' ث</option>'; }).join(""); };
+  var items = L.map(function(r, i){ return '<li class="sitem"><div><b class="ayl">' + esc(r.t) + '</b><small>النص ' + (i + 1) + ' من ' + L.length + '</small></div>' +
+    '<span><select data-ays="' + esc(r.id) + '" aria-label="مدة الظهور">' + sopt(r.sec) + '</select>' + (i ? btn("▲", "ayUp", "sm ghost", r.id) : "") + btn("حذف", "ayDel", "sm danger", r.id) + '</span></li>'; }).join("");
+  return '<ul class="slist">' + (items || '<li class="empty">لا توجد نصوص بعد، أضف أول نص</li>') + '</ul>' +
+    '<div class="fld col"><span><b>نص جديد</b><small>بدون عنوان، نص فقط. يمكن كتابة السورة ورقم الآية في آخره بين قوسين مثل [يونس: 36]</small></span>' +
+    '<textarea id="ay-t" rows="3" placeholder="اكتب الآية أو النص هنا"></textarea>' +
+    '<div class="remf"><span>مدة الظهور</span><select id="ay-s">' + sopt(+S.ayat.sec || 10) + '</select><span>ثم ينتقل للنص التالي</span></div>' +
+    '<div class="row-end">' + btn("إضافة النص", "ayAdd") + '</div></div>';
+}
+function remCard(){
+  var L = (S.sndRem && S.sndRem.items) || [];
+  var opt = function(list, v){ return list.map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === v ? " selected" : "") + '>' + esc(o[1]) + '</option>'; }).join(""); };
+  var items = L.map(function(r){ var snd = (REM_SND.filter(function(o){ return o[0] === r.sound; })[0] || ["", ""])[1];
+    return '<li class="sitem' + (r.on === false ? " off" : "") + '"><div><b>' + esc(remText(r)) + '</b><small>' + esc((r.title ? r.title + " · " : "") + (r.text || "بدون رسالة") + " · " + snd + (r.on === false ? " · متوقف" : "")) + '</small></div>' +
+      '<span>' + btn("تجربة", "remTest", "sm ghost", r.id) + btn(r.on === false ? "تشغيل" : "إيقاف", "remTog", "sm ghost", r.id) + btn("حذف", "remDel", "sm danger", r.id) + '</span></li>'; }).join("");
+  return card("تنبيهات صوتية مجدولة",
+    '<ul class="slist">' + (items || '<li class="empty">لا توجد تنبيهات بعد</li>') + '</ul>' +
+    '<div class="fld col"><span><b>تنبيه جديد</b><small>مثال: قبل أذان الفجر بـ 30 دقيقة «صلاة القيام»، أو عند الثلث الأخير «وقت الدعاء»</small></span>' +
+    '<div class="remf"><select id="rm-when"><option value="before">قبل</option><option value="after">بعد</option></select>' +
+    '<input type="number" id="rm-min" value="10" min="0" max="240" inputmode="numeric" aria-label="عدد الدقائق"><span>دقيقة من</span>' +
+    '<select id="rm-at"><option value="adhan">أذان</option><option value="iqama">إقامة</option></select>' +
+    '<select id="rm-ref">' + opt(REM_REF, "fajr") + '</select></div>' +
+    '<div class="remf"><select id="rm-snd">' + opt(REM_SND, "beep") + '</select><input type="text" id="rm-title" placeholder="العنوان (اختياري)"><input type="text" id="rm-text" placeholder="نص الرسالة على الشاشة (اختياري)"></div>' +
+    '<div class="row-end">' + btn("إضافة التنبيه", "remAdd") + '</div></div>',
+    "تعمل داخل الجهاز بدون إنترنت. تظهر الرسالة 12 ثانية بملء الشاشة مع الصوت. «منتصف الليل» و«الثلث الأخير» محسوبان من المغرب إلى الفجر.");
+}
 
+/* خلفية الصفحة بملء الشاشة: لون سادة، أو صورة من خلفيات التطبيق أو من الجهاز مع تعتيم لوضوح النص */
+function zkFullBgUI(){
+  var Z = S.zk, img = Z.fullBgImg || "", cur0 = img.indexOf("file:") === 0 ? img.slice(5) : "";
+  if (Z.fullDim == null) Z.fullDim = 0.45;
+  var o2 = A.orient(), list = A.bgList(o2);
+  return '<div class="fld col"><span><b>خلفية الصفحة بملء الشاشة</b><small>' + (img ? (cur0 ? "صورة من خلفيات التطبيق" : "صورة من الجهاز") : "لون سادة. اختر صورة من الخلفيات أدناه لتظهر بدل اللون") + '</small></span></div>' +
+    (img ? "" : colorIn("لون الخلفية", "zk.fullBg")) +
+    '<div class="bgs pick">' + list.map(function(b, i){ var svg = /\.svg$/.test(b[0]);
+      return '<button type="button" class="bgt ' + o2 + (svg ? " svg" : "") + (b[0] === cur0 ? " on" : "") + '" data-act="spImg" data-x="' + esc("zk.fullBgImg|file:" + b[0]) + '" style="' +
+        (svg ? "background-image:url(bg/" + b[0] + ")" : "background-position:0 " + (-(b[3] != null ? b[3] : i)*(o2 === "P" ? 160 : 90)) + "px") + '" aria-label="خلفية ' + (i + 1) + '"></button>'; }).join("") + '</div>' +
+    '<div class="row-end"><label class="btn ghost">صورة من الجهاز<input type="file" accept="image/*" data-up="sp:zk.fullBgImg" hidden></label>' + (img ? btn("بدون صورة (لون سادة)", "spImg", "ghost", "zk.fullBgImg|") : "") + '</div>' +
+    (img ? rangeIn("تعتيم الصورة", "zk.fullDim", 0, 0.85, 0.05, "%", "يغمّق الصورة حتى تكون الأذكار واضحة. 0% الصورة كما هي") : "");
+}
+function subSec(t, d){ return '<div class="ssub"><b>' + esc(t) + '</b>' + (d ? '<small>' + esc(d) + '</small>' : "") + '</div>'; }
+R.timesOnly = null; R.newsOnly = null;
 R.adhkar = function(){
   var Z = S.zk, PR = [["fajr","الفجر"],["dhuhr","الظهر والجمعة"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"]];
   var kindCard = function(kind, title, onLabel, hint){
-    var n = (A.zkList ? A.zkList(kind) : []).length;
+    var n = (A.zkList ? A.zkList(kind) : []).length, tk = kind + "Tpl";
+    if (!Z[tk] || typeof Z[tk] !== "object") { Z[tk] = {}; Z[tk][Z[kind + "Page"] === "page" ? "page" : "one"] = true; } // من الإعداد القديم (قالب واحد)
+    var TP = [["one","ذكر بعد ذكر"],["page","صفحة مزخرفة (إطار وقبة)"],["full","صفحة بملء الشاشة بدون خلفية"],["royal","ملكي: أخضر وذهبي بزوايا مزخرفة"],["ivory","عاجي: فاتح بشريط نجوم"],["night","ليلي: كحلي بهلال ونجوم"]].concat(kind === "after" ? [["bgold","لوحة جاهزة: ذهبي على أسود"],["bivory","لوحة جاهزة: عاجي فاتح"],["bgray","لوحة جاهزة: رمادي داكن"]] : []), T = Z[tk];
+    var tPg = !!(T.page || T.full || T.royal || T.ivory || T.night || (kind === "after" && (T.bgold || T.bivory || T.bgray))), tOne = !!T.one || !tPg; // بدون أي اختيار: ذكر بعد ذكر
     return card(title, tog(onLabel, "zk." + kind, hint) +
       (Z[kind] ? (kind === "after" ? '<div class="fld col"><span><b>الصلوات التي تظهر بعدها</b></span><div class="days">' + PR.map(function(p){ return '<label><input type="checkbox" data-p="zk.afterOn.' + p[0] + '" data-t="bool"' + (!Z.afterOn || Z.afterOn[p[0]] !== false ? " checked" : "") + '> ' + p[1] + '</label>'; }).join("") + '</div></div>' : "") +
-        numIn("أقصى مدة", "zk." + kind + "Min", 1, 60, 1, "دقيقة", "تنتهي الأذكار عند انتهاء القائمة أو هذه المدة، أيهما أسبق") +
+        '<div class="fld col"><span><b>قوالب العرض</b><small>يمكن اختيار أكثر من قالب، فتتناوب الصلوات عليها: كل صلاة بالقالب التالي. الصفحة تعرض الأذكار كلها معاً بأكبر خط يتسع لها</small></span><div class="days">' +
+          TP.map(function(o){ return '<label><input type="checkbox" data-p="zk.' + tk + '.' + o[0] + '" data-t="bool"' + (T[o[0]] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</div></div>' +
+        (T.full ? zkFullBgUI() +
+          '<div class="row-end">' + btn("معاينة الصفحة بملء الشاشة", "zkPrev", "", kind + "|full") + '</div>' : "") +
+        ["royal","ivory","night","bgold","bivory","bgray"].filter(function(k){ return T[k] && (kind === "after" || k.charAt(0) !== "b"); }).map(function(k){ return '<div class="row-end">' + btn("معاينة " + ({royal:"قالب ملكي", ivory:"قالب عاجي", night:"قالب ليلي", bgold:"اللوحة الذهبية", bivory:"اللوحة العاجية", bgray:"اللوحة الرمادية"})[k], "zkPrev", "", kind + "|" + k) + '</div>'; }).join("") +
+        (tPg && !tOne ? numIn("مدة ظهور صفحة الأذكار", "zk." + kind + "Min", 1, 60, 1, "دقيقة") : "") +
+        (T.page ?
+          '<div class="fld"><span><b>صورة لوحة الأذكار</b><small>' + (Z[kind + "Img"] ? "تظهر الصورة بملء الشاشة بدل النص" : "اختياري: صورة جاهزة للأذكار (مثل لوحة مطبوعة) تظهر بدل النص") + '</small></span><span class="nb">' +
+          '<label class="btn sm ghost">' + (Z[kind + "Img"] ? "تغيير الصورة" : "اختر صورة") + '<input type="file" accept="image/*" data-up="sp:zk.' + kind + 'Img" hidden></label>' +
+          (Z[kind + "Img"] ? btn("إزالة", "spImg", "sm danger", "zk." + kind + "Img|") : "") + '</span></div>' +
+          '<div class="row-end">' + btn("معاينة الصفحة المزخرفة", "zkPrev", "", kind + "|page") + '</div>' : "") +
+        (tPg ? '<p class="note">تظهر صفحة الأذكار 40 ثانية، والمس الشاشة لإغلاقها</p>' : "") +
+        (tOne ? numIn(tPg ? "المدة" : "أقصى مدة", "zk." + kind + "Min", 1, 60, 1, "دقيقة", tPg ? "مدة ظهور صفحة الأذكار، وأقصى مدة لعرض ذكر بعد ذكر" : "تنتهي الأذكار عند انتهاء القائمة أو هذه المدة، أيهما أسبق") +
         (Z.autoSec ? "" : numIn("مدة كل ذكر", "zk." + kind + "Sec", 5, 120, 5, "ثانية")) +
-        (Z.noRepeat ? "" : numIn("عدد مرات عرض القائمة", "zk." + kind + "Rounds", 1, 5, 1, "مرة", "في كل صلاة")) +
+        (Z.noRepeat ? "" : numIn("عدد مرات عرض القائمة", "zk." + kind + "Rounds", 1, 5, 1, "مرة", "في كل صلاة")) : "") +
         '<p class="note">عدد الأذكار في القائمة: ' + n + ' · تعديلها من محرر النصوص</p>' : ""));
   };
   return kindCard("after", "أذكار ما بعد الصلاة", "تفعيل أذكار ما بعد الصلاة", "تظهر بعد انتهاء الصلاة") +
@@ -493,7 +583,13 @@ R.adhkar = function(){
       tog("عدم تكرار الذكر في نفس الصلاة", "zk.noRepeat", "يظهر كل ذكر مرة واحدة فقط في كل صلاة") +
       tog("الإكمال من حيث توقفت في الصلاة السابقة", "zk.rotate", "إذا كانت القائمة أطول من المدة، تبدأ الصلاة التالية بالأذكار التي لم تظهر، فلا تتكرر نفس الأذكار في كل صلاة")) +
   card("دعاء أسفل الشاشة", tog("إظهار الدعاء أسفل الشاشة", "fixedOn", "يظهر فوق شريط الإعلانات") + txt("نص الدعاء", "fixedZekr", "اتركه فارغاً لعرض: اللهم اغفر لي وارحمني واهدني وعافني وارزقني", true) +
-    '<div class="row-end">' + btn("استعادة الدعاء الافتراضي", "fzDef", "ghost") + '</div>');
+    '<div class="row-end">' + btn("استعادة الدعاء الافتراضي", "fzDef", "ghost") + '</div>') +
+  card("الآيات المتغيرة",
+    tog("عرض آيات قرآنية تتغير بدل الدعاء", "ayat.on", "آية بعد آية بانتقال هادئ، تحت الساعة أو في سطر الدعاء") +
+    (S.ayat && S.ayat.on ? sel("مكان الآية", "ayat.pos", [["mid","تحت الساعة وفوق جدول الصلوات (بإطار مزخرف)"],["bottom","في سطر الدعاء أسفل الشاشة"]]) + numIn("مدة عرض كل آية", "ayat.sec", 5, 300, 5, "ثانية", "للآيات الجاهزة، وهي المدة المقترحة لكل نص جديد في قائمتك") +
+      sel("الآيات", "ayat.mode", [["default","آيات مختارة جاهزة (" + (window.AYAT_LIST || []).length + " آية)"],["custom","نصوصي الخاصة (لكل نص مدة ظهور)"]]) +
+      (S.ayat.mode === "custom" ? ayCard() : "") : ""),
+    "الآيات الجاهزة مكتوبة بدون تشكيل مع اسم السورة ورقم الآية. راجعها، أو اكتب قائمتك من مصحف موثوق");
 };
 
 function schedText(x){
@@ -504,6 +600,16 @@ function schedText(x){
   return p.length ? " · " + p.join(" · ") : "";
 }
 var newsEdit = null;
+/* حفظ الرسالة المكتوبة في نموذج الإعلان: بزر «حفظ الرسالة»، وأيضاً تلقائياً عند «حفظ الإعدادات» أو الانتقال لقسم آخر أو إغلاق الإعدادات،
+   حتى لا يضيع إعلان كُتب ولم يُضغط زر حفظه */
+function newsDraftSave(){
+  var t = $("#ntext"); if (!newsEdit || !t) return false;
+  var tx = t.value.trim(); if (!tx) { newsEdit = null; return false; }
+  var x = newsEdit, it = {id: x === "new" ? A.uid() : x, text: tx, type: $("#ntype").value, days: $$("#ndays input:checked").map(function(c){ return +c.value; }), date: $("#ndate").value,
+    d1: $("#nd1").value, d2: $("#nd2").value, t1: $("#nt1").value, t2: $("#nt2").value};
+  if (x === "new" || idx(S.news, x) < 0) S.news.push(it); else S.news[idx(S.news, x)] = it;
+  newsEdit = null; commit(); return true;
+}
 R.news = function(){
   var list = S.news.map(function(x, i){
     var sch = (x.type === "week" ? "أيام: " + (x.days || []).map(function(d){ return DAYS[d]; }).join("، ") : x.type === "date" ? "تاريخ: " + x.date : x.type === "daily" ? "يومياً" : "يظهر دائماً") + schedText(x);
@@ -512,7 +618,8 @@ R.news = function(){
   }).join("");
   return card("إعلانات المسجد أسفل الشاشة",
     tog("تفعيل شريط الإعلانات", "tickerOn") + tog("تفعيل شريط النص المتحرك", "marquee", "عند إيقافه تظهر الرسائل واحدة تلو الأخرى") +
-    numIn("سرعة الشريط", "speed", 40, 300, 10, "بكسل/ث") + numIn("مدة عرض الرسالة", "newsSec", 4, 60, 1, "ثانية") +
+    (S.marquee ? (S.tickDir ? "" : (S.tickDir = S.slides.move === "rtl" || (S.slides.move !== "ltr" && S.lang !== "ar") ? "rtl" : "ltr"), "") + sel("اتجاه حركة الشريط", "tickDir", [["ltr","من اليسار إلى اليمين"],["rtl","من اليمين إلى اليسار"]], "مستقل عن الشريط العلوي (الآيات)") : "") +
+    numIn("سرعة الشريط", "speed", 60, 300, 60, "بكسل/ث", "60 بطيء، 120 متوسط، 180 سريع. نفس سرعة الشرائح المتحركة أعلى الشاشة") + numIn("مدة عرض الرسالة", "newsSec", 4, 60, 1, "ثانية") +
     tog("ظل خلف شريط الإعلانات", "look.newsShade", "عند إيقافه يظهر النص مباشرة فوق الخلفية بدون شريط داكن") +
     (S.look.newsShade !== false ? rangeIn("درجة الظل", "look.newsShadeOp", 0, 0.9, 0.05, "%", "0% = تلقائي بنفس ظل جدول المواقيت") : "")) +
   card("الرسائل", '<ul class="list">' + (list || '<li class="empty">لا توجد رسائل بعد</li>') + '</ul>' + (newsEdit === "new" ? '<div class="ed">' + newsForm({id:"new", text:"", type:"none", days:[], date:""}) + '</div>' : "") +
@@ -646,12 +753,12 @@ function edOpen(el){
     '<span class="edg har">' + ED_HAR.map(function(c){ return '<button type="button" data-ins="' + c[0] + '" title="' + c[1] + '">ـ' + c[0] + '</button>'; }).join("") + '</span>' +
     '<span class="edg"><button type="button" data-ed="strip" title="إزالة التشكيل">إزالة التشكيل</button><button type="button" data-ed="clear">مسح</button>' +
     '<label class="edfile">استيراد ملف<input type="file" accept=".txt,.docx,text/plain" hidden id="edf"></label></span></div>' +
-    '<textarea id="edt" dir="rtl" spellcheck="false" rows="' + (multi ? 9 : 3) + '" style="font-family:\'' + esc(font) + '\',Amiri,serif"></textarea>' +
-    '<div class="edpv"><small>معاينة على الشاشة</small><div id="edp" style="font-family:\'' + esc(font) + '\',Amiri,serif"></div></div></div><div class="edside"></div></div>' +
+    '<textarea id="edt" dir="rtl" spellcheck="false" rows="' + (multi ? 3 : 1) + '" style="font-family:\'' + esc(font) + '\',Amiri,serif"></textarea><div class="edside"></div>' +
+    '<div class="edpv"><small>معاينة على الشاشة</small><div id="edp" style="font-family:\'' + esc(font) + '\',Amiri,serif"></div></div></div></div>' +
     '<div class="edf"><small>' + (multi ? "Enter لسطر جديد · Ctrl+Enter للحفظ" : "سطر واحد · Enter للحفظ") + '</small><button type="button" class="btn ghost" data-ed="x">إلغاء</button><button type="button" class="btn" data-ed="ok">حفظ</button></div></div>';
   var t = $("#edt"); t.value = el.value; ed.hidden = false; ed.dataset.multi = multi ? "1" : "";
   if (vkOn()) { t.setAttribute("inputmode", "none"); vkOpen(t, $(".edside", ed), false); }
-  var upd = function(){ $("#edp").textContent = t.value || " "; var w = t.value.trim() ? t.value.trim().split(/\s+/).length : 0; $("#edc").textContent = t.value.length + " حرف · " + w + " كلمة"; };
+  var upd = function(){ $("#edp").textContent = t.value || " "; var w = t.value.trim() ? t.value.trim().split(/\s+/).length : 0; $("#edc").textContent = t.value.length + " حرف · " + w + " كلمة"; if (window.rwsGrow) window.rwsGrow(t); };
   t.addEventListener("input", upd); upd(); setTimeout(function(){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); }, 30);
   t.addEventListener("keydown", function(e){
     if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); edClose(false); }
@@ -731,14 +838,72 @@ function vkOpen(t, host, docked){
   VK.lang = t.getAttribute("dir") === "ltr" || /url|email|number|password|tel/.test(t.type) ? "en" : "ar";
   VK.mode = t.type === "number" || t.type === "tel" ? "sym" : ""; VK.shift = false;
   if (!VK.el) { VK.el = document.createElement("div"); VK.el.className = "vkwrap";
-    VK.el.addEventListener("mousedown", function(e){ if (e.target.closest("[data-vk]")) e.preventDefault(); }); // الضغط بالفأرة لا يُخرج المؤشر من الحقل
-    VK.el.addEventListener("click", vkClick); vkLpBind(VK.el); }
-  var bef = host.querySelector(".edf"); if (bef) host.insertBefore(VK.el, bef); else if (VK.el.parentNode !== host) host.appendChild(VK.el);
+    VK.el.addEventListener("mousedown", function(e){ if (e.target.closest("[data-vk]")) { e.preventDefault(); vkRoOn(); } }); // الضغط بالفأرة لا يُخرج المؤشر من الحقل
+    // قبل أن يعالج محرك العرض الضغطة: الحقل للقراءة فقط، فلا تظهر لوحة النظام مع كل حرف
+    VK.el.addEventListener("pointerdown", function(e){ if (e.target.closest("[data-vk]")) vkRoOn(); }, true);
+    VK.el.addEventListener("touchstart", function(e){ if (e.target.closest("[data-vk]")) vkRoOn(); }, {capture:true, passive:true});
+    ["pointerup", "touchend", "pointercancel"].forEach(function(n){ VK.el.addEventListener(n, function(){ if (vkRO.t) vkRoSoon(); }, true); });
+    VK.el.addEventListener("click", function(e){ try { vkClick(e); } finally { if (vkRO.t) vkRoSoon(); scrLock(); } }); vkLpBind(VK.el); }
+  var bef = host.querySelector(".edf"); if (bef && bef.parentNode === host) { if (VK.el.nextSibling !== bef) host.insertBefore(VK.el, bef); } else if (VK.el.parentNode !== host) host.appendChild(VK.el);
   VK.el.classList.toggle("dock", !!docked); VK.el.hidden = false; vkRender();
-  if (docked) { var sb = $(".sbody", panel); if (sb) { sb.style.paddingBottom = (VK.el.offsetHeight + 30) + "px"; } try { t.scrollIntoView({block:"center"}); } catch(e){} }
+  if (docked) { var sb = $(".sbody", panel); if (sb) { sb.style.paddingBottom = (VK.el.offsetHeight + 30) + "px"; }
+    // نافذة كلمة السر ليست داخل قائمة الإعدادات: في الشاشة العرضية كانت لوحة المفاتيح تغطي الحقل وزر «فتح التعديل».
+    // تصبح النافذة فوق لوحة المفاتيح مباشرة وتُمرَّر إذا لم تتسع
+    var lk = !(sb && sb.contains(t)) ? t.closest(".lock") : null;
+    vkLockFit(lk); vkReveal(t, lk || sb); }
   return true;
 }
-function vkClose(){ if (!VK.el) return; if (VK.docked) vkCommit(); VK.el.hidden = true; var sb = $(".sbody", panel); if (sb) sb.style.paddingBottom = ""; VK.t = null; }
+function vkLockFit(lk){
+  if (VK.lk && VK.lk !== lk) { VK.lk.style.maxHeight = VK.lk.style.overflowY = VK.lk.style.marginTop = VK.lk.style.marginBottom = ""; VK.lk = null; }
+  if (!lk || !VK.el) return;
+  VK.lk = lk; lk.style.marginTop = "14px"; lk.style.marginBottom = "0";
+  var free = panel.clientHeight - VK.el.offsetHeight - lk.offsetTop - 8;
+  if (free > 120) { lk.style.maxHeight = free + "px"; lk.style.overflowY = "auto"; }
+}
+/* إظهار الحقل فوق لوحة المفاتيح بتمرير قائمة الإعدادات فقط.
+   scrollIntoView كان يمرر كل الحاويات حتى المخفية التمرير (الصفحة وطبقة الإعدادات المدوّرة)، فتنزاح الواجهة وتنقص لوحة المفاتيح من الطرف */
+function vkReveal(t, sb){
+  if (!t || !sb || !sb.contains(t)) { scrLock(); return; }
+  if (sb.classList.contains("lock")) { var f = t.form, sub = f && f.querySelector("[type=submit]"); // الحقل وزر الإرسال معاً إن اتسعت المساحة
+    try { var top = t.offsetTop, bot = sub ? sub.offsetTop + sub.offsetHeight : t.offsetTop + t.offsetHeight; sb.scrollTop = bot - top <= sb.clientHeight ? Math.max(0, bot - sb.clientHeight + 6) : top; } catch(e){}
+    scrLock(); return; }
+  // إحداثيات التخطيط (لا تتأثر بالتدوير ولا بالتمرير): موضع الحقل داخل محتوى القائمة
+  var offY = function(el){ var y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; };
+  try { var y = offY(t) - offY(sb) - sb.clientTop, room = sb.clientHeight - (VK.el && !VK.el.hidden ? VK.el.offsetHeight : 0);
+    sb.scrollTop = Math.max(0, y - Math.max(0, (room - t.offsetHeight) / 2)); } catch(e){}
+  scrLock();
+}
+/* الصفحة وطبقة الإعدادات لا تُمرَّر أبداً: لوحة مفاتيح النظام (إذا ظهرت لحظة) أو المتصفح يمررها لإظهار الحقل،
+   فتنزاح الواجهة المدوّرة ويختفي جزء منها خارج الشاشة. تُعاد لموضعها فوراً */
+function scrLock(){
+  try {
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+    var vv = window.visualViewport; if (vv && vv.scale <= 1.001 && (vv.offsetLeft || vv.offsetTop)) window.scrollTo(0, 0);
+    [document.documentElement, document.body, document.getElementById("ui"), document.getElementById("set")].forEach(function(el){
+      if (!el) return; if (el.scrollLeft) el.scrollLeft = 0;
+      if (el.scrollTop && el.id !== "set") el.scrollTop = 0;
+      else if (el.scrollTop && !/(auto|scroll)/.test(getComputedStyle(el).overflowY)) el.scrollTop = 0;
+    });
+  } catch(e){}
+}
+(function(){
+  var q = 0, kick = function(){ if (q) return; q = requestAnimationFrame(function(){ q = 0; scrLock(); }); };
+  window.addEventListener("scroll", function(e){ var t = e.target; if (t === document || t === document.documentElement || t === document.body || (t && (t.id === "ui" || t.id === "set"))) kick(); }, true);
+  window.addEventListener("resize", function(){ kick(); setTimeout(scrLock, 300); });
+  if (window.visualViewport) { window.visualViewport.addEventListener("scroll", kick); window.visualViewport.addEventListener("resize", kick); }
+})();
+/* تطبيق أندرويد: الضغط على زر في لوحة التطبيق (بالفأرة أو اللمس) والمؤشر في حقل نصي كان يجعل محرك العرض يطلب لوحة النظام،
+   فتظهر لحظة ثم تُغلق مع كل حرف. أثناء الضغطة يصبح الحقل للقراءة فقط (لا تُطلب لوحة النظام لحقل للقراءة فقط)، ثم يعود كما كان */
+var vkRO = {t:null, tm:0};
+function vkRoOn(){
+  var t = VK.t; if (!t || !window.RawayieAndroid || !vkOn0()) return;
+  if (vkRO.t && vkRO.t !== t) vkRoOff();
+  if (!vkRO.t) { if (t.readOnly) return; vkRO.t = t; t.readOnly = true; }
+  clearTimeout(vkRO.tm); vkRO.tm = setTimeout(vkRoOff, 1500);
+}
+function vkRoOff(){ clearTimeout(vkRO.tm); var t = vkRO.t; vkRO.t = null; if (t) t.readOnly = false; }
+function vkRoSoon(){ clearTimeout(vkRO.tm); vkRO.tm = setTimeout(vkRoOff, 350); }
+function vkClose(){ vkRoOff(); vkLockFit(null); if (!VK.el) return; if (VK.docked) vkCommit(); VK.el.hidden = true; var sb = $(".sbody", panel); if (sb) sb.style.paddingBottom = ""; VK.t = null; }
 function vkCommit(){ var t = VK.t; if (t && document.body.contains(t)) t.dispatchEvent(new Event("change", {bubbles:true})); }
 function vkIns(txt){
   var t = VK.t; if (!t) return;
@@ -790,7 +955,13 @@ function vkClick(e){
     p = Math.max(0, Math.min(t.value.length, p + d)); try { t.setSelectionRange(p, p); } catch(x){} return; }
   if (c === "{clear}") { t.value = ""; t.dispatchEvent(new Event("input", {bubbles:true})); return; }
   if (c === "{nl}") { if (t.tagName === "TEXTAREA") vkIns("\n"); return; }
-  if (c === "{done}") { if (ED.el && $("#ed") && !$("#ed").hidden && t.id === "edt") { edClose(true); return; } var tt = t; vkClose(); try { tt.focus({preventScroll:true}); } catch(x){} return; }
+  if (c === "{done}") { if (ED.el && $("#ed") && !$("#ed").hidden && t.id === "edt") { edClose(true); return; }
+    // زر الإدخال في حقل كلمة السر يرسلها مباشرة (مثل Enter)، بدل أن يغلق اللوحة فقط
+    var fm = t.form, sb0 = fm && t.tagName === "INPUT" ? fm.querySelector("[type=submit]") : null;
+    if (sb0 && b.classList.contains("ent")) { vkClose(); if (fm.requestSubmit) fm.requestSubmit(sb0); else sb0.click();
+      // كلمة سر خاطئة (النافذة باقية): تعود لوحة المفاتيح لإعادة المحاولة
+      setTimeout(function(){ if (!fm.hidden && document.body.contains(t) && !(VK.el && !VK.el.hidden)) { try { t.blur(); t.focus({preventScroll:true}); } catch(x){} } }, 80); return; }
+    var tt = t; vkClose(); try { tt.focus({preventScroll:true}); } catch(x){} return; }
   if (b.closest(".vkalt")) { vkAltClose(); }
   // حقول الأرقام تحتاج أرقاماً إنجليزية
   if (/^[٠-٩]$/.test(c) && (t.type === "number" || t.getAttribute("dir") === "ltr")) c = String("٠١٢٣٤٥٦٧٨٩".indexOf(c));
@@ -921,18 +1092,22 @@ function slById(id){ var l = slItems(); for (var i = 0; i < l.length; i++) if (l
 R.slides = function(){
   var items = slItems().map(function(sl, i){
     if (slEdit === sl.id) return "";
-    var label = sl.title || (sl.body || "").slice(0, 40) || (sl.img ? "شريحة صورة" : "شريحة فارغة");
-    return '<li class="sitem' + (sl.active === false ? " off" : "") + '">' + slFrame(sl, 150) + '<div><b>' + esc(label) + '</b><small>' +
-      (sl.full ? "ملء الشاشة" : "منتصف الشاشة") + (sl.sec ? " · " + sl.sec + " ثانية" : "") + (sl.active === false ? " · متوقفة" : "") + '</small></div>' +
+    var full = [sl.title, sl.body].filter(function(x){ return x && String(x).trim(); }).join(" ۞ ").replace(/\s*\n+\s*/g, " ");
+    var label = full || (sl.img ? "شريحة صورة" : "شريحة فارغة"), info = [];
+    if (sl.img && sl.full) info.push("ملء الشاشة"); if (sl.sec) info.push(sl.sec + " ثانية"); if (sl.active === false) info.push("متوقفة");
+    return '<li class="sitem sline' + (sl.active === false ? " off" : "") + '">' + (sl.img ? slFrame(sl, 150) : "") + '<div class="slt"><b class="sll">' + esc(label) + '</b>' + (info.length ? '<small>' + esc(info.join(" · ")) + '</small>' : "") + '</div>' +
       '<span>' + btn("↑", "sUp", "sm ghost", sl.id) + btn("تحرير", "sEdit", "sm ghost", sl.id) + btn("نسخ", "sDup", "sm ghost", sl.id) + btn("حذف", "sDel", "sm danger", sl.id) + '</span></li>';
   }).join("");
   return card("استعراض الشرائح",
     tog("تفعيل الشرائح", "slides.on") + tog("عرض الشرائح بشكل عشوائي", "slides.random") +
-    numIn("وقت العرض لكل شريحة", "slides.sec", 3, 120, 1, "ثانية") + numIn("تظهر الشريحة كل", "slides.every", 10, 900, 10, "ثانية"),
-    "تظهر الشريحة في منتصف الشاشة مكان الساعة، أو بملء الشاشة إذا اخترت ذلك في محرر الشريحة") +
+    sel("حركة الشرائح", "slides.move", [["none","ثابتة في مكانها"],["ltr","تتحرك من اليسار إلى اليمين"],["rtl","تتحرك من اليمين إلى اليسار"],["band","ثابتة في شريط تحت الساعة (الشريط السفلي يتحرك)"]], "المتحركة تظهر في سطر واحد مستقيم، ومدتها حسب طول النص. «ثابتة في شريط» تعرض كل آية بدون حركة حسب الثواني المختارة. شرائح الصور تبقى ثابتة") +
+    (S.slides.move === "band" ? numIn("مدة ظهور كل آية", "slides.sec", 3, 120, 1, "ثانية", "ثم تظهر الآية التالية مباشرة. يمكن تحديد مدة خاصة لكل آية من محررها")  + '<p class="note">سرعة شريط الإعلانات السفلي من قسم «الإعلانات» (أسفل الشاشة)</p>' :
+     S.slides.move && S.slides.move !== "none" ? '<p class="note">سرعة الحركة هي نفس سرعة شريط الإعلانات، وتُضبط من قسم «الإعلانات» (أسفل الشاشة). مدة الشريحة حسب طول النص</p>' : numIn("وقت العرض لكل شريحة", "slides.sec", 3, 120, 1, "ثانية")) + numIn("تظهر الشريحة كل", "slides.every", 10, 900, 10, "ثانية") +
+    sel("مكان الشرائح", "slides.pos", [["zone","مكان الساعة والعد التنازلي"],["below","تحت الساعة وفوق جدول الصلوات"]], "«تحت الساعة» يبقي الساعة ظاهرة، وتصغر صفوف الصلوات قليلاً وقت الشريحة"),
+    "الشريحة التي تختار لها «ملء الشاشة» في محررها تظهر بملء الشاشة دائماً. للتجربة: اضغط 3 مرات على اسم صلاة الظهر فتظهر كل الشرائح متتالية، ولإيقاف أي شريحة المسها") +
   (slEdit ? card(slEdit === "new" ? "شريحة جديدة" : "تحرير الشريحة", slForm()) : "") +
   card("الشرائح", '<ul class="slist">' + (items || (slEdit ? "" : '<li class="empty">لا توجد شرائح بعد</li>')) + '</ul>' +
-    '<div class="row-end">' + btn("إضافة شريحة نصية", "sNew") + '<label class="btn ghost">إضافة صور<input type="file" accept="image/*" multiple data-up="slide" hidden></label>' +
+    '<div class="row-end">' + btn("إضافة شريحة نصية", "sNew") + btn("إضافة الأدعية والآيات الجاهزة", "sPreset", "ghost") + '<label class="btn ghost">إضافة صور<input type="file" accept="image/*" multiple data-up="slide" hidden></label>' +
     (slItems().length ? btn("حذف الكل", "sClear", "danger ghost") : "") + '</div>');
 };
 function spIn(label, k, type, a, b, st, suf){
@@ -949,13 +1124,21 @@ function seg(label, k, opts){
   return '<div class="fld"><span><b>' + esc(label) + '</b></span><div class="seg m0">' + opts.map(function(o){
     return '<button type="button" data-act="spSeg" data-x="' + k + ":" + o[0] + '" class="' + (slDraft[k] === o[0] ? "on" : "") + '">' + esc(o[1]) + '</button>'; }).join("") + '</div></div>';
 }
+function slMV(d){ return !!(S.slides.move && S.slides.move !== "none" && d && !d.img); }
 function slForm(){
   var d = slDraft;
+  if (slMV(d)) return '<div class="sedit mvedit"><div class="sfields">' +
+    '<label class="fld col"><span><b>النص</b></span><textarea data-sp="body" rows="2" class="tarea mvta">' + esc(d.body) + '</textarea></label>' +
+    '<p class="note">' + (S.slides.move === "band" ? "تظهر الآية ثابتة في الشريط تحت الساعة بخط الشريط السفلي، ويصغر الخط تلقائياً للآية الطويلة" : "الشريحة المتحركة تأخذ خط ولون وحجم الشريط السفلي تلقائياً، ومدتها حسب طول النص. لتغيير الحجم: الخطوط ← «الشريط»") + '</p>' +
+    '<h4>صورة بدل النص</h4>' + '<div class="fld"><span><b>صورة الشريحة</b>' + (d.img ? "<small>توجد صورة</small>" : "<small>اختياري</small>") + '</span><span class="nb"><label class="btn sm ghost">' + (d.img ? "تغيير الصورة" : "اختر صورة") + '<input type="file" accept="image/*" id="spimg" hidden></label>' + (d.img ? btn("حذف الصورة", "spImgDel", "sm ghost") : "") + '</span></div>' +
+    (S.slides.move === "band" ? spIn("مدة ظهور هذه الآية", "sec", "range", 0, 120, 1, " ث") + '<p class="note">0 = المدة العامة (' + (+S.slides.sec || 15) + ' ثانية)</p>' : "") +
+    spIn("الشريحة مفعلة", "active", "bool") +
+    '<div class="row-end">' + btn("حفظ الشريحة", "sSave") + btn("إلغاء", "sCancel", "ghost") + '</div></div></div>';
   return '<div class="sedit"><div class="sprev">' + slFrame(d, 420, "big") + '<small>معاينة مباشرة</small></div><div class="sfields">' +
-    '<h4>النص</h4>' + spIn("العنوان", "title", "text") + spIn("النص", "body", "area") +
-    '<div class="grid2">' + spIn("خط العنوان", "tFont", "font") + spIn("خط النص", "bFont", "font") +
-    spIn("حجم العنوان", "tSize", "range", 30, 220, 2, "px") + spIn("حجم النص", "bSize", "range", 20, 160, 2, "px") +
-    spIn("لون العنوان", "tColor", "color") + spIn("لون النص", "bColor", "color") + '</div>' +
+    '<h4>النص</h4>' + (d.title ? spIn("العنوان (اختياري، امسحه لشريحة بدون عنوان)", "title", "text") : "") + spIn("النص", "body", "area") +
+    '<div class="grid2">' + (d.title ? spIn("خط العنوان", "tFont", "font") : "") + spIn("خط النص", "bFont", "font") +
+    (d.title ? spIn("حجم العنوان", "tSize", "range", 30, 220, 2, "px") : "") + spIn("حجم النص", "bSize", "range", 20, 160, 2, "px") +
+    (d.title ? spIn("لون العنوان", "tColor", "color") : "") + spIn("لون النص", "bColor", "color") + '</div>' +
     '<h4>المحاذاة والمسافات</h4>' +
     seg("المحاذاة الأفقية", "align", [["right","يمين"],["center","وسط"],["left","يسار"]]) +
     seg("المحاذاة العمودية", "valign", [["top","أعلى"],["center","وسط"],["bottom","أسفل"]]) +
@@ -973,7 +1156,14 @@ function slForm(){
 }
 function slPaint(root){ $$(".sframe", root || body).forEach(function(f){
   var sl = slEdit && f.closest(".sprev") ? slDraft : slById(f.dataset.sl); if (sl) A.renderSlide(f, sl); }); }
-function slPreview(){ var f = $(".sprev .sframe", body); if (!f) return;
+function mvPreview(){ var bx = $(".mvbox", body), l = bx && $(".mvl", bx); if (!l) return;
+  var tx = String(slDraft.body || "").replace(/\s*\n+\s*/g, " ").trim() || "اكتب النص";
+  l.textContent = tx; l.style.fontFamily = "'" + (S.look.fontText || "Amiri") + "',Amiri,serif";
+  var W = bx.clientWidth, w = l.offsetWidth, sp = Math.max(40, +S.speed || 110) * (W / 1080), ltr = S.slides.move === "ltr";
+  if (l._an) try { l._an.cancel(); } catch(e){}
+  if (l.animate) l._an = l.animate([{transform:"translate3d(" + (ltr ? -w : W) + "px,0,0)"}, {transform:"translate3d(" + (ltr ? W : -w) + "px,0,0)"}], {duration:Math.max(1500, (W + w) / sp * 1000), iterations:Infinity, easing:"linear"});
+}
+function slPreview(){ if ($(".mvbox", body)) { mvPreview(); return; } var f = $(".sprev .sframe", body); if (!f) return;
   var w = 420, d = slDims(slDraft), sc = w/d[0]; f.style.width = d[0] + "px"; f.style.height = d[1] + "px"; f.style.transform = "scale(" + sc + ")";
   f.parentNode.style.height = Math.round(d[1]*sc) + "px"; A.renderSlide(f, slDraft); }
 function onSlInput(e){
@@ -1088,10 +1278,13 @@ function hiCard(){
     tog("لون مخصص لنصوص الصلاة القادمة", "look.hiTextOn", "اسم الصلاة ووقت الأذان والإقامة في السطر المميز") +
     (L.hiTextOn ? sw(tx, "hiTx", L.hiTextColor, true) + colorIn("لون النصوص", "look.hiTextColor") : "") +
     tog("إطار فقط بدل تعبئة الشريط", "look.hiFrame", "يظهر حول الصلاة القادمة إطار بلون التمييز بدل خلفية ملوّنة") +
-    tog("تكبير السطر المميز قليلاً", "look.hiZoom", "يبرز سطر الصلاة القادمة بتكبير بسيط عن باقي الصلوات") +
-    tog("تخفيت الصلوات الماضية", "look.dimPast", "الصلوات التي مضت اليوم تظهر بلون أخف")), "السطر المميز في جدول المواقيت هو الصلاة القادمة، أو الصلاة الحالية أثناء انتظار الإقامة");
+    tog("تكبير السطر المميز قليلاً", "look.hiZoom", "يبرز سطر الصلاة القادمة بتكبير بسيط عن باقي الصلوات")), "السطر المميز في جدول المواقيت هو الصلاة القادمة، أو الصلاة الحالية أثناء انتظار الإقامة");
 }
-R.hilite = function(){ return hiCard(); };
+R.hilite = function(){
+  var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
+  return hiCard() +
+  R.shadow();
+};
 R.fonts = function(){
   return card("ضبط خطوط التطبيق",
     sel("خط النصوص", "look.fontText", window.FONTS) + sel("خط الأرقام والساعة", "look.fontNum", window.FONTS) + sel("خط الأذكار", "look.fontZekr", window.FONTS) +
@@ -1110,8 +1303,8 @@ R.fonts = function(){
 /* ===== خيارات العرض: كل خيارات الشاشة الأساسية في مكان واحد ومجموعات واضحة ===== */
 var DISP_REC = {"look.showCount":true, "look.bigCounter":true, "look.bigIqCnt":true, "red90":true, "lastMinBlack":true,
   "azanScreen":true, "iqNowOn":true, "iqNowSec":30, "look.iqClock":true, "look.ovGlass":true, "look.homeClock":false,
-  "look.shadow":true, "look.dimPast":true, "look.hiOn":true, "look.nightTimes":true, "look.netStar":true,
-  "look.bigL":true, "look.centerL":true, "look.dateSide":true, "look.centerP":true,
+  "look.shadow":true, "look.dimPast":true, "look.hiOn":true, "look.netStar":true,
+  "look.bigL":true, "look.centerL":true, "look.dateSide":true, "look.centerP":true, "look.bigP":true,
   "look.h24":false, "look.zeroH":"all", "look.fullClock":false, "look.arabicDigits":true};
 function dispOri(){ var o = R.display.o; if (o) return o; try { return A.orient() === "P" ? "P" : "L"; } catch(e){ return "L"; } }
 function segBtns(act, opts, on){ return '<div class="seg m0" role="radiogroup">' + opts.map(function(o){ var a = String(o[0]) === String(on);
@@ -1123,7 +1316,10 @@ var UI_SETS = [
   ["ليالي رمضان", "أزرق ليلي، فوانيس معلّقة، بطاقات قِباب", "#0a4a86", "#F6D88B", "hr04.jpg", "vr08.jpg", "lantern", "cards", "dome", "#C99A2E"],
   ["العثماني الأحمر", "أحمر عثماني، أركان أرابيسك، جدول", "#7a0b0b", "#EBD1A0", "hr00.jpg", "vr07.jpg", "arabesque", "std", "round", "#C9A24A"],
   ["سماء النجوم", "أزرق داكن، نجوم إسلامية، جدول", "#05344a", "#BFD7EA", "hr10.jpg", "vr02.jpg", "stars", "std", "round", "#2A7FB8"],
-  ["الكلاسيكي", "بدون زخارف إضافية، جدول", "#1d2a3a", "#EBD1A0", "hr00.jpg", "vr07.jpg", "none", "std", "round", "#3B93E3"]];
+  ["الكلاسيكي", "بدون زخارف إضافية، جدول", "#1d2a3a", "#EBD1A0", "hr00.jpg", "vr07.jpg", "none", "std", "round", "#3B93E3"],
+  // الأزرق الهادئ: محراب أزرق، جدول هادئ بلا عناوين أعمدة، الإقامة بالدقائق، التاريخان الهجري والميلادي، وكل الصلوات واضحة
+  ["الأزرق الهادئ", "محراب أزرق، جدول هادئ، الإقامة بالدقائق، والتاريخان", "#2154bd", "#F2D49B", "hr19.jpg", "vr00.jpg", "none", "std", "round", "#3B93E3",
+    {"look.tblStyle":"classic", "look.thead":false, "look.iqFmt":"min", "look.dimPast":false, "look.shadow":true, "look.rowAuto":true, "look.rowOpacity":0.18, "look.rowShadow":0, "look.rowRadius":18, "look.hiOn":true, "look.hiFrame":false, "look.centerP":true, "look.dateStyle":"line", "dateMode":"both", "look.showCount":true}]];
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
   var MU = S.multi || {};
@@ -1149,64 +1345,54 @@ R.display = function(){
     sel("الزخرفة الإسلامية", "look.decor", [["none","بدون"],["gold","إطار ذهبي بنجوم ثمانية"],["arabesque","أركان أرابيسك"],["lantern","فوانيس معلّقة"],["stars","نجوم إسلامية متناثرة"]], "تُرسم بلون التمييز خلف النصوص، وتعمل مع كل الخلفيات والأنماط") +
     (S.look.decor && S.look.decor !== "none" ? rangeIn("وضوح الزخرفة", "look.decorOp", 0.2, 1, 0.05, "%") : "") +
     (S.look.tpl === "cards" ? sel("شكل البطاقات", "look.cardShape", [["round","مستطيل بزوايا دائرية"],["dome","قبة"]]) : "")) +
-    card("العدّاد والعد التنازلي",
-    tog("إظهار العد التنازلي", "look.showCount", "الوقت المتبقي للصلاة القادمة بجانب الشعار") +
-    tog("تكبير عداد الوقت المتبقي للصلاة القادمة", "look.bigCounter") +
-    tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة") +
-    tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") +
-    tog("تكبير العداد على شاشة سوداء عند آخر دقيقة", "lastMinBlack", "قبل الإقامة بدقيقة يملأ العداد شاشة سوداء")) +
-  card("الأذان والإقامة",
-    tog("إظهار شاشة الأذان", "azanScreen") +
-    tog("عرض شاشة الإقامة قبل الشاشة السوداء", "iqNowOn", "رسالة «حان الآن موعد الإقامة» ثم تُخفى الشاشة أثناء الصلاة") +
-    (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "") +
-    tog("عرض الإقامة مع الساعة", "look.iqClock", "وقت إقامة الصلاة القادمة تحت الساعة") +
-    tog("الساعة أعلى شاشات الأذان والإقامة والأذكار", "look.ovClock", "الوقت الحالي أعلى الشاشة أثناء الأذان وانتظار الإقامة والأذكار") +
-    (S.look.ovClock !== false ? tog("إظهارها في شاشة انتظار الإقامة", "look.ovClkWait", "تظهر فوق عداد الإقامة مباشرة") + tog("إظهار الثواني في هذه الساعة", "look.ovSec") + rangeIn("حجم هذه الساعة", "look.ovClkSize", 0.5, 2, 0.05, "%") : "") +
-    tog("شاشات شبه شفافة للأذان والإقامة والأذكار", "look.ovGlass", "تظهر الخلفية خلفها. عند الإيقاف تكون بلون ثابت") +
-    tog("ساعة المنزل: إخفاء أوقات الإقامة", "look.homeClock", "للبيوت فقط. لا يناسب المساجد لأنه يخفي الإقامة عن المصلين") +
-    (S.look.homeClock ? '<p class="note warn">⚠ ساعة المنزل مفعّلة: أوقات الإقامة مخفية عن المصلين.</p>' : "")) +
-  card("جدول المواقيت",
-    tog("تظليل خلف أوقات الصلاة", "look.shadow", "تفاصيل الظل من قسم «ظل الصلوات»") +
-    tog("تخفيت الصلوات الماضية", "look.dimPast") +
-    tog("إظهار أوقات الليل", "look.nightTimes", "منتصف الليل والثلث الأخير في شريط أسفل الشاشة") +
-    (S.look.nightTimes ? '<div class="subbox">' +
-      tog("منتصف الليل", "look.nightMid") + tog("الثلث الأخير من الليل", "look.nightThird", "يتميّز بعلامة «الآن» عند دخوله حتى أذان الفجر") +
-      sel("وقت الظهور", "look.nightShow", [["maghrib","من المغرب حتى الفجر"],["isha","بعد صلاة العشاء حتى الفجر"],["always","طوال اليوم"],["custom","من ساعة إلى ساعة"]], "الليل من أذان المغرب إلى أذان الفجر") +
-      (S.look.nightShow === "isha" ? numIn("يظهر بعد انتهاء صلاة العشاء بـ", "look.nightAfter", 0, 240, 5, "دقيقة") : "") +
-      (S.look.nightShow === "custom" ? timeIn("من الساعة", "look.nightFrom") + timeIn("إلى الساعة", "look.nightTo", "يمكن أن يتجاوز منتصف الليل، مثل من 21:00 إلى 04:00") : "") +
-      rangeIn("حجم شريط أوقات الليل", "look.nbSize", 0.5, 1.8, 0.05, "%", "حجم النصوص والأيقونات والشريط كله") +
-      tog("تخصيص الظل والاستدارة والخلفية", "look.nbCustom", "عند إيقافه يتبع شكل صفوف الصلوات (قسم ظل الصلوات)") +
-      (S.look.nbCustom ? rangeIn("قوة الظل", "look.nbShadow", 0, 1, 0.05, "%", "صفر = بدون ظل") + rangeIn("انتشار الظل", "look.nbBlur", 0, 60, 1, "px") +
-        rangeIn("استدارة الزوايا", "look.nbRadius", 0, 60, 1, "px") + rangeIn("شفافية الخلفية", "look.nbBgOp", 0, 1, 0.05, "%", "صفر = بدون خلفية") : "") +
-      '</div>' : "") +
-    tog("التحقق من اتصال الإنترنت", "look.netStar", "نجمة أسفل الشاشة: خضراء عند الاتصال وحمراء عند الانقطاع")) +
-  card("اتجاه الشاشة",
-    '<div class="fld"><span><b>خيارات العرض</b><small>' + (now ? "الشاشة الآن " + (now === "P" ? "رأسية" : "أفقية") : "") + '</small></span>' +
-      segBtns("dispOri", [["L","الأفقي"],["P","الرأسي"]], o) + '</div>' +
-    (o === "L" ?
-      tog("تكبير أوقات الصلاة والإقامة", "look.bigL") +
-      tog("وضع أسماء الصلوات في المنتصف", "look.centerL") +
-      tog("التاريخ يميناً واسم المسجد يساراً", "look.dateSide", "في سطر واحد أعلى الشاشة، فتتسع المساحة للساعة")
-    : tog("وضع أسماء الصلوات في المنتصف", "look.centerP"))) +
-  card("الوقت والأرقام",
+  "";
+};
+/* «الخيارات»: الخيارات العامة للعرض التي لا تتبع قسماً بعينه (الساعة والأرقام، العد التنازلي، ترتيب الجدول، أسفل الشاشة).
+   كل خيار هنا لا يتكرر في أي قسم آخر */
+R.opts = function(){
+  var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
+  return card("الساعة والأرقام",
     '<div class="fld"><span><b>نظام الساعة</b></span>' + segBtns("dispH24", [["12","12 ساعة (ص/م)"],["24","24 ساعة"]], S.look.h24 ? "24" : "12") + '</div>' +
     sel("إضافة صفر قبل الساعة", "look.zeroH", [["off","بدون صفر (9:05)"],["clock","في الساعة فقط (09:05)"],["all","في الساعة وأوقات الصلوات"]], "في نظام 24 ساعة يظهر الصفر دائماً") +
     tog("تفعيل عرض الساعة الكاملة 00:00:00", "look.fullClock", "الساعات والدقائق والثواني بحجم واحد") +
-    tog("تفعيل الأرقام العربية", "look.arabicDigits", "١٢:٣٠ بدل 12:30")) +
+tog("إظهار الثواني صغيرة بجانب الساعة", "look.seconds") +
+    tog("تفعيل الأرقام العربية", "look.arabicDigits", "١٢:٣٠ بدل 12:30") +
+    tog("عرض الإقامة مع الساعة", "look.iqClock", "وقت إقامة الصلاة القادمة تحت الساعة")) +
+  card("العد التنازلي للصلاة القادمة",
+    tog("إظهار العد التنازلي", "look.showCount", "الوقت المتبقي للصلاة القادمة بجانب الشعار") +
+    tog("تكبير عداد الوقت المتبقي للصلاة القادمة", "look.bigCounter") +
+    tog("إظهار الثواني في الصلاة القادمة", "look.nextSec")) +
+  card("جدول المواقيت",
+    tog("تخفيت الصلوات الماضية", "look.dimPast", "الصلوات التي مضت اليوم تظهر بلون أخف") +
+    tog("إظهار عناوين الأعمدة", "look.thead", "الصلاة - وقت الأذان - وقت الإقامة فوق الجدول") +
+    tog("ساعة المنزل: إخفاء أوقات الإقامة", "look.homeClock", "للبيوت فقط. لا يناسب المساجد لأنه يخفي الإقامة عن المصلين") +
+    (S.look.homeClock ? '<p class="note warn">⚠ ساعة المنزل مفعّلة: أوقات الإقامة مخفية عن المصلين.</p>' : "") +
+    (S.look.homeClock ? "" : sel("عرض الإقامة", "look.iqFmt", [["time","بوقت الإقامة (3:02)"],["min","بالدقائق بعد الأذان (20’)"]]))) +
+  card("ترتيب الجدول حسب اتجاه الشاشة",
+    '<div class="fld"><span><b>خيارات العرض</b><small>' + (now ? "الشاشة الآن " + (now === "P" ? "رأسية" : "أفقية") : "") + '</small></span>' +
+      segBtns("dispOri", [["L","الأفقي"],["P","الرأسي"]], o) + '</div>' +
+    '<div class="subbox">' + (o === "L" ?
+      tog("تكبير أوقات الصلاة والإقامة", "look.bigL") +
+      tog("وضع أسماء الصلوات في المنتصف", "look.centerL") +
+      tog("التاريخ يميناً واسم المسجد يساراً", "look.dateSide", "في سطر واحد أعلى الشاشة، فتتسع المساحة للساعة")
+    : tog("وضع أسماء الصلوات في المنتصف", "look.centerP") + tog("تكبير أوقات الصلاة (لكبار السن)", "look.bigP", "تصغر الساعة والعداد قليلاً لتكبر الصلوات")) + '</div>') +
+  card("أسفل الشاشة",
+    tog("إظهار رابط الموقع", "look.showSite", "rawayie.sa") +
+    tog("إظهار موقع المسجد", "look.showLoc", "الحي والمدينة") +
+    tog("إظهار إصدار التطبيق", "look.footVer", A.VERSION + " ويتحدث تلقائياً") +
+    tog("التحقق من اتصال الإنترنت", "look.netStar", "نجمة خضراء عند الاتصال وحمراء عند الانقطاع") +
+    tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion") +
+    txt("نص إضافي أسفل الشاشة", "look.footSite", "يُضاف بعد ما سبق، اتركه فارغاً إن لم تحتجه")) +
   '<div class="row-end">' + btn("استعادة القيم الموصى بها للمساجد", "dispRec", "ghost") + '</div>';
 };
 R.layout = function(){
-  return card("الساعة والأرقام",
-    tog("إظهار الثواني صغيرة بجانب الساعة", "look.seconds"), "نظام 12/24 ساعة والأرقام العربية والصفر قبل الساعة في «خيارات العرض»") +
-  card("جدول المواقيت",
-    sel("نمط الجدول", "look.tblStyle", [["cards","بطاقات بإطار وتمييز ملوّن"],["classic","كلاسيكي (حسب ألوان الخلفية)"]], "ألوان البطاقات في قسم «تمييز الصلاة القادمة»") +
-    tog("إظهار عناوين الأعمدة", "look.thead", "الصلاة - وقت الأذان - وقت الإقامة فوق الجدول") +
-    (S.look.homeClock ? "" : sel("عرض الإقامة", "look.iqFmt", [["time","بوقت الإقامة (3:02)"],["min","بالدقائق بعد الأذان (20’)"]]))) +
-  card("عناصر الشاشة",
-    tog("إظهار الثواني في الصلاة القادمة", "look.nextSec") +
-    txt("نص إضافي أسفل الشاشة", "look.footSite", "أسفل الشاشة يظهر دائماً: rawayie.sa " + A.VERSION + " | المدينة، ورقم الإصدار يتحدث تلقائياً مع كل تحديث. هذا النص يُضاف بعدهما، اتركه فارغاً إن لم تحتجه") + tog("إخفاء السطر السفلي في شاشة الإقامة والشاشة السوداء", "look.hideVersion"))
+  return card("التاريخ",
+      tog("إظهار اسم اليوم", "look.showDay") + tog("إظهار التاريخ", "look.showDate", "الهجري والميلادي") +
+      sel("شكل التاريخ في العرض الرأسي", "look.dateStyle", [["badges","شارات: الهجري يميناً واليوم في الوسط والميلادي يساراً"],["line","سطر واحد"]], "الشارات مع الخلفيات بدون محراب، وخلفيات المحراب تبقى بالسطر الواحد") +
+      sel("شكل شارة الرقم", "look.badgeShape", [["dome","قبة (أعلاها مقوّس)"],["soft","ناعمة الحواف"]]) + numIn("سمك إطار الشارة", "look.badgeBorder", 0, 10, 1, "بكسل", "0 بدون إطار") + tog("ظل للشارة", "look.badgeShadow", "ظل خفيف تحت شارة الرقم") +
+      tog("اسم اليوم بالإنجليزية", "look.dayEn", "تحت اسم اليوم في شكل الشارات") + tog("شارة رمضان", "look.dateTag", "بجانب اسم اليوم بالإنجليزية طوال شهر رمضان") +
+      sel("طريقة عرض السطر الواحد", "dateMode", [["alt","تبديل بين الهجري والميلادي في نفس المكان"],["hijri","الهجري فقط"],["greg","الميلادي فقط"],["both","الهجري أعلى والميلادي بجانب الشعار"]], "لخلفيات المحراب وشكل السطر الواحد") + numIn("مدة عرض كل تاريخ", "dateSec", 3, 60, 1, "ثانية"), "يمكن أيضاً الضغط على التاريخ في الشاشة للتبديل يدوياً");
 };
-
 function rangeIn(label, p, min, max, step, suf, hint){ var i = id(), v = get(p);
   return '<label class="fld rng" for="' + i + '"><span><b>' + esc(label) + '</b>' + (hint ? '<small>' + esc(hint) + '</small>' : "") + '</span><span class="rg"><input type="range" id="' + i + '" data-p="' + p + '" data-t="num" min="' + min + '" max="' + max + '" step="' + step + '" value="' + esc(v) + '"><output>' + esc(fmtR(v, suf)) + '</output></span></label>'; }
 function fmtR(v, suf){ return suf === "%" ? Math.round(v*100) + "%" : v + (suf || ""); }
@@ -1331,11 +1517,16 @@ function clkOpen(){
     '<button type="button" data-ck="net">مزامنة من الإنترنت</button>' + (AN && AN.openDateSettings ? '<button type="button" data-ck="sys">إعدادات وقت الجهاز</button>' : "") +
     '</div><p class="acterr" id="ck-msg" role="status"></p><button type="button" class="actlater" data-ck="x">إغلاق</button></div>';
   clkEl.hidden = false;
-  var draw = function(){ var p = function(n){ return two(n); };
-    $("#ck-big", clkEl).textContent = t.getFullYear() + "-" + p(t.getMonth() + 1) + "-" + p(t.getDate()) + "  " + p(t.getHours()) + ":" + p(t.getMinutes());
-    $("#ck-h", clkEl).textContent = p(t.getHours()); $("#ck-m", clkEl).textContent = p(t.getMinutes()); $("#ck-d", clkEl).textContent = t.getDate(); $("#ck-M", clkEl).textContent = t.getMonth() + 1; $("#ck-y", clkEl).textContent = t.getFullYear();
+  var edited = false, H24 = !!S.look.h24, MON = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  var hTxt = function(h){ return H24 ? two(h) : (h % 12 || 12) + (h >= 12 ? " م" : " ص"); }; // نفس صيغة ساعة الشاشة (12 أو 24 ساعة)
+  var draw = function(){ var p = function(n){ return two(n); }, h = t.getHours();
+    $("#ck-big", clkEl).innerHTML = '<span class="ckt">' + (H24 ? p(h) : (h % 12 || 12)) + ":" + p(t.getMinutes()) + (H24 ? "" : ' <small>' + (h >= 12 ? "مساءً" : "صباحاً") + '</small>') + '</span>' +
+      '<span class="ckd">' + DAYS[t.getDay()] + " " + t.getDate() + " " + MON[t.getMonth()] + " " + t.getFullYear() + '</span>';
+    $("#ck-h", clkEl).textContent = hTxt(h); $("#ck-m", clkEl).textContent = p(t.getMinutes()); $("#ck-d", clkEl).textContent = t.getDate(); $("#ck-M", clkEl).textContent = t.getMonth() + 1; $("#ck-y", clkEl).textContent = t.getFullYear();
     var s = CK.state(); $("#ck-src", clkEl).textContent = "الحالي: " + clkSrc(s); };
   draw();
+  clearInterval(clkEl._tk); clkEl._tk = setInterval(function(){ if (clkEl.hidden) { clearInterval(clkEl._tk); return; } if (edited) return; // يتابع الساعة الفعلية حتى تبدأ التعديل
+    var n0 = new Date(CK.state().now); n0.setSeconds(0, 0); if (n0.getTime() !== t.getTime()) { t = n0; draw(); } }, 1000);
   clkEl.onclick = function(e){ var b = e.target.closest("[data-ck]"); if (!b) return; var k = b.dataset.ck, msg = $("#ck-msg", clkEl);
     if (k === "x") { clkEl.hidden = true; return; }
     if (k === "ok") { CK.set(t.getTime() + (new Date(CK.state().now).getSeconds()) * 0); msg.className = "acterr ok"; msg.textContent = "تم حفظ الوقت ✓ تُحسب المواقيت عليه الآن"; clkRefresh(); A.rebuild(); setTimeout(function(){ clkEl.hidden = true; }, 1200); return; }
@@ -1343,7 +1534,7 @@ function clkOpen(){
       setTimeout(function(){ var s = CK.state(); if (s.src === "net" || (!s.suspect && before.suspect)) { t = new Date(s.now); t.setSeconds(0, 0); draw(); msg.className = "acterr ok"; msg.textContent = "تم ضبط الوقت من الإنترنت ✓"; clkRefresh(); A.rebuild(); }
         else if (!s.suspect) { msg.className = "acterr ok"; msg.textContent = "الوقت صحيح ومطابق للإنترنت ✓"; } else { msg.className = "acterr bad"; msg.textContent = "لا يوجد اتصال بالإنترنت الآن. اضبط الوقت يدوياً"; } }, 5000); return; }
     if (k === "sys") { try { window.RawayieAndroid.openDateSettings(); } catch(e2){} return; }
-    var u = k.slice(0, -1), dir = k.slice(-1) === "+" ? 1 : -1;
+    var u = k.slice(0, -1), dir = k.slice(-1) === "+" ? 1 : -1; edited = true;
     if (u === "h") t.setHours(t.getHours() + dir); else if (u === "m") t.setMinutes(t.getMinutes() + dir); else if (u === "d") t.setDate(t.getDate() + dir); else if (u === "M") t.setMonth(t.getMonth() + dir); else if (u === "y") t.setFullYear(t.getFullYear() + dir);
     draw(); };
   // الريموت: الأسهم بين الأزرار، وأرقام لوحة المفاتيح لا تُستخدم هنا
@@ -1393,7 +1584,8 @@ R.remote = function(){
     "تُزامن النصوص والمواقيت والمظهر. الصور والأصوات المرفوعة من الجهاز تبقى محلية في كل شاشة.");
 };
 R.perms = function(){
-  var secs = SECTIONS.filter(function(s){ return !ADMIN_ONLY[s[0]] && !PERM_OF[s[0]]; });
+  var secs = []; SECTIONS.forEach(function(s){ if (ADMIN_ONLY[s[0]] || PERM_OF[s[0]]) return; // القسم المدمج: صلاحية لكل جزء منه
+    if (MERGED[s[0]]) MERGED[s[0]].forEach(function(k){ secs.push([k, PERM_LABEL[k] || k]); }); else secs.push(s); });
   var pwCards = window.RAWAYIE_MANAGE ? card("كلمات سر الإعدادات في الشاشة",
     '<p class="note">كلمات السر محفوظة في جهاز المسجد فقط ولا تظهر هنا. يمكنك ضبط كلمات جديدة أو إلغاءها، فتصل للشاشة خلال دقيقة.</p>' +
     '<label class="fld" for="mpw"><span><b>كلمة سر المدير الجديدة</b><small>اتركها فارغة لعدم التغيير</small></span><input type="password" id="mpw" autocomplete="new-password"></label>' +
@@ -1564,7 +1756,8 @@ function licStrip(){ if (window.RAWAYIE_MANAGE) return "";
 function homeHTML(){
   return '<div class="shome"><h2>' + ico("gear") + 'الإعدادات</h2><p class="sdesc">اختر القسم الذي تريد ضبطه، أو ابحث عن أي خيار باسمه.</p>' +
     '<label class="ssearch" for="sq">' + ico("search") + '<input type="search" id="sq" placeholder="ابحث في الإعدادات… مثل: الإقامة، الخلفية، الخط، السكون" autocomplete="off"></label>' +
-    licStrip() + '<div id="sres" class="sres" hidden></div><div id="sgroups">' +
+    licStrip() +
+    '<div id="sres" class="sres" hidden></div><div id="sgroups">' +
     GROUPS.map(function(g){ var ss = SECTIONS.filter(function(s){ return s[4] === g[0] && allowed(s[0]); }); if (!ss.length) return "";
       return '<section class="hgrp"><h3>' + esc(g[1]) + '</h3><div class="tiles">' + ss.map(function(s){
         return '<button type="button" class="tile" data-sec="' + s[0] + '"><span class="ti">' + ico(s[3]) + '</span><span class="tt"><b>' + esc(s[1]) + '</b><small>' + esc(s[2]) + '</small></span></button>'; }).join("") + '</div></section>'; }).join("") + '</div></div>';
@@ -1613,8 +1806,20 @@ function gotoOpt(sec, label){
 }
 
 /* ===== الرسم والأحداث ===== */
+/* خيارات التفعيل (علامة الصح) في كل بطاقة تُجمع معاً في صندوق واحد، ثم الأرقام والنصوص والألوان بعدها */
+function groupTogs(root){
+  $$(".sec", root).forEach(function(sec){
+    var tg = Array.prototype.filter.call(sec.children, function(e){ return e.matches && e.matches("label.fld.tog"); });
+    if (tg.length < 2) return;
+    var box = document.createElement("div"); box.className = "togs"; sec.insertBefore(box, tg[0]);
+    tg.forEach(function(t){ box.appendChild(t); });
+    var w = $("#lmwarn", sec); if (w) sec.insertBefore(w, box.nextSibling); // التنبيه تحت خياراته
+  });
+}
 function render(){
   n = 0;
+  if (cur === "slides") cur = "news"; if (cur === "screens") cur = "times"; // أقسام دُمجت
+  if (cur === "all") cur = "opts";
   if (!allowed(cur)) cur = "home";
   $$("button[data-sec]", nav).forEach(function(b){ b.hidden = !allowed(b.dataset.sec); b.classList.toggle("on", b.dataset.sec === cur); });
   $$(".ngrp", nav).forEach(function(g){ g.hidden = !$$("button[data-sec]", g).some(function(b){ return !b.hidden; }); });
@@ -1625,9 +1830,10 @@ function render(){
   var sc1 = secOf(cur);
   body.innerHTML = '<div class="shead"><button type="button" class="crumb" data-sec="home">' + ico("home") + 'الإعدادات</button><span class="crumb-sep">‹</span><span class="crumb g">' + esc(groupName(sc1[4])) + '</span>' +
     '<h2>' + ico(sc1[3]) + esc(sc1[1]) + '</h2><p class="sdesc">' + esc(sc1[2]) + '</p></div>' + R[cur]() + nextHTML(cur);
+  groupTogs(body);
   $$("[data-media]", body).forEach(function(im){ A.mediaURL(im.dataset.media).then(function(u){ if (u) im.src = u; }); });
-  if (cur === "slides") { slPaint(); }
-  if (cur === "shadow") setTimeout(shPreview, 30);
+  if (cur === "news" && allowedOne("slides")) { slPaint(); mvPreview(); }
+  if ($("#shprev", body)) setTimeout(shPreview, 30);
   var ta1 = $("#tarea"); if (ta1) { ta1.addEventListener("input", txCount); txCount(); }
   var dz = $("#tdrop"); if (dz) {
     ["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("over"); }); });
@@ -1650,6 +1856,7 @@ function onChange(e){
   if (el.dataset.p === "keepUnlock") setTimeout(function(){ keepSave(); lockSave(); render(); }, 0);
   if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
   if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
+  if (el.dataset.ays) { ayItems().forEach(function(q){ if (q.id === el.dataset.ays) q.sec = +el.value || 10; }); commit(); toast("مدة الظهور: " + el.value + " ثانية"); return; }
   if (el.dataset.sp) { onSlInput(e); return; }
   if (el.dataset.devsec) { var ds = devSecs().slice(); var dx = ds.indexOf(el.dataset.devsec); if (el.checked && dx < 0) ds.push(el.dataset.devsec); if (!el.checked && dx >= 0) ds.splice(dx, 1); S.devSecs = ds; A.save(); return; }
   if (el.dataset.perm) { var ss = S.sup.sections || []; var ix = ss.indexOf(el.dataset.perm); if (el.checked && ix < 0) ss.push(el.dataset.perm); if (!el.checked && ix >= 0) ss.splice(ix, 1); S.sup.sections = ss; A.save(); return; }
@@ -1664,10 +1871,10 @@ function onChange(e){
   var v = el.dataset.t === "bool" ? el.checked : el.dataset.t === "num" ? parseFloat(el.value) : el.value;
   if (el.dataset.t === "num" && isNaN(v)) return;
   if (el.type === "number") { var mn = parseFloat(el.min), mx = parseFloat(el.max); if (v < mn) v = mn; if (v > mx) v = mx; }
-  put(el.dataset.p, v); commit(); if (cur === "shadow") setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
+  put(el.dataset.p, v); commit(); if (/^zk\.\w+Tpl\./.test(el.dataset.p)) render(); if ($("#shprev")) setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
-  if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(A.uqCityId ? A.uqCityId() : S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
+  if (/^(nm\.frame|marquee|notifyOn|sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|look\.hiCustom|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
@@ -1689,6 +1896,7 @@ function shrink(file, max){
 }
 /* ===== حفظ جميع الإعدادات ===== */
 function saveAll(){
+  if (newsDraftSave()) render(); // إعلان مكتوب لم يُضغط «حفظ الرسالة»
   A.save();
   var b = $("#saveall"), jobs = [];
   if (window.REMOTE && ((S.remote && S.remote.on) || window.RAWAYIE_MANAGE)) jobs.push(window.REMOTE.push());
@@ -1750,7 +1958,7 @@ var confirmAct = null;
 function onClick(e){
   var b = e.target.closest("button"); if (!b) return;
   if (b.dataset.step) { step(b); return; }
-  if (b.dataset.sec) { if (!allowed(b.dataset.sec)) return; panel.classList.remove("navopen"); $("#hamb").setAttribute("aria-expanded", "false"); cur = b.dataset.sec; calEdit = null; newsEdit = null; boardEdit = null; slEdit = null; slDraft = null; render(); body.scrollTop = 0; return; }
+  if (b.dataset.sec) { if (!allowed(b.dataset.sec)) return; panel.classList.remove("navopen"); $("#hamb").setAttribute("aria-expanded", "false"); if (newsDraftSave()) toast("حُفظت الرسالة المكتوبة"); cur = b.dataset.sec; calEdit = null; newsEdit = null; boardEdit = null; slEdit = null; slDraft = null; render(); body.scrollTop = 0; return; }
   var a = b.dataset.act, x = b.dataset.x; if (!a) return;
   var danger = {reset:1, nClear:1, sClear:1, bClear:1};
   if (danger[a] && confirmAct !== a) { confirmAct = a; b.textContent = "اضغط مرة أخرى للتأكيد"; setTimeout(function(){ if (confirmAct === a) { confirmAct = null; render(); } }, 3500); return; }
@@ -1785,6 +1993,17 @@ function onClick(e){
     case "nCancel": newsEdit = null; render(); break;
     case "alTog": var al = (S.alerts || []).filter(function(q){ return q.id === x; })[0]; if (al) { al.on = al.on === false; commit(); render(); } break;
     case "alDel": S.alerts = (S.alerts || []).filter(function(q){ return q.id !== x; }); commit(); render(); toast("تم حذف الرسالة"); break;
+    case "remAdd": var rv = function(i){ var e = $("#" + i); return e ? e.value : ""; }, rr = {id:"r" + Date.now().toString(36), when:rv("rm-when"), min:Math.max(0, Math.min(240, +rv("rm-min") || 0)), at:rv("rm-at"), ref:rv("rm-ref"), sound:rv("rm-snd"), title:rv("rm-title").trim(), text:rv("rm-text").trim(), on:true};
+      if (rr.sound === "none" && !rr.text && !rr.title) { toast("اختر صوتاً أو اكتب رسالة"); return; }
+      S.sndRem = S.sndRem || {items:[]}; S.sndRem.items = (S.sndRem.items || []).concat([rr]); commit(); render(); toast("أُضيف التنبيه: " + remText(rr)); break;
+    case "ayAdd": var at0 = ($("#ay-t") || {}).value || ""; at0 = at0.trim(); if (!at0) { toast("اكتب النص أولاً"); return; }
+      ayItems().push({id:"a" + Date.now().toString(36), t:at0, sec:+(($("#ay-s") || {}).value) || 10}); commit(); render(); toast("أُضيف النص"); break;
+    case "ayDel": S.ayat.items = ayItems().filter(function(q){ return q.id !== x; }); commit(); render(); toast("حُذف النص"); break;
+    case "ayUp": var al0 = ayItems(), ai = -1; al0.forEach(function(q, k){ if (q.id === x) ai = k; }); if (ai > 0) { var tq = al0[ai - 1]; al0[ai - 1] = al0[ai]; al0[ai] = tq; commit(); render(); } break;
+    case "zkPrev": var zx = String(x).split("|"); if (!S.zk[zx[0]]) { S.zk[zx[0]] = true; commit(); } close(); if (A.zkPreview) A.zkPreview(zx[0], 40, zx[1] || ""); break;
+    case "remDel": S.sndRem.items = (S.sndRem.items || []).filter(function(q){ return q.id !== x; }); commit(); render(); toast("حُذف التنبيه"); break;
+    case "remTog": (S.sndRem.items || []).forEach(function(q){ if (q.id === x) q.on = q.on === false; }); commit(); render(); break;
+    case "remTest": var rt = (S.sndRem.items || []).filter(function(q){ return q.id === x; })[0]; if (rt) { close(); A.remTest(rt); } break;
     case "nDel": S.news.splice(idx(S.news, x), 1); commit(); render(); break;
     case "nUp": move(S.news, idx(S.news, x)); commit(); render(); break;
     case "nClear": S.news = []; commit(); render(); toast("تم حذف كل الرسائل"); break;
@@ -1807,6 +2026,7 @@ function onClick(e){
     case "autoLinux": dl("rawayie.desktop", linuxDesk(), "text/plain"); toast("انقل الملف إلى ‎~/.config/autostart‎"); break;
     case "autoCopy": var rl = $("#runlk"); if (rl) { rl.select(); try { (navigator.clipboard ? navigator.clipboard.writeText(rl.value) : Promise.reject()).catch(function(){ document.execCommand("copy"); }); } catch(e){ document.execCommand("copy"); } toast("تم نسخ الرابط"); } break;
     case "saveAll": saveAll(); break;
+    case "hints": var hon = !panel.classList.contains("showhints"); panel.classList.toggle("showhints", hon); try { localStorage.setItem("rawayie-hints", hon ? "1" : "0"); } catch(e){} toast(hon ? "يظهر شرح كل خيار تحته" : "أُخفي الشرح: قائمة مختصرة"); break;
     case "sleepPrev": close(); A.previewBlack(10000, true); break;
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
@@ -1842,27 +2062,27 @@ function onClick(e){
     case "offInstall": window.OFFLINE.install().then(function(ok){ toast(ok ? "تم تثبيت التطبيق، افتحه من أيقونته" : "لم يكتمل التثبيت"); render(); }); break;
     case "offPersist": window.OFFLINE.persist(true).then(function(p){ toast(p ? "تم تفعيل الحفظ الدائم" : "رفض المتصفح الطلب. ثبّت التطبيق ثم أعد المحاولة"); render(); }); break;
     case "offPrep": if (window.OFFLINE) { b.disabled = true; $("#offst").textContent = "جارٍ تنزيل الملفات..."; window.OFFLINE.prepare().then(function(){ render(); toast(window.OFFLINE.state.supported ? "تم تجهيز الشاشة" : offState()); }); } break;
-    case "setRot": S.look.rot = +x; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
-    case "rotStep": S.look.rot = ((+S.look.rot || 0) + 90) % 360; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
+    case "setRot": S.look.rot = +x; S.look.rotOk = +x; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
+    case "rotStep": S.look.rot = ((+S.look.rot || 0) + 90) % 360; S.look.rotOk = S.look.rot; commit(); render(); setTimeout(function(){ if (cur === "rotate") render(); }, 2800); break;
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
     case "muMode": S.multi = S.multi || {}; S.multi.mode = x === "dual" ? "dual" : "single"; commit(); render(); break;
     case "muAds": S.multi = S.multi || {}; S.multi.adsSlot = +x || 2; commit(); render(); toast("شاشة الإعلانات الآن: الشاشة " + (+x || 2)); break;
     case "muRole": S.multi = S.multi || {}; S.multi.role = x === "second" ? "second" : "main"; commit(); render(); toast(x === "second" ? "هذه الشاشة الآن للمحتوى" : "هذه الشاشة الآن للمواقيت"); break;
-    case "uiSet": var u = UI_SETS[+x]; if (u) { var L = S.look; L.bgL = u[4]; L.bgP = u[5]; L.customBg = ""; L.bgMode = "manual"; L.autoColor = true; L.decor = u[6]; L.tpl = u[7]; L.cardShape = u[8]; L.tcHi = u[9]; L.hiCustom = false;
+    case "uiSet": var u = UI_SETS[+x]; if (u) { var L = S.look; L.bgL = u[4]; L.bgP = u[5]; L.customBg = ""; L.bgMode = "manual"; L.autoColor = true; L.decor = u[6]; L.tpl = u[7]; L.cardShape = u[8]; L.tcHi = u[9]; L.hiCustom = false; if (u[10]) Object.keys(u[10]).forEach(function(k){ put(k, u[10][k]); }); // إعدادات إضافية للواجهة
       L.bgHidden = (L.bgHidden || []).filter(function(f){ return f !== u[4] && f !== u[5]; }); commit(); render(); toast("تم تطبيق واجهة «" + u[0] + "»"); } break;
     case "dispTpl": S.look.tpl = x === "cards" ? "cards" : "std"; commit(); render(); break;
     case "dispRec": Object.keys(DISP_REC).forEach(function(k){ put(k, DISP_REC[k]); }); commit(); render(); toast("تم تطبيق القيم الموصى بها ✓"); break;
     case "wxRefresh": A.refreshWeather(); setTimeout(render, 1500); break;
     case "nSave":
-      var tx = $("#ntext").value.trim(); if (!tx) { toast("من فضلك اكتب نص الرسالة"); return; }
-      var it = {id: x === "new" ? A.uid() : x, text: tx, type: $("#ntype").value, days: $$("#ndays input:checked").map(function(c){ return +c.value; }), date: $("#ndate").value,
-        d1: $("#nd1").value, d2: $("#nd2").value, t1: $("#nt1").value, t2: $("#nt2").value};
-      if (x === "new") S.news.push(it); else S.news[idx(S.news, x)] = it;
-      newsEdit = null; commit(); render(); toast("تم الحفظ بنجاح"); break;
-    case "sNew": slEdit = "new"; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); slDraft.id = "new"; slDraft.title = "عنوان الشريحة"; slDraft.body = "اكتب نص الشريحة هنا"; render(); body.scrollTop = 0; break;
+      if (!$("#ntext").value.trim()) { toast("من فضلك اكتب نص الرسالة"); return; }
+      newsDraftSave(); render(); toast("تم الحفظ بنجاح"); break;
+    case "sNew": slEdit = "new"; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); slDraft.id = "new"; slDraft.title = ""; slDraft.body = "اكتب نص الشريحة هنا"; slDraft.bFont = "Amiri"; slDraft.bColor = "#EBD1A0"; slDraft.bSize = 64; slDraft.bgOp = 0; render(); body.scrollTop = 0; break;
     case "sEdit": slEdit = x; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); var src = slById(x); for (var kk in src) slDraft[kk] = src[kk]; render(); body.scrollTop = 0; break;
+    case "sPreset": var pre = window.SLIDE_PRESET || [], have = {}; slItems().forEach(function(q){ have[q.body] = 1; }); var addN = 0;
+      pre.forEach(function(tx, k){ if (have[tx]) return; var ns = JSON.parse(JSON.stringify(A.SLIDE_DEF)); ns.id = A.uid() + k; ns.title = ""; ns.body = tx; ns.bFont = "Amiri"; ns.bColor = "#EBD1A0"; ns.bSize = 64; ns.bgOp = 0; S.slides.items.push(ns); addN++; });
+      if (!addN) { toast("الأدعية والآيات مضافة من قبل"); return; } S.slides.on = true; commit(); render(); toast("أُضيفت " + addN + " شرائح"); break;
     case "sCancel": slEdit = null; slDraft = null; render(); break;
     case "sSave": var it2 = JSON.parse(JSON.stringify(slDraft));
       if (slEdit === "new") { it2.id = A.uid(); S.slides.items.push(it2); } else S.slides.items[idx(S.slides.items, slEdit)] = it2;
@@ -1921,6 +2141,8 @@ function onClick(e){
     case "reset": if (window.RAWAYIE_MANAGE) { var keep0 = {mosque:S.mosque, city:S.city}; A.setAll(keep0); A.save(); render(); toast("أُعيدت إعدادات الشاشة للوضع الافتراضي (مع بقاء اسم المسجد والمدينة)"); break; } A.resetAll(); break;
     case "reload": location.reload(); break;
     case "close": close(); break;
+    case "pgUp": case "pgDn": if (body) body.scrollBy ? body.scrollBy({top:(a === "pgUp" ? -1 : 1) * body.clientHeight * .8, behavior:"smooth"}) : (body.scrollTop += (a === "pgUp" ? -1 : 1) * body.clientHeight * .8); break;
+    case "okClose": saveAll(); setTimeout(close, 300); break;
   }
 }
 function saveBoard(x){
@@ -1981,16 +2203,17 @@ function lockSave(){ try { if (unlocked && S.pass && lockMin() > 0) sessionStora
 function lockValid(){ if (!S.pass || !unlocked) return unlocked; if (S.keepUnlock) return true; var m = lockMin(); if (!m) return false; if (Date.now() - (lastAct || 0) > m*60000) { unlocked = false; lockSave(); return false; } return true; }
 (function(){ if (keepLoad()) return; try { var o = JSON.parse(sessionStorage.getItem(LKS) || "null"); if (o && S.pass && Date.now() - o.at < lockMin()*60000 && (o.role === "admin" || (o.role === "sup" && S.sup.pass))) { unlocked = true; role = o.role; lastAct = o.at; } } catch(e){} })();
 ["keydown", "pointerdown", "touchstart", "wheel"].forEach(function(ev){ document.addEventListener(ev, function(){ if (unlocked && S.pass && panel && !panel.hidden) { var n = Date.now(); if (n - lastAct > 20000) { lastAct = n; lockSave(); } else lastAct = n; } }, {capture:true, passive:true}); });
-function close(){ exitReq = false; if (S.pass) { if ((S.keepUnlock || lockMin() > 0) && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
+function close(){ if (newsDraftSave()) toast("حُفظت الرسالة المكتوبة"); exitReq = false; if (S.pass) { if ((S.keepUnlock || lockMin() > 0) && unlocked) { lastAct = Date.now(); lockSave(); } else { unlocked = false; lockSave(); } } if (panel) panel.hidden = true; document.body.classList.remove("setopen"); calEdit = newsEdit = boardEdit = null; }
 function build(){
-  panel = $("#set");
-  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+  panel = $("#set"); panel.classList.add("simple"); // قائمة مختصرة واضحة: سطر لكل خيار، والشرح عند الطلب
+  try { if (localStorage.getItem("rawayie-hints") === "1") panel.classList.add("showhints"); } catch(e){}
+  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><span class="tkarrows"><button type="button" class="tkbtn" data-act="pgUp" aria-label="لأعلى">▲</button><button type="button" class="tkbtn" data-act="pgDn" aria-label="لأسفل">▼</button></span><button type="button" class="btn ghost hintbtn" data-act="hints" id="hintbtn" title="إظهار شرح كل خيار تحته">الشرح</button><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
     '<div id="mgd" class="lock" hidden><h2>إعدادات هذه الشاشة تُدار من الموقع</h2>' +
     '<p class="note">لا يمكن تعديل الإعدادات من جهاز المسجد. التعديل من الموقع: «شاشاتي» للمشرف، و«شاشات المساجد» للمدير، ويصل للشاشة خلال دقيقة.</p>' +
     '<p class="note">لفتحها من هذا الجهاز: يضع مدير الموقع كلمة سر للشاشة من تحرير الشاشة ← الصلاحيات.</p>' +
     '<button type="button" class="btn" id="mgdAuto" hidden>السماح بالتشغيل التلقائي بعد إعادة تشغيل الجهاز</button>' +
     '<button type="button" class="btn ghost" data-act="close">إغلاق</button></div>' +
-    '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button><button type="button" class="lkforgot" id="lkforgot">نسيت كلمة السر؟</button><p class="note" id="lkhelp" hidden></p></form>' +
+    '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><p class="note warn lkwarn"><b>تنبيه:</b> يُمنع تعديل إعدادات الشاشة إلا من قِبل مشرف المسجد.</p><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button><button type="button" class="lkforgot" id="lkforgot">نسيت كلمة السر؟</button><p class="note" id="lkhelp" hidden></p></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' + GROUPS.map(function(g){
       return '<div class="ngrp"><div class="nglbl">' + esc(g[1]) + '</div>' + SECTIONS.filter(function(s){ return s[4] === g[0]; }).map(function(s){ return '<button type="button" data-sec="' + s[0] + '">' + ico(s[3]) + '<span>' + esc(s[1]) + '</span></button>'; }).join("") + '</div>'; }).join("") + '</nav><div class="sbody" id="sbody"></div></div>';
   nav = $(".snav", panel); body = $("#sbody");
@@ -2063,7 +2286,8 @@ function enterFS(){
   try { var p = req.call(e, {navigationUI:"hide"}); return p && p.then ? p.then(function(){ return true; }, function(){ return false; }) : Promise.resolve(window.isFS()); } catch(err){ return Promise.resolve(false); }
 }
 function autoFS(){
-  if (S.look.autoFS === false || window.isFS() || window.RAWAYIE_PREVIEW) return;
+  var touch = !!(window.matchMedia && matchMedia("(pointer:coarse)").matches);
+  if (S.look.autoFS === false || window.isFS() || window.RAWAYIE_MANAGE || (window.RAWAYIE_PREVIEW && !touch)) return; // المعاينة على الجوال: لمسة تملأ الشاشة
   var e = document.documentElement; if (!(e.requestFullscreen || e.webkitRequestFullscreen || e.mozRequestFullScreen || e.msRequestFullscreen)) return;
   enterFS().then(function(ok){
     if (ok || window.isFS()) return;
@@ -2089,7 +2313,8 @@ function shortcuts(){
     var b = e.target.closest("button"); if (!b) return; var a = b.dataset.sc;
     if (a === "set") open();
     if (a === "fs") toggleFS();
-    if (a === "rot" && (!S.pass || S.sup.rotate)) { S.look.rot = (S.look.rot + 90) % 360; A.save(); A.rebuild(); }
+    if (a === "rot" && (!S.pass || S.sup.rotate)) { S.look.rot = ((+S.look.rot || 0) + 90) % 360; A.save(); A.rebuild();
+      if (S.look.oriLock !== false && S.look.rot !== (+S.look.rotOk || 0)) if (A.scrMsg) A.scrMsg("تدوير مؤقت يرجع بعد دقيقة. للتثبيت: الإعدادات ← تدوير الشاشة"); }
     if (a === "snd") { A.unlock(); }
   });
   addEventListener("keydown", function(e){
@@ -2167,7 +2392,15 @@ function stepBack(){ if (back()) return; if (panel && !panel.hidden) close(); }
 document.addEventListener("mouseup", function(e){ if (e.button === 3) { e.preventDefault(); stepBack(); } }, true);
 document.addEventListener("auxclick", function(e){ if (e.button === 3) e.preventDefault(); }, true);
 document.addEventListener("contextmenu", function(e){ if (panel && !panel.hidden) { e.preventDefault(); stepBack(); } }, true);
-window.SETTINGS = {open:open, close:close, back:back, stepBack:stepBack, refresh:function(){ if (panel && !panel.hidden) render(); }};
+/* دمج الأقسام: كل جزء بعنوان واضح */
+(function(){
+  var T0 = R.times, N0 = R.news;
+  R.times = function(){ return (allowedOne("times") ? subSec("المواقيت والإقامة", "دقائق الإقامة وتعديل أوقات الأذان") + T0() : "") +
+    (allowedOne("screens") ? subSec("شاشات الأذان والإقامة", "رسالة الأذان وشاشة الأذان وعداد الإقامة ورسالة الجوال والحديث") + R.screens() : ""); };
+  R.news = function(){ return (allowedOne("news") ? subSec("① إعلانات أسفل الشاشة", "الشريط المتحرك والرسائل والتذكيرات") + N0() : "") +
+    (allowedOne("slides") ? subSec("② إعلانات أعلى الشاشة", "الشرائح: صور ونصوص تظهر بالتناوب أعلى الشاشة") + R.slides() : ""); };
+})();
+window.SETTINGS = {keep:function(){ return newsDraftSave(); }, open:open, close:close, back:back, stepBack:stepBack, refresh:function(){ if (panel && !panel.hidden && !(newsEdit && $("#ntext"))) render(); }};
 })();
 
 /* ===== الوقت بنظام 12 ساعة (ص / م) في كل حقول الوقت =====
@@ -2191,4 +2424,26 @@ function hm12(v){ v = String(v || ""); if (!/^\d{1,2}:\d{2}/.test(v)) return v; 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", later); else later();
   // تغيير القيمة من الكود (مثل نافذة اختيار الوقت): يُحدَّث النص كل ثانية للحقول الظاهرة
   setInterval(function(){ Array.prototype.forEach.call(document.querySelectorAll(".t12w>input[type=time]"), show); }, 1000);
+})();
+
+
+/* ===== محرر النصوص يكبر مع طول النص =====
+   كل مربع نص (textarea) يزيد ارتفاعه تلقائياً مع الكتابة أو اللصق فيظهر النص كاملاً بلا تمرير داخلي،
+   ويصغر عند الحذف حتى ارتفاعه الأصلي. أقصى ارتفاع 70% من الشاشة، وبعده يتمرر داخل المربع */
+(function(){
+  if (window.__rwsGrow) return; window.__rwsGrow = 1;
+  function grow(t){
+    if (!t || t.tagName !== "TEXTAREA" || t.hidden || !t.offsetParent) return;
+    var max = Math.max(160, Math.round((window.innerHeight || 800) * .7)), y = window.scrollY;
+    t.style.height = "auto"; var h = t.scrollHeight + (t.offsetHeight - t.clientHeight);
+    t.style.height = Math.min(h, max) + "px"; t.style.overflowY = h > max ? "auto" : "hidden";
+    if (window.scrollY !== y) window.scrollTo(window.scrollX, y); // لا تقفز الصفحة أثناء الكتابة
+  }
+  function all(){ Array.prototype.forEach.call(document.querySelectorAll("textarea"), grow); }
+  ["input", "focusin", "change"].forEach(function(ev){ document.addEventListener(ev, function(e){ grow(e.target); }, true); });
+  var pend = 0; function soon(){ if (!pend) pend = setTimeout(function(){ pend = 0; all(); }, 60); }
+  if (window.MutationObserver) new MutationObserver(soon).observe(document.documentElement, {childList:true, subtree:true, attributes:true, attributeFilter:["hidden","class"]});
+  window.addEventListener("resize", soon);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", all); else all();
+  window.rwsGrow = function(t){ if (t) grow(t); else all(); };
 })();

@@ -19,12 +19,16 @@ function needed(){
   // الخلفيات: كلها إذا كانت تتغير تلقائياً، وإلا الحالية فقط
   var all = (L.bgMode && L.bgMode !== "manual") || S.offlineAllBg;
   (all ? (A.bgList ? A.bgList("P").concat(A.bgList("L")) : window.BG_P.concat(window.BG_L)) : [[L.bgP], [L.bgL]]).forEach(function(b){ if (b[0]) add("bg/" + b[0]); });
+  // لوحات الأذكار الجاهزة المختارة، وصورة خلفية صفحة الأذكار من خلفيات التطبيق
+  var Z = S.zk || {}, AT = Z.afterTpl || {}; ["gold","ivory","gray"].forEach(function(c){ if (AT["b" + c]) { add("zk/after-" + c + "-P.jpg"); add("zk/after-" + c + "-L.jpg"); } });
+  if (String(Z.fullBgImg || "").indexOf("file:") === 0) add("bg/" + Z.fullBgImg.slice(5));
   // الأصوات المختارة
   if (S.snd.azan === "long") add("snd/azan_long.mp3");
   // صور من الخادم (مكتبة الوسائط في ووردبريس)
   var url = function(x){ return /^(https?:)?\/\//.test(String(x || "")) || /^\/[^/]/.test(String(x || "")); };
   [L.customBg, L.logoId, S.snd.azanId, S.snd.iqamaId].forEach(function(x){ if (url(x)) add(x); });
   (S.slides.items || []).forEach(function(s){ if (url(s.img)) add(s.img); });
+  (S.gslides || []).forEach(function(s){ if (s && url(s.img)) add(s.img); }); // صور الإعلانات العامة (ملصقات المحاضرات)
   (S.boards.items || []).forEach(function(b){ if (url(b.img)) add(b.img); });
   if (S.weather.on) ["clear_day","clear_night","cloudy","fog","haze","rain","thunder","thunder_rain","unknown"].forEach(function(w){ add("img/" + w + ".png"); });
   return u;

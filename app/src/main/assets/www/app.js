@@ -15,30 +15,32 @@ var DEF = {
   hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
   offPrayer:false, offSleep:false, lockMin:15, devOpen:false, devSecs:["rotate","sounds"], sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
-  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, notifyOn:true, notifyMsg:"من فضلك اغلق الهاتف",
+  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
   snd:{azan:"short", iqama:"short", beep:true, vol:1},
+  sndRem:{items:[]},
+  ayat:{on:false, sec:20, mode:"default", list:"", pos:"mid"},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
   eid:{fitrOn:false, fitr:"06:00", adhaOn:false, adha:"05:45"},
   zk:{after:true, afterMin:7, morning:true, morningMin:15, evening:true, eveningMin:15, itemSec:25,
     afterOn:{fajr:true, dhuhr:true, asr:true, maghrib:true, isha:true}, afterSec:25, morningSec:25, eveningSec:25,
-    afterRounds:1, morningRounds:1, eveningRounds:1, autoSec:false, noRepeat:true, rotate:true},
+    afterRounds:1, morningRounds:1, eveningRounds:1, afterPage:"", morningPage:"", eveningPage:"", afterImg:"", morningImg:"", eveningImg:"", autoSec:false, noRepeat:true, rotate:true},
   news:[
     {id:"n1", text:"سبحان الله وبحمده، سبحان الله العظيم", type:"none", days:[], date:""},
     {id:"n2", text:"نرجو المحافظة على نظافة المسجد وإغلاق الجوال قبل الصلاة", type:"none", days:[], date:""},
     {id:"n3", text:"درس أسبوعي في تفسير القرآن الكريم بعد صلاة المغرب كل إثنين", type:"week", days:[1], date:""}
   ],
-  tickerOn:true, marquee:true, newsSec:12, speed:110,
+  tickerOn:true, marquee:true, newsSec:12, speed:120,
   fixedOn:true, fixedZekr:"اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي",
-  slides:{on:false, random:false, sec:15, every:60, items:[]},
+  slides:{on:false, random:false, sec:15, every:60, items:[], pos:"zone", move:"ltr", speed:160},
   multi:{mode:"single", role:"main", adsSlot:2, sec:20, boards:true, slides:true, remind:true, adhkar:true, news:true, hadith:true},
   remind:{on:true, white:true, ashura:true, fri:true, friHour:true, show:"both"},
   boards:{on:false, rot:20, items:[]},
-  look:{tpl:"std", decor:"none", decorOp:0.85, cardShape:"round", orient:"auto", rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
+  look:{tpl:"std", decor:"none", decorOp:0.85, cardShape:"round", orient:"auto", oriLock:true, rot:0, bgP:"vr07.jpg", bgL:"hr00.jpg", bgHidden:[], customBg:"", tone:"auto", accent:"#EBD1A0",
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
-        centerP:true, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, ovClock:true, ovClkWait:true, ovSec:true, ovClkSize:1, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", nbCustom:false, nbSize:1, nbShadow:0.3, nbBlur:18, nbRadius:26, nbBgOp:0.3, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        centerP:true, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false, dateStyle:"badges", dayEn:true, dateTag:true, bigP:true, badgeShape:"dome", badgeShadow:false, badgeBorder:3,
+        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, ovClock:true, ovClkWait:true, ovSec:true, ovClkSize:1, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", nbCustom:false, nbSize:1, nbShadow:0.3, nbBlur:18, nbRadius:26, nbBgOp:0.3, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, showSite:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -59,11 +61,16 @@ try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catc
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
 try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 13; } catch(e){}
+function mvFix(o){ if (o && o.slides && !o.slides.mv2) { o.slides.move = "ltr"; o.slides.mv2 = 1; } if (o && !o.nmV) { o.nm = o.nm || {}; o.nm.frame = false; o.nmV = 1; } return o; } // 13.8: الشرائح النصية سطر واحد متحرك تحت الساعة افتراضياً
+mvFix(S);
 S.slides.items = S.slides.items.map(function(x){ return typeof x === "string" ? {id:"s" + x, img:x, imgMode:"contain", active:true} : x; });
 if ((S.lookV || 0) < 3) { // تصميم التطبيق الجديد: يعيد المظهر والذكر الثابت للافتراضي مرة واحدة
   S.look = clone(DEF.look); S.fixedZekr = DEF.fixedZekr; S.marquee = DEF.marquee; S.lookV = 3;
 }
 if (S.lookV < 4) { S.marquee = true; S.look.autoColor = true; S.look.logoOp = 1; S.lookV = 4; }
+if (!S.notifyMsg || S.notifyMsg === "يرجى إغلاق الجوال أو وضعه على الصامت، تعظيمًا لحرمة المسجد وخشوع المصلين.") S.notifyMsg = DEF.notifyMsg; // العودة للعبارة القصيرة الواضحة لكبار السن
+mvFix(S); // 17.24: رسالة الجوال بدون إطار (مرة واحدة، ويمكن إعادته من الإعدادات)
+if (S.speed % 60) S.speed = Math.max(60, Math.min(300, Math.round(S.speed / 60) * 60)); // السرعة القديمة (مثل 110) إلى أقرب سرعة ناعمة
 if (S.lookV < 5) { S.look.iqFmt = "time"; S.look.thead = true; S.look.homeClock = false; S.weather.on = true; S.lookV = 5; }
 if (S.lookV < 6) { S.lastMinOnly = false; S.circle = true; S.lookV = 6; }
 if (S.lookV < 7) { S.fixedOn = true; if (!String(S.fixedZekr || "").trim()) S.fixedZekr = DEF.fixedZekr; S.lookV = 7; }
@@ -202,12 +209,26 @@ function loadCity(id, cb){
   if (uqWait[id]) { if (cb) uqWait[id].push(cb); return; }
   uqWait[id] = cb ? [cb] : [];
   var s = document.createElement("script"); s.src = "uq/" + id + ".js"; s.async = true;
-  s.onerror = function(){ delete uqWait[id]; };
+  s.onerror = function(){ var w = uqWait[id] || []; delete uqWait[id]; if (s.parentNode) s.parentNode.removeChild(s); // لم يُحمَّل الجدول: محاولة أخرى بعد دقيقة
+    setTimeout(function(){ loadCity(id, function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; w.forEach(function(f){ try { f(); } catch(e){} }); }); }, 60000); };
   document.head.appendChild(s);
 }
+/* أي جدول أم القرى يُستخدم: المدينة المختارة، أو أقرب مدينة سعودية (حتى 15 كم) للموقع المخصص بطريقة أم القرى،
+   فلا يختلف الفجر دقيقة بين جهاز اختار «الدمام» من القائمة وجهاز حدّد موقعه بالخريطة أو GPS داخل الدمام */
+var uqNearK = "", uqNearV = "";
+function uqCityId(){
+  if (!S.custom.on) return S.city;
+  var C = S.custom; if ((C.method && C.method !== "uq") || C.src === "table" || C.noUq) return "";
+  var k = (+C.lat).toFixed(3) + "," + (+C.lng).toFixed(3); if (k === uqNearK) return uqNearV;
+  var best = "", bd = 15, ids = window.UQ_IDS || [], R = Math.PI / 180;
+  ids.forEach(function(id){ var c = window.CITIES && window.CITIES[id]; if (!c) return;
+    var dl = (c[2] - C.lat) * R, dg = (c[3] - C.lng) * R, a = Math.sin(dl/2)*Math.sin(dl/2) + Math.cos(C.lat*R)*Math.cos(c[2]*R)*Math.sin(dg/2)*Math.sin(dg/2);
+    var d = 12742 * Math.asin(Math.min(1, Math.sqrt(a))); if (d < bd) { bd = d; best = id; } });
+  uqNearK = k; uqNearV = best; return best;
+}
 function uqRow(Y, M, D){
-  if (S.custom.on) return null;
-  var c = UQD[S.city]; if (!c) return null;
+  var id = uqCityId(); if (!id) return null;
+  var c = UQD[id]; if (!c) return null;
   var i = Math.round((Date.UTC(Y, M, D) - c.start)/86400000);
   var r = c.rows[i]; if (!r) return null;
   var o = []; for (var j = 0; j < 6; j++) o.push((+r.substr(j*4, 2))*60 + (+r.substr(j*4+2, 2)));
@@ -286,6 +307,8 @@ function dayTimes(Y, M, D){
 function byK(day, k){ for (var i = 0; i < day.list.length; i++) if (day.list[i].k === k) return day.list[i]; }
 
 /* ===== الحالة الحالية ===== */
+var zkPrev = null;
+function zkPreview(kind, sec, tpl){ var n0 = Date.now(); zkPrev = kind ? {kind:kind, start:n0, until:n0 + (sec || 40) * 1000, tpl:tpl || ""} : null; zkPlans = {}; ovKey = ""; try { tick(true); } catch(e){} }
 function phase(now){
   var z = zp(now), today = dayTimes(z.Y, z.M, z.D), yest = dayTimes(z.Y, z.M, z.D - 1), tom = dayTimes(z.Y, z.M, z.D + 1);
   var M60 = 60000, res = {today:today, tom:tom, mode:"", p:null};
@@ -326,6 +349,9 @@ function phase(now){
   var nx = null; for (var j = 0; j < P.length; j++) if (P[j].A > now) { nx = P[j]; break; }
   res.next = nx || byK(tom, "fajr");
   res.inIqama = now >= p.A && now < p.I && p.k !== "eid";
+  if (zkPrev && now < zkPrev.until && !res.mode) { // معاينة لوحة الأذكار من الإعدادات (لا تُعرض فوق الأذان أو الإقامة)
+    var zp0 = zkPlan(zkPrev.kind, zkPrev.start, zkPrev.tpl); if (zp0) { res.mode = "zk-" + zkPrev.kind; res.zkStart = zkPrev.start; res.zkPlan = zp0; res.zkPrev = true; } }
+  else if (zkPrev && now >= zkPrev.until) zkPrev = null;
   res.hi = res.inIqama ? p.k : (nx ? nx.k : "fajr");
   return res;
 }
@@ -371,6 +397,8 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&
 var natKey = "";
 function rotCSS(){
   var r = (((+S.look.rot || 0) % 360) + 360) % 360, AN = window.RawayieAndroid;
+  // القفل: شاشة طولية فعلياً لا تُدوَّر 90° فتصبح أفقية (التدوير 90° فقط للتلفاز العرضي المركّب عمودياً)
+  if (S.look.oriLock !== false && S.look.sysRot !== true && innerHeight > innerWidth && (r === 90 || r === 270)) r = 0;
   // المعاينة والإدارة من الموقع: تُعرض الشاشة معتدلة كما يراها المصلون، لا مدوّرة كما تُرسل لجهاز مركّب بالعرض
   if (window.RAWAYIE_PREVIEW && !AN) return 0;
   if (!AN || !AN.setRotation || window.RAWAYIE_PREVIEW) return r;
@@ -407,15 +435,25 @@ function safeIns(){
   if (S.look.safeArea === false) o = {t:0, l:0, r:0, b:0};
   return o;
 }
+/* قفل الاتجاه: التدوير المعتمد من الإعدادات يُحفظ في rotOk، وأي تدوير يدوي آخر (زر الاختصار أو الريموت) يرجع تلقائياً بعد دقيقة */
+var rotGuardT = 0;
+function rotGuard(){
+  var L0 = S.look; if (L0.oriLock === false) return;
+  if (L0.rotOk === undefined) { L0.rotOk = +L0.rot || 0; save(); return; }
+  if ((+L0.rot || 0) === (+L0.rotOk || 0)) { rotGuardT = 0; return; }
+  if (!rotGuardT) { rotGuardT = Date.now() + 60000; return; }
+  if (Date.now() >= rotGuardT) { rotGuardT = 0; L0.rot = +L0.rotOk || 0; save(); rebuild(); try { scrMsg("رجعت الشاشة لاتجاهها الصحيح"); } catch(e){} }
+}
 function orient(){
   var r = rotCSS(), w = innerWidth, h = innerHeight;
   if (r === 90 || r === 270) { var x = w; w = h; h = x; }
-  if (S.look.orient === "portrait") return "P";
-  if (S.look.orient === "landscape") return "L";
+  if (S.look.oriLock === false && S.look.orient === "portrait") return "P"; // القفل: الاتجاه دائماً حسب الشاشة الفعلية
+  if (S.look.oriLock === false && S.look.orient === "landscape") return "L";
   if (window.RAWAYIE_PREVIEW && !window.RawayieAndroid) { var r0 = (((+S.look.rot || 0) % 360) + 360) % 360; if (r0 === 90 || r0 === 270) return "P"; }
   return h >= w ? "P" : "L";
 }
 function fit(){
+  if (!stage) return; // الإعدادات وصلت من الموقع قبل تجهيز الصفحة (لوحة التعديل تُفتح مخفية): يُرسم عند بدء التشغيل
   var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
   var si = safeIns(), vw = innerWidth, vh = innerHeight, RW = vw, RH = vh;
   var rs = document.documentElement.style; rs.setProperty("--sat", si.t + "px"); rs.setProperty("--sab", si.b + "px"); rs.setProperty("--sal", si.l + "px"); rs.setProperty("--sar", si.r + "px");
@@ -428,13 +466,20 @@ function fit(){
   // مساحة الكاميرا وشريط الحالة داخل الشاشة (بوحدات التصميم) حسب اتجاه التدوير
   var q = r === 180 ? [si.b, si.l, si.t, si.r] : r === 90 ? [si.l, si.b, si.r, si.t] : r === 270 ? [si.r, si.t, si.l, si.b] : [si.t, si.r, si.b, si.l];
   ["--it", "--ir", "--ib", "--il"].forEach(function(k, i){ stage.style.setProperty(k, (q[i] / sc).toFixed(1) + "px"); });
-  stage.style.width = W + "px"; stage.style.height = H + "px";
+  stage.style.width = W + "px"; stage.style.height = H + "px"; stage.style.setProperty("--xz", Math.max(1, Math.min(1.25, H / (o === "P" ? 1920 : 1080))).toFixed(3)); // شاشة أطول من التصميم (جوال): تكبير عناصر شاشات الأذان والإقامة لملء المساحة
   // التموضع على بكسلات كاملة في الجهاز: الإزاحة بأنصاف البكسل تجعل النصوص والخطوط والصور ضبابية
   var dpr = window.devicePixelRatio || 1, px = function(v){ return Math.round(v*dpr)/dpr; };
+  window.RWS_PXK = sc * dpr; // بكسلات الجهاز لكل بكسل في التصميم: لضبط سرعة الشريط على بكسلات كاملة
   var side = r === 90 || r === 270, bw = (side ? H : W)*sc, bh = (side ? W : H)*sc, x0 = (RW - bw)/2, y0 = (RH - bh)/2;
   var tx = r === 90 || r === 180 ? x0 + bw : x0, ty = r === 180 || r === 270 ? y0 + bh : y0;
   stage.style.left = "0"; stage.style.top = "0"; stage.style.transformOrigin = "0 0";
   stage.style.transform = "translate(" + px(tx) + "px," + px(ty) + "px) rotate(" + r + "deg) scale(" + sc + ")";
+  // طبقة الإعدادات ولوحة المفاتيح: كانت تتوسط الشاشة بـ translate(-50%,-50%) فتقع على نصف بكسل في كثير من الأجهزة
+  // (الجوالات والأجهزة اللوحية خاصة مع التدوير) فتظهر كل النصوص ضبابية. الآن تُثبّت من الزاوية على بكسلات كاملة
+  var uiL = document.getElementById("ui");
+  if (uiL) { var uw = side ? RH : RW, uh = side ? RW : RH, ux = r === 90 || r === 180 ? RW : 0, uy = r === 180 || r === 270 ? RH : 0;
+    uiL.style.left = "0"; uiL.style.top = "0"; uiL.style.width = uw + "px"; uiL.style.height = uh + "px"; uiL.style.transformOrigin = "0 0";
+    uiL.style.transform = "translate(" + px(ux) + "px," + px(uy) + "px) rotate(" + r + "deg)"; }
   var mb = document.getElementById("menu"); if (mb) mb.hidden = S.look.menuBtn === false;
   document.documentElement.setAttribute("data-rot", String(((r % 360) + 360) % 360));
   // حجم لوحة الإعدادات حسب دقة الشاشة: 1 حتى 1080p، ويكبر تدريجياً حتى 2.2 في شاشات 4K وما فوق
@@ -512,6 +557,9 @@ function applyLook(){
   st.setProperty("--rowsh", "0 6px 18px rgba(0,0,0," + (+L.rowShadow) + ")");
   st.setProperty("--rowrad", (+L.rowRadius) + "px"); st.setProperty("--rowgap", (+L.rowGap) + "px");
   var fs = L.fs || {}; ["ts","ns"].forEach(function(k){ st.setProperty("--" + k, +(fs[k] || 1)); });
+  var NM = S.nm || {}; st.setProperty("--nms", String(Math.max(.5, Math.min(1.8, +NM.size || 1)))); st.setProperty("--nmsh", String(Math.max(0, Math.min(1, NM.shadow == null ? .4 : +NM.shadow)))); // رسالة إغلاق الجوال: الحجم والظل والإطار
+  st.setProperty("--nmbc", NM.frameColor ? NM.frameColor : "rgba(255,217,160,.35)"); st.setProperty("--nmbw", Math.max(0, Math.min(8, NM.frameW == null ? 2 : +NM.frameW)) + "px"); st.setProperty("--nmbg", String(Math.max(0, Math.min(.9, NM.bg == null ? .35 : +NM.bg))));
+  stage.classList.toggle("nmnofr", NM.frame === false);
   ["name","date","clock","count","pname","ptime","fixed","news"].forEach(function(k){ st.setProperty("--s-" + k, +(fs[k] || 1)); });
   st.setProperty("--logoop", L.logoOp == null ? 1 : +L.logoOp);
   st.setProperty("--emb", L.embSize == null ? .7 : +L.embSize);
@@ -534,11 +582,14 @@ function applyLook(){
   var tl = window.BG_TOP && !L.customBg ? window.BG_TOP[b.file] : null, topLight = tl == null ? light : tl > 150;
   st.setProperty("--namefg", topLight === light ? acc : (topLight ? "#3a2a10" : (auto ? accRaw : L.accent)));
   st.setProperty("--menufg", topLight ? "#222" : "#fff");
+  var bw = +S.look.badgeBorder; st.setProperty("--dbw", (isFinite(bw) ? Math.max(0, Math.min(10, bw)) : 3) + "px"); // سمك إطار شارة الرقم
   st.setProperty("--ft", "'" + S.look.fontText + "', 'Cairo', Tahoma, sans-serif");
   st.setProperty("--fn", "'" + S.look.fontNum + "', 'Cairo', Tahoma, sans-serif");
   st.setProperty("--fz", "'" + S.look.fontZekr + "', 'Amiri', serif");
   stage.classList.toggle("shadow", !!S.look.shadow);
   stage.classList.toggle("arch", b.arch && !S.look.customBg);
+  // تغيّرت الخلفية بين محراب وغيره (تلقائياً أو يدوياً): يُعاد بناء رأس التاريخ بالشكل المناسب
+  if (!inBuild && builtDB !== null && builtDB !== wantDB()) setTimeout(build, 0);
   stage.style.backgroundColor = (!S.look.customBg && window.BG_COLOR && window.BG_COLOR[b.file]) || "";
   stage.dir = S.lang === "ar" ? "rtl" : "ltr";
   stage.classList.toggle("apar", !!S.look.arabicDigits && !S.look.h24); // صباحاً/مساءً يسار الوقت (اتجاه العربية)، وAM/PM يمينه
@@ -568,11 +619,13 @@ function logoHTML(cls){
   if ((S.look.logoColor || "auto") === "gold") return '<img class="' + c + '" src="' + (S.look.logoId ? customLogo : "img/mark.png") + '" alt="">';
   return '<div class="' + c + ' lgw' + (S.look.logoId ? " sq" : "") + (S.look.logoColor === "silver" ? " silver" : "") + '"><div class="lgm"></div></div>';
 }
+var builtDB = null, inBuild = false; // شكل التاريخ المبني حالياً (شارات أو سطر)
+function wantDB(){ return layout === "P" && S.look.dateStyle !== "line" && !stage.classList.contains("arch"); } // الشارات مع الخلفيات بدون محراب فقط
 function build(){
   layout = orient();
   var P = layout === "P";
   stage.className = "stage " + layout + (S.look.ovGlass === false ? " noglass" : "") + (S.look.bigIqCnt ? " bigiq" : "");
-  applyLook();
+  inBuild = true; applyLook(); inBuild = false;
   var SEC = isSecond();
   var boards = !SEC && S.boards.on && S.boards.items.some(function(b){ return b.active; });
   var flag = "";
@@ -582,14 +635,14 @@ function build(){
     html = '<div class="s2h"><div class="s2n"><div class="mname"></div><div class="s2d"><span class="dayn"></span> <span class="hij"></span></div></div>' +
       '<div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span></div>' +
       '<div class="s2c cnt"><div class="cv"></div><div class="cl"></div></div></div>' +
-      '<div class="s2box"><div class="s2in"></div><div class="s2dots"></div></div><div class="cards"></div>' +
+      (s2Band() ? '<div class="smbar s2bar"></div>' : "") + '<div class="s2box"><div class="s2in"></div><div class="s2dots"></div></div><div class="cards"></div>' +
       (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>';
   } else if (boards) {
     var clock0 = '<div class="clk"><span class="tm"></span><span class="ap"></span></div>';
     html = '<div class="hdr">' + logoHTML() + '<div class="mname"></div></div>' +
       '<div class="board"><img class="bimg" alt="" hidden><div class="bt"></div><div class="bb"></div></div>' +
       '<div class="bstrip"><div class="bclk">' + clock0 + '<div class="bdate"></div></div><div class="cards"></div></div>' +
-      (S.fixedOn ? '<div class="fixed"></div>' : "") + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
+      ((S.fixedOn || (S.ayat && S.ayat.on)) ? '<div class="fixed"></div>' : "") + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
   } else if (S.look.tpl === "cards" && !P) { // البطاقات للعرض الأفقي فقط، والرأسي يبقى بالجدول
     // نمط البطاقات: الساعة في المنتصف بين الشعار والعد التنازلي، والآية بعرض الشاشة، وبطاقات الصلوات بالأسفل (الأذان والإقامة)
     var wxk = '<div class="wx" hidden><span></span><img alt=""></div>';
@@ -597,22 +650,30 @@ function build(){
       '<div class="zone tkz"><div class="tkm"><div class="tkc cnt"><div class="cv"></div><div class="cl"></div></div>' +
       '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span></div>' + (S.look.iqClock && !S.look.homeClock ? '<div class="iqclk"></div>' : "") + '</div></div>' +
       '<div class="emb tke">' + logoHTML("elogo") + '</div></div><div class="slide" hidden></div></div>' +
-      (S.fixedOn ? '<div class="fixed"></div>' : "") + '<div class="cards"></div>' +
-      (S.look.nightTimes && (S.look.nightMid !== false || S.look.nightThird !== false) ? '<div class="nightbar" hidden></div>' : "") +
+      ((S.fixedOn || (S.ayat && S.ayat.on)) ? '<div class="fixed"></div>' : "") + '<div class="cards"></div>' +
+      "" +
       (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag;
   } else {
     var wp = S.weather.pos || "mid", wxh = '<div class="wx" hidden><span></span><img alt=""></div>';
     var LH = !P && !!S.look.dateSide, IQC = !!S.look.iqClock && !S.look.homeClock; // التاريخ يميناً واسم المسجد يساراً في العرض الأفقي
-    var top = (LH ? "" : '<div class="dayn"></div><div class="hij"></div>') + '<div class="zone">' +
+    var DB = wantDB(); // شارات التاريخ في العرض الرأسي: الهجري يميناً واليوم في الوسط والميلادي يساراً (خلفيات المحراب تبقى بسطر التاريخ)
+    var dbc = '<div class="dbn"></div><div class="dbtx"><div class="dbm"></div><div class="dby"></div></div>';
+    var top = (LH ? "" : DB ? '<div class="dbx"><div class="dbc dbh">' + dbc + '</div><div class="dbc dbd"><div class="dbr1"><div class="dayn"></div></div><div class="dbr3"><div class="dbe"></div><div class="dbt" hidden></div></div></div><div class="dbc dbg">' + dbc + '</div></div>' : '<div class="dayn"></div><div class="hij"></div>') + '<div class="zone">' +
       '<div class="mid"><div class="ms wcol">' + (wp === "mid" ? wxh : "") + '<div class="gre"></div></div>' +
       '<div class="emb">' + logoHTML("elogo") + '</div>' +
       '<div class="ms cnt"><div class="cv"></div><div class="cl"></div></div></div>' +
       '<div class="center"><div class="cpan"><div class="clk"><i class="ap apl"></i><span class="tm"></span><span class="sx"><b class="ss"></b><i class="ap"></i></span>' + (wp === "clock" ? wxh : "") + '</div>' + (IQC ? '<div class="iqclk"></div>' : "") + '</div></div>' +
-      '<div class="slide" hidden></div></div>';
+      (S.slides.pos === "below" ? "" : '<div class="slide" hidden></div>') + '</div>' +
+      (S.slides.pos === "below" ? '<div class="slide sbelow" hidden></div>' : ""); // الشرائح تحت الساعة وفوق جدول الصلوات
     var rows = (S.look.thead ? '<div class="thead"><div class="c1">' + esc(t("prayer")) + '</div><div class="c2">' + esc(t("adhan_time")) + '</div>' +
       (S.look.homeClock ? "" : '<div class="c3">' + esc(S.look.iqFmt === "time" ? t("iqama_time") : "الإقامة بعد") + '</div>') + '</div>' : "") + '<div class="rows"></div>';
-    var nb = S.look.nightTimes && (S.look.nightMid !== false || S.look.nightThird !== false) ? '<div class="nightbar" hidden></div>' : "";
-    var fx = S.fixedOn ? '<div class="fixed"></div>' : "";
+    var nb = ""; // شريط منتصف الليل والثلث الأخير حُذف من الشاشة
+    var AYM = !!(S.ayat && S.ayat.on && S.ayat.pos !== "bottom"); // الآية تحت الساعة وفوق جدول الصلوات
+    var BND = !!(S.slides.on && S.slides.move && S.slides.move !== "none"), AYB = !!(S.ayat && S.ayat.on && !AYM);
+    // ترتيب أنظف: مع شريط الشرائح يظهر الدعاء الثابت داخله تحت الساعة (بدل سطر مستقل أسفل الجدول) ويتبادل مع الشرائح المتحركة
+    var fx = ((S.fixedOn && !BND) || AYB) ? '<div class="fixed"></div>' : "";
+    if (AYM) top += '<div class="ayah"></div>';
+    if (BND) top += '<div class="smbar"></div>'; // شريط الشرائح المتحركة تحت الساعة بمساحة ثابتة
     html = (LH ? '<div class="lhdr"><div class="ldate"><div class="dayn"></div><div class="hij"></div></div><div class="mname"></div></div>' : '<div class="mname"></div>') + (P ? top + rows : '<div class="lcols"><div class="lc1">' + top + '</div><div class="lc2">' + rows + '</div></div>') +
       nb + fx + (S.tickerOn ? '<div class="news"><div class="tick"></div></div>' : "") + '<div class="foot"></div>' + flag +
       (wp === "top" || wp === "bottom" ? wxh.replace('class="wx"', 'class="wx wx-' + wp + '"') : "");
@@ -622,16 +683,17 @@ function build(){
   decorate();
   var TK = !SEC && !boards && !P && S.look.tpl === "cards";
   mainEl.className = "main" + (SEC ? " sec2" : "") + (boards ? " boards" : "") + (TK ? " tk" : "") + (S.look.menuBtn === false ? " nomenu" : "") + (TK && S.look.thead ? " thd" : "") + (S.look.cardShape === "dome" ? " dome" : "") + (S.look.homeClock ? " home" : "") + (S.look.bigCounter ? " bigcnt" : "") +
-    (P ? (S.look.centerP ? " ctr" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
-    (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "");
+    (P ? (S.look.centerP ? " ctr" : "") + (S.look.bigP ? " bigp" : "") : (S.look.centerL ? " ctr" : "")) + (!P && S.look.bigL ? " bigl" : "") + (S.dateMode === "both" ? "" : " dalt") + (S.look.fullClock ? " fullclk" : "") + (S.look.showName === false ? " noname" : "") + (S.look.showDay === false ? " noday" : "") + (S.look.showDate === false ? " nodate" : "") +
+    (S.look.showCount === false ? " nocnt" : "") + (!boards && S.look.iqClock && !S.look.homeClock ? " iqc" : "") + (!boards && !P && S.look.dateSide ? " lhd" : "") + ($(".dbx", mainEl) ? " dbs" + (S.look.badgeShape === "soft" ? " dbsoft" : "") + (S.look.badgeShadow ? " dbshd" : "") : ""); builtDB = !!$(".dbx", mainEl) || (boards || SEC || TK ? null : false);
   ui = {
-    mname: $(".mname", mainEl), dayn: $(".dayn", mainEl), hij: $(".hij", mainEl), gre: $(".gre", mainEl), bdate: $(".bdate", mainEl),
+    mname: $(".mname", mainEl), dayn: $(".dayn", mainEl), hij: $(".hij", mainEl), gre: $(".gre", mainEl), bdate: $(".bdate", mainEl), dbg: $(".dbg", mainEl), dbh: $(".dbh", mainEl), dbe: $(".dbe", mainEl), dbt: $(".dbt", mainEl),
     tm: $(".tm", mainEl), ap: $(".ap", mainEl), aps: mainEl.querySelectorAll(".ap"), ss: $(".ss", mainEl), cl: $(".cl", mainEl), cv: $(".cv", mainEl), cnt: $(".cnt", mainEl),
-    rows: $(".rows", mainEl), cards: $(".cards", mainEl), fixed: $(".fixed", mainEl), tick: $(".tick", mainEl), foot: $(".foot", mainEl),
-    s2: $(".s2in", mainEl), s2dots: $(".s2dots", mainEl), tks: $(".tks", mainEl), cpan: $(".cpan", mainEl), iqclk: $(".iqclk", mainEl), night: $(".nightbar", mainEl), slide: $(".slide", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
+    rows: $(".rows", mainEl), cards: $(".cards", mainEl), fixed: $(".fixed", mainEl), ayah: $(".ayah", mainEl), tick: $(".tick", mainEl), foot: $(".foot", mainEl),
+    s2: $(".s2in", mainEl), s2dots: $(".s2dots", mainEl), tks: $(".tks", mainEl), cpan: $(".cpan", mainEl), iqclk: $(".iqclk", mainEl), night: $(".nightbar", mainEl), slide: $(".slide", mainEl), mqbar: $(".smbar", mainEl), zone: $(".zone", mainEl), wx: $(".wx", mainEl), board: $(".board", mainEl)
   };
   ui.mname.textContent = S.mosque; fitText(ui.mname, .5);
   if (ui.fixed) ui.fixed.textContent = String(S.fixedZekr || "").trim() || DEF.fixedZekr; // إذا كان فارغاً يظهر الدعاء الافتراضي
+  bandIdle();
   lastRowKey = ""; lastDay = ""; tickerKey = ""; nightKey = ""; slideState = {i:-1, until:0, show:false, next: Date.now() + S.slides.every*1000}; var fs0 = $("#fslide"); if (fs0) fs0.hidden = true; boardState = {i:-1, until:0};
   renderWeather(); tick(true);
 }
@@ -777,9 +839,14 @@ function fitRows(){
   if (!ui.rows) return; var on = stage.classList.contains("tcards");
   var rs = ui.rows.querySelectorAll(".row > div");
   for (var i = 0; i < rs.length; i++) rs[i].style.fontSize = "";
-  if (!on) return;
-  for (var j = 0; j < rs.length; j++) { var c = rs[j], h = c.parentNode.clientHeight, fs = parseFloat(getComputedStyle(c).fontSize) || 0, mx = (h - 10) / 1.18;
+  if (on) for (var j = 0; j < rs.length; j++) { var c = rs[j], h = c.parentNode.clientHeight, fs = parseFloat(getComputedStyle(c).fontSize) || 0, mx = (h - 10) / 1.18;
     if (h && fs > mx) c.style.fontSize = Math.max(12, mx).toFixed(1) + "px"; }
+  // ضمان ظهور كل الصلوات: إن تجاوز الجدول مساحته (خط كبير، شاشة أقصر، اسم مسجد بسطرين) تصغر الخطوط معاً بنفس النسبة حتى يتسع
+  var R = ui.rows, n = 0;
+  while (n++ < 12 && R.clientHeight && R.scrollHeight > R.clientHeight + 1) {
+    var k = Math.max(.82, Math.min(.97, R.clientHeight / R.scrollHeight));
+    for (var q = 0; q < rs.length; q++) { var f0 = parseFloat(getComputedStyle(rs[q]).fontSize) || 0; if (f0) rs[q].style.fontSize = Math.max(12, f0 * k).toFixed(1) + "px"; }
+  }
 }
 /* ===== أوقات الليل: منتصف الليل والثلث الأخير =====
    الليل من أذان المغرب إلى أذان الفجر التالي. تظهر في شريط أسفل الشاشة حسب «وقت الظهور» */
@@ -831,7 +898,7 @@ function inSched(o, z){
 }
 function newsToday(){
   var z = zp(Date.now()), k = dkey(z.Y, z.M, z.D);
-  var list = S.news.filter(function(n){
+  var list = (S.gnews || []).concat(S.news || []).filter(function(n){ // أخبار عامة من إدارة الموقع لكل المساجد ثم أخبار المسجد
     if (!n.text || !inSched(n, z)) return false;
     if (n.type === "week") return (n.days || []).indexOf(z.dow) >= 0;
     if (n.type === "date") return n.date === k;
@@ -882,21 +949,63 @@ function remindList(now){
   }
   remCache = {k:ck, v:out}; return out;
 }
+/* ===== الآيات المتغيرة: سطر الدعاء أسفل الشاشة يعرض آية بعد آية بانتقال هادئ ===== */
+var ayIdx = -1, ayNext = 0, ayKey = "";
+function ayList(){ var A0 = S.ayat || {}, d = Math.max(5, +A0.sec || 20), own = [];
+  if (A0.mode === "custom") own = A0.items ? A0.items.filter(function(q){ return q && String(q.t || "").trim(); }).map(function(q){ return {t:String(q.t).trim(), sec:Math.max(3, +q.sec || d)}; })
+    : String(A0.list || "").split(/\n+/).map(function(x){ return x.trim(); }).filter(Boolean).map(function(x){ return {t:x, sec:d}; });
+  return own.length ? own : (window.AYAT_LIST || []).map(function(x){ return {t:x, sec:d}; }); }
+function ayHTML(x){ var m = String(x).match(/^([\s\S]*?)\s*[\[(]([^\[\]()]*\d[^\[\]()]*)[\])]\s*$/), tx = m ? m[1] : x;
+  tx = tx.replace(/^\s*﴿\s*|\s*﴾\s*$/g, "");
+  return '<span class="ayo">۞</span><span class="ayt">﴿ ' + esc(tx) + ' ﴾' + (m ? '<small class="ayr">' + esc(m[2]) + '</small>' : "") + '</span><span class="ayo">۞</span>'; }
+function renderAyat(now){
+  var A0 = S.ayat || {}, el = ui.ayah || ui.fixed; if (!el) return;
+  if (!A0.on) { if (ayKey && ui.fixed) { ayKey = ""; ui.fixed.classList.remove("ayf"); ui.fixed.textContent = String(S.fixedZekr || "").trim() || DEF.fixedZekr; } return; }
+  var L = ayList(); if (!L.length) return; var key = L.map(function(q){ return q.sec; }).join(",") + "|" + A0.mode + "|" + layout + "|" + (ui.ayah ? 1 : 0);
+  if (key !== ayKey) { ayKey = key; ayNext = 0; }
+  if (now < ayNext && el.textContent) return;
+  ayIdx = (ayIdx + 1) % L.length; ayNext = now + L[ayIdx].sec * 1000; // لكل نص مدته الخاصة
+  el.classList.remove("ayf"); void el.offsetWidth;
+  if (el === ui.ayah) { el.innerHTML = ayHTML(L[ayIdx].t); var t0 = el.querySelector(".ayt"); t0.style.fontSize = ""; t0.style.whiteSpace = "nowrap"; // سطر واحد: يصغر الخط حتى تدخل الآية كاملة
+    var fs0 = parseFloat(getComputedStyle(t0).fontSize) || 40, av = t0.clientWidth, sp0 = document.createElement("span"); sp0.innerHTML = t0.innerHTML; sp0.style.cssText = "visibility:hidden;position:absolute;white-space:nowrap"; t0.appendChild(sp0);
+    var w0 = sp0.offsetWidth; t0.removeChild(sp0); if (av && w0 > av) { var k = Math.max(.55, av / w0 * .97); t0.style.fontSize = (fs0 * k).toFixed(1) + "px"; if (av / w0 < .55) t0.style.whiteSpace = "normal"; } } else el.textContent = L[ayIdx].t;
+  el.classList.add("ayf");
+}
+/* الشريطان المتحركان بنفس الحركة والسرعة والاتجاه، ولا يتحركان معاً: العلوي ثم السفلي ثم العلوي... */
+var tkAn = null, tkCoord = false;
+/* سرعة الشريطين بعدد صحيح من البكسلات في كل إطار (الشاشة 60 إطاراً في الثانية): 60، 120، 180...
+   السرعة الكسرية (مثل 110 = 1.83 بكسل/إطار) تجعل الحركة تتقطع وترتجف على شاشات التلفاز والأجهزة الضعيفة */
+function mqSpeed(){ var sp = Math.max(60, Math.min(300, Math.round(Math.max(40, +S.speed || 120) / 60) * 60)), k = +window.RWS_PXK || 1;
+  return Math.max(60, Math.round(sp * k / 60) * 60) / k; } // السرعة على الشاشة الفعلية بمضاعفات 60 بكسل جهاز/ث
+/* تحريك أفقي على كرت الشاشة. المتصفح القديم الذي لا يدعم animate: حركة بديلة ببكسلات صحيحة بدل التوقف */
+function mqAnim(el, x0, x1, dur, loop){
+  x0 = Math.round(x0); x1 = Math.round(x1);
+  if (el.animate) return el.animate([{transform:"translate3d(" + x0 + "px,0,0)"}, {transform:"translate3d(" + x1 + "px,0,0)"}], {duration:dur, easing:"linear", iterations:loop ? Infinity : 1, fill:"both"});
+  var t0 = 0, live = true, raf = window.requestAnimationFrame || function(f){ return setTimeout(function(){ f(Date.now()); }, 16); };
+  var step = function(ts){ if (!live) return; if (!t0) t0 = ts; var k = (ts - t0) / dur; if (k >= 1) { if (loop) { t0 = ts; k = 0; } else k = 1; }
+    el.style.transform = "translate3d(" + Math.round(x0 + (x1 - x0) * k) + "px,0,0)"; if (k < 1 || loop) raf(step); };
+  raf(step); return {cancel:function(){ live = false; }};
+}
+function tkDir(){ if (S.tickDir === "ltr" || S.tickDir === "rtl") return S.tickDir; var m = S.slides.move; return m === "rtl" ? "rtl" : m === "ltr" ? "ltr" : (S.lang === "ar" ? "ltr" : "rtl"); } // «ثابتة في شريط»: السفلي باتجاه العربية
+function tkReady(){ return !!(ui.tick && S.tickerOn && S.marquee && ui.tick.parentNode && !ui.tick.parentNode.hidden && ui.tick.classList.contains("mqj") && ui.tick.textContent); }
+function tkStop(){ if (tkAn) { try { tkAn.cancel(); } catch(e){} tkAn = null; } }
+function tkPass(loop){ // مرور كامل للشريط السفلي، ويرجع مدته
+  if (!tkReady()) return 0; tkStop();
+  var W = ui.tick.parentNode.clientWidth, w = ui.tick.scrollWidth, ltr = tkDir() === "ltr", a = ltr ? [-w, W] : [W, -w];
+  var dur = Math.round((W + w) / mqSpeed() * 1000);
+  tkAn = mqAnim(ui.tick, a[0], a[1], dur, loop);
+  return dur;
+}
 function renderTicker(){
   if (!ui.tick) return;
-  var items = newsToday(), key = items.map(function(n){ return n.id + n.text; }).join("|") + S.marquee + S.speed;
+  var items = newsToday(), key = items.map(function(n){ return n.id + n.text; }).join("|") + S.marquee + S.speed + (S.tickDir || "");
   if (!items.length) { ui.tick.parentNode.hidden = true; tickerKey = key; return; }
   ui.tick.parentNode.hidden = false;
   if (S.marquee) {
     if (key === tickerKey) return; tickerKey = key;
-    ui.tick.className = "tick mq"; ui.tick.innerHTML = "";
+    tkStop(); ui.tick.className = "tick mqj"; ui.tick.innerHTML = "";
     items.forEach(function(n, i){ if (i) { var b = document.createElement("b"); b.textContent = "۞"; ui.tick.appendChild(b); } ui.tick.appendChild(document.createTextNode(n.text)); });
-    requestAnimationFrame(function(){
-      var W = ui.tick.parentNode.clientWidth, w = ui.tick.scrollWidth, rtl = S.lang === "ar";
-      ui.tick.style.setProperty("--from", (rtl ? -w : W) + "px"); ui.tick.style.setProperty("--to", (rtl ? W : -w) + "px");
-      ui.tick.style.animation = "none"; void ui.tick.offsetWidth; ui.tick.style.animation = "";
-      ui.tick.style.animationDuration = ((W + w)/S.speed) + "s";
-    });
+    if (!tkCoord) requestAnimationFrame(function(){ tkPass(true); }); // بدون شرائح متحركة: الشريط السفلي يدور وحده باستمرار
   } else {
     var now = Date.now();
     if (key !== tickerKey) { tickerKey = key; newsIdx = -1; newsUntil = 0; ui.tick.className = "tick st"; ui.tick.style.animation = "none"; }
@@ -911,13 +1020,16 @@ function renderTicker(){
    الجهاز المرتبط بالموقع يعرف رقمه (الشاشة 1، الشاشة 2...) فيأخذ دوره تلقائياً حسب «شاشة الإعلانات» (adsSlot)،
    فتبقى إعدادات المسجد واحدة لكل أجهزته. الجهاز غير المرتبط: الدور المختار يدوياً فيه (role) */
 function mySlot(){ var R = S.remote || {}; return R.on && R.server && +R.slot > 0 ? +R.slot : 0; }
+function s2Band(){ var M = S.multi || {}; return M.slides !== false && S.slides.move && S.slides.move !== "none" && S.slides.items.some(function(x){ return x && typeof x === "object" && !x.img && x.active !== false && (x.title || x.body); }); }
+function s2Text(){ return S.slides.items.filter(function(x){ return x && typeof x === "object" && !x.img && x.active !== false && (x.title || x.body); }); }
 function isSecond(){ var M = S.multi || {}; if (M.mode !== "dual") return false; var n = mySlot();
   return n ? n === (+M.adsSlot || 2) : M.role === "second"; }
 var s2State = {i:-1, until:0, key:""};
 function secondItems(now){
   var M = S.multi || {}, out = [], z = zp(now);
   if (M.boards !== false) S.boards.items.forEach(function(b){ if (b.active) out.push({id:"b" + b.id, title:b.title || "", body:b.body || "", img:b.img || "", tSize:b.tSize || 110, bSize:b.bSize || 64, bg:"#000000", bgOp:0}); });
-  if (M.slides !== false) S.slides.items.forEach(function(x){ if (typeof x === "string") x = {id:x, img:x}; if (x.active !== false && (x.img || x.title || x.body)) { var c = {}; for (var k in x) c[k] = x[k]; c.full = false; c.bgOp = 0; out.push(c); } });
+  var band = s2Band() && ui.mqbar; // الشرائح النصية تتحرك في شريط تحت الساعة، والصندوق للصور والأذكار
+  if (M.slides !== false) S.slides.items.forEach(function(x){ if (typeof x === "string") x = {id:x, img:x}; if (band && !x.img) return; if (x.active !== false && (x.img || x.title || x.body)) { var c = {}; for (var k in x) c[k] = x[k]; c.full = false; c.bgOp = 0; out.push(c); } });
   if (M.remind !== false) remindList(now).forEach(function(r){ out.push({id:r.id, title:r.title, body:r.body, tSize:110, bSize:66, bgOp:0}); });
   if (M.adhkar !== false) { // أذكار الصباح من الفجر إلى الظهر، وأذكار المساء من العصر إلى العشاء
     var d = dayTimes(z.Y, z.M, z.D), tm = {}; d.list.forEach(function(x){ tm[x.k] = x.A; });
@@ -956,6 +1068,7 @@ var slideState = {}, boardState = {};
 function slideList(){
   var own = S.slides.on ? S.slides.items.map(function(x){ return typeof x === "string" ? {id:x, img:x, imgMode:"contain"} : x; })
     .filter(function(x){ return x.active !== false && (x.img || x.title || x.body); }) : [];
+  (S.gslides || []).forEach(function(g){ if (g && (g.title || g.body) && inSched(g)) own.unshift(g); }); // إعلانات عامة من إدارة الموقع (محاضرة، استسقاء...) في موعدها
   var R0 = S.remind || {};
   if (R0.show !== "ticker") remindList(Date.now()).forEach(function(r){ own.unshift({id:r.id, title:r.title, body:r.body, tSize:92, bSize:52, lineH:1.7, bg:"#000000", bgOp:.55}); });
   return own;
@@ -996,28 +1109,98 @@ var alertKey = "";
 function alerts(now, ph){
   var el = document.getElementById("salert"), z = zp(now), cur = null;
   if (ph.mode !== "praying" && ph.mode !== "black" && ph.mode !== "iqnow")
-    (S.alerts || []).forEach(function(x){ if (!cur && x && x.on !== false && (x.text || x.title) && inSched(x, z)) cur = x; });
+    (S.galerts || []).concat(S.alerts || []).forEach(function(x){ if (!cur && x && x.on !== false && (x.text || x.title) && inSched(x, z)) cur = x; }); // الإعلانات العامة من إدارة الموقع أولاً
   if (!cur) { if (el && !el.hidden) { el.hidden = true; stage.classList.remove("salerton"); } alertKey = ""; return; }
   if (!el) { el = document.createElement("div"); el.id = "salert"; el.className = "slide full"; stage.appendChild(el); }
   var key = cur.id + "|" + cur.title + "|" + cur.text + "|" + layout;
   if (alertKey !== key) { alertKey = key;
     renderSlide(el, {title:cur.title || "", body:cur.text || "", tSize:cur.tSize || 130, bSize:cur.bSize || 80, tColor:cur.tColor || "#EBD1A0", bColor:"#ffffff", bg:cur.bg || "#000000", bgOp:cur.bgOp == null ? .94 : cur.bgOp, full:true, radius:0, align:"center", valign:"center", lineH:1.7, gap:40, pad:90}); }
   el.hidden = false; el.style.zIndex = 7; stage.classList.add("salerton");
+  if (el._fitK !== alertKey) { el._fitK = alertKey; fitSlide(el); }
+}
+/* الرسالة الطويلة (عاجلة أو مجدولة): يصغر الخط تدريجياً حتى يظهر النص كاملاً داخل الشاشة */
+function fitSlide(el){
+  var run = function(){
+    var box = el.querySelector(".sbox"); if (!box || el.hidden) return;
+    var st = box.querySelector(".st"), sb = box.querySelector(".sb");
+    var over = function(){ return el.scrollHeight > el.clientHeight + 2 || box.scrollHeight > box.clientHeight + 2 || box.offsetHeight > el.clientHeight * 0.9; }; // هامش حتى لا يلامس النص حافة الشاشة
+    for (var n = 0; n < 60 && over(); n++) {
+      if (sb) { var f = parseFloat(sb.style.fontSize) || 80; if (f > 22) sb.style.fontSize = (f*0.94).toFixed(1) + "px"; }
+      if (st && (!sb || n % 2)) { var g = parseFloat(st.style.fontSize) || 130; if (g > 44) st.style.fontSize = (g*0.95).toFixed(1) + "px"; }
+    }
+  };
+  run(); setTimeout(run, 700); // مرة أخرى بعد تحميل الخط
+}
+function scrMsg(txt){ var u = document.getElementById("ui") || document.body, m = document.createElement("div"); m.className = "fshint"; m.textContent = txt; u.appendChild(m);
+  setTimeout(function(){ if (m.parentNode) m.parentNode.removeChild(m); }, 3500); }
+var dhTaps = [];
+function slideTap(e){ // المس الشريحة لإيقافها، واضغط 3 مرات على اسم الظهر لتجربة الشرائح
+  if (slideState.show && e.target.closest(".slide,#fslide,.smbar")) { e.stopPropagation(); slideState.stopReq = true; tick(); return true; }
+  if (e.target.closest('[data-k="dhuhr"],[data-k="jumuah"]') && !e.target.closest(".c2,.c3,.a,.i")) {
+    var t0 = Date.now(); dhTaps = dhTaps.filter(function(x){ return t0 - x < 1500; }); dhTaps.push(t0);
+    if (dhTaps.length >= 3) { dhTaps = []; slideState.testReq = true; tick(); } return true; }
+  return false;
+}
+function bandIdle(){ // الشريط العلوي بين الشرائح: الدعاء الثابت في مكانه، فلا تبقى مساحة فارغة تحت الساعة
+  var b = ui.mqbar; if (!b) return;
+  if (!S.fixedOn || isSecond()) { b.innerHTML = ""; b.classList.remove("on", "idle"); return; }
+  b.innerHTML = '<div class="smidle">' + esc(String(S.fixedZekr || "").trim() || DEF.fixedZekr) + '</div>'; b.classList.add("on", "idle");
+  fitText(b.firstChild, .5);
+}
+function bandStatic(el, sl){ // الشريط تحت الساعة بدون حركة: الآية ثابتة لمدتها ثم التالية
+  var tx = [sl.title, sl.body].filter(function(x){ return x && String(x).trim(); }).join(" ۞ ").replace(/\s*\n+\s*/g, " "); if (!tx) return 0;
+  el.classList.remove("idle"); el.innerHTML = '<div class="smst"><span>' + esc(tx) + '</span></div>'; el.classList.add("on");
+  var d = el.firstChild, sp = d.firstChild, fit0 = function(){ if (!d.parentNode) return; d.style.fontSize = ""; // قياس النص نفسه: لا يُقصّ طرف الآية
+    var av = d.clientWidth - 36, w = sp.offsetWidth, f = parseFloat(getComputedStyle(d).fontSize) || 40;
+    if (av > 0 && w > av) d.style.fontSize = Math.max(f * .45, f * av / w * .97).toFixed(1) + "px"; };
+  fit0(); d.classList.add("fade"); setTimeout(fit0, 700); // مرة أخرى بعد تحميل الخط
+  return Math.max(3, +sl.sec || +S.slides.sec || 15) * 1000;
+}
+function slideMove(el, sl){ // حركة بخط مستقيم من اليمين لليسار أو العكس، بسرعة ثابتة فيكون وقت النص الطويل أطول
+  var mv = S.slides.move; if (!mv || mv === "none" || sl.img) return 0;
+  var tx = [sl.title, sl.body].filter(function(x){ return x && String(x).trim(); }).join(" ۞ ").replace(/\s*\n+\s*/g, " "); if (!tx) return 0;
+  var d = {}; for (var k in SLIDE_DEF) d[k] = (sl[k] !== undefined && sl[k] !== "") ? sl[k] : SLIDE_DEF[k];
+  el.innerHTML = ""; var W0 = el.clientWidth, H0 = el.clientHeight; if (!W0) return 0;
+  var line = document.createElement("div"); line.className = "smq"; line.textContent = tx;
+  var bar = el === ui.mqbar; // الشريط العلوي: نفس خط ولون وحجم شريط الأخبار السفلي
+  line.style.cssText = "position:absolute;top:0;bottom:0;left:0;display:flex;align-items:center;white-space:nowrap;will-change:transform;backface-visibility:hidden;line-height:1.5;" +
+    (bar ? "" : "font-weight:700;color:" + d.bColor + ";font-family:'" + (d.bFont || S.look.fontText) + "',Amiri,serif;font-size:" + Math.round(Math.min(H0 * .55, Math.max(40, d.bSize * 1.35))) + "px");
+  el.appendChild(line); var W = line.offsetWidth, sp = mqSpeed(), dur = Math.round((W0 + W) / sp * 1000);
+  var a = mv === "ltr" ? [-W, W0] : [W0, -W]; // ltr: من اليسار إلى اليمين
+  mqAnim(line, a[0], a[1], dur, false); // على كرت الشاشة: حركة ناعمة
+  return dur + 300;
 }
 function slides(now){
   var fs = $("#fslide");
-  var items = slideList();
-  var stop = function(){ slideState.show = false; if (ui.slide) ui.slide.hidden = true; if (ui.zone) ui.zone.classList.remove("sliding"); if (fs) fs.hidden = true; stage.classList.remove("fsl"); };
-  if (!items.length || isSecond()) { stop(); return; } // الشاشة الثانية تعرض المحتوى في مساحتها الخاصة
+  var SECB = isSecond() && !!ui.mqbar, items = SECB ? s2Text() : slideList();
+  var stop = function(){ if (ui.mqbar && slideState.bar && S.slides.move !== "band") bandIdle(); slideState.bar = false; mainEl.classList.remove("mqon"); slideState.show = false; if (ui.slide) ui.slide.hidden = true; if (ui.zone) ui.zone.classList.remove("sliding"); if (fs) fs.hidden = true; stage.classList.remove("fsl"); mainEl.classList.remove("sbon"); };
+  if (slideState.stopReq) { slideState.stopReq = false; slideState.test = 0; var wb = slideState.bar; stop(); var d2 = tkCoord && wb ? tkPass(false) : 0; slideState.next = now + (d2 ? d2 + 500 : S.slides.every*1000); return; } // لمسة على الشريحة توقفها
+  if (slideState.testReq) { slideState.testReq = false; if (!items.length) { scrMsg("لا توجد شرائح مفعلة لتجربتها"); return; } stop(); slideState.test = items.length; slideState.i = -1; slideState.next = 0; scrMsg("تجربة الشرائح (" + items.length + ")، المس الشريحة لإيقافها"); }
+  var coord = !!(ui.mqbar && S.slides.move !== "band" && (isSecond() ? SECB : true) && items.some(function(x){ return !x.img && (x.title || x.body); }));
+  if (coord !== tkCoord) { tkCoord = coord; slideState.cInit = 0; if (!coord) { tkStop(); requestAnimationFrame(function(){ tkPass(true); }); } else tkStop(); }
+  if (!items.length || (isSecond() && !SECB)) { stop(); if (ui.mqbar && ui.mqbar.querySelector(".smst")) bandIdle(); return; }
+  if (ui.mqbar && S.slides.move === "band" && !slideState.cInit && !slideState.show) { slideState.cInit = 1; slideState.next = Math.min(slideState.next || 0, now + 1000); }
+  if (coord && !slideState.cInit && !slideState.show) { slideState.cInit = 1; var d0 = tkPass(false); slideState.next = now + (d0 ? d0 + 500 : 1500); return; } // يبدأ بالسفلي ثم العلوي
+  if (SECB && !slideState.s2i) { slideState.s2i = 1; slideState.next = now + 1500; } // الشاشة الثانية: الشرائح المتحركة متتالية // الشاشة الثانية تعرض المحتوى في مساحتها الخاصة
   if (!ui.zone && !fs) return;
-  if (slideState.show && now >= slideState.until) { stop(); slideState.next = now + S.slides.every*1000; }
+  if (slideState.show && now >= slideState.until) { var wasBar = slideState.bar; stop(); if (slideState.test > 0 && --slideState.test > 0) slideState.next = now + 400; else { slideState.test = 0;
+      var d1 = coord && wasBar ? tkPass(false) : 0; // انتهى العلوي: يمر السفلي مرة كاملة ثم يعود العلوي
+      slideState.next = now + (d1 ? d1 + 500 : S.slides.move === "band" && wasBar ? 0 : (SECB || coord ? 1200 : S.slides.every*1000)); } } // في التجربة: الشرائح متتالية بدون انتظار
   else if (!slideState.show && now >= slideState.next) {
-    slideState.i = S.slides.random ? Math.floor(Math.random()*items.length) : (slideState.i + 1) % items.length;
+    slideState.i = S.slides.random && !slideState.test ? Math.floor(Math.random()*items.length) : (slideState.i + 1) % items.length;
     var sl = items[slideState.i], full = !!sl.full || !ui.zone;
     slideState.show = true; slideState.full = full; slideState.until = now + ((+sl.sec || S.slides.sec)*1000);
+    if (ui.mqbar && !sl.img && (sl.title || sl.body)) { // متحركة: في شريطها تحت الساعة، فلا تُغطّى الساعة ولا تتحرك عناصر الشاشة
+      if (S.slides.move === "band") { var st0 = bandStatic(ui.mqbar, sl); if (st0) { slideState.bar = true; slideState.until = now + st0; return; } }
+      ui.mqbar.classList.remove("idle"); var mq0 = slideMove(ui.mqbar, sl);
+      if (mq0) { tkStop(); slideState.bar = true; slideState.until = now + mq0; ui.mqbar.classList.add("on"); mainEl.classList.add("mqon"); return; }
+    }
+    if (SECB) { slideState.show = false; slideState.next = now + 3000; return; }
     var el = full ? fs : ui.slide;
     renderSlide(el, sl); el.hidden = false; el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade");
-    if (!full) ui.zone.classList.add("sliding"); else stage.classList.add("fsl"); // شريحة بملء الشاشة تخفي ما تحتها
+    var mq = slideMove(el, sl); if (mq) slideState.until = now + mq; // الشريحة المتحركة: مدتها حسب طول النص
+    var below = !full && ui.slide && ui.slide.classList.contains("sbelow");
+    if (below) mainEl.classList.add("sbon"); else if (!full) ui.zone.classList.add("sliding"); else stage.classList.add("fsl"); // شريحة بملء الشاشة تخفي ما تحتها
   }
 }
 function boards(now){
@@ -1037,6 +1220,14 @@ function boards(now){
 /* ===== الطقس (يعمل عند تشغيل النسخة المحلية مع إنترنت) ===== */
 var wx = null, wxAt = 0, wxStatus = "";
 try { var wc0 = JSON.parse(localStorage.getItem("rawayie-weather") || "null"); if (wc0 && Date.now() - wc0.at < 3*3600000) { wx = wc0.wx; wxStatus = "cache@" + wc0.at; } } catch(e){}
+/* النهار من الشروق إلى المغرب حسب مواقيت اليوم نفسها، فيبقى الرمز صحيحاً بدون إنترنت ويتبدل وحده */
+var wxDN = "";
+function wxDayNight(){
+  if (!ui.wx || ui.wx.hidden) return;
+  var now = Date.now(), z = zp(now), d = dayTimes(z.Y, z.M, z.D), sr = byK(d, "sunrise"), mg = byK(d, "maghrib");
+  var k = sr && mg ? (now >= sr.A && now < mg.A ? "clear_day" : "clear_night") : (wx && +wx.is_day === 0 ? "clear_night" : "clear_day");
+  if (k !== wxDN) { wxDN = k; $("img", ui.wx).src = "img/" + k + ".png"; }
+}
 function wxIcon(c, day){
   if (c === 0 || c === 1) return day ? "clear_day" : "clear_night";
   if (c === 2 || c === 3) return "cloudy"; if (c === 45 || c === 48) return "fog";
@@ -1074,8 +1265,9 @@ function fetchWeather(){
 function renderWeather(){
   if (!ui.wx) return;
   if (!S.weather.on || !wx) { ui.wx.hidden = true; return; }
-  ui.wx.hidden = false; $("img", ui.wx).src = "img/" + wxIcon(wx.weather_code, wx.is_day) + ".png";
-  $("span", ui.wx).textContent = num(Math.round(wx.temperature_2m)) + "°";
+  // رمز النهار أو الليل فقط (شمس أو هلال) ودرجة الحرارة بدون علامة الدرجة
+  ui.wx.hidden = false; wxDN = ""; wxDayNight();
+  $("span", ui.wx).textContent = num(Math.round(wx.temperature_2m));
 }
 
 /* ===== الأصوات ===== */
@@ -1098,7 +1290,37 @@ function play(kind){
   var go = function(u){ if (!u) return; try { audio.pause(); audio.src = u; audio.volume = +S.snd.vol; var p = audio.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} };
   if (custom) mediaURL(custom).then(go); else go(src);
 }
+/* ===== تنبيهات صوتية مجدولة =====
+   صوت ورسالة قصيرة (12 ثانية) قبل أو بعد أذان أو إقامة صلاة معيّنة بعدد دقائق، أو عند منتصف الليل والثلث الأخير.
+   تعمل داخل الجهاز بدون إنترنت. مثال: «قبل الفجر بـ 30 دقيقة: صلاة القيام» */
+var remFired = {}, remT = null;
+var REM_NAMES = {fajr:"الفجر", sunrise:"الشروق", dhuhr:"الظهر", asr:"العصر", maghrib:"المغرب", isha:"العشاء", mid:"منتصف الليل", third:"الثلث الأخير من الليل"};
+function remBase(r, ph, now){
+  if (r.ref === "mid" || r.ref === "third") { var n0 = nightTimes(ph.today, ph, now); return n0 ? n0[r.ref] : 0; }
+  var p = byK(ph.today, r.ref); if (!p) return 0;
+  return r.at === "iqama" && r.ref !== "sunrise" ? p.I : p.A;
+}
+function remShow(r){
+  var stage0 = stage, el = document.getElementById("remmsg"); if (!stage0) return;
+  if (!el) { el = document.createElement("div"); el.id = "remmsg"; el.className = "slide full"; stage0.appendChild(el); }
+  renderSlide(el, {title:r.title || "", body:r.text || "", tSize:120, bSize:80, tColor:"#EBD1A0", bColor:"#ffffff", bg:"#000000", bgOp:.9, full:true, radius:0, align:"center", valign:"center", lineH:1.7, gap:36, pad:90});
+  el.hidden = false; el.style.zIndex = 8; try { fitSlide(el); } catch(e){}
+  clearTimeout(remT); remT = setTimeout(function(){ el.hidden = true; }, Math.max(5, +r.sec || 12) * 1000);
+}
+function remRun(r){
+  if (r.sound && r.sound !== "none") play(r.sound === "azan" ? "azan" : r.sound === "iqama" ? "iqama" : "beep");
+  if (r.text || r.title) remShow(r);
+}
+function soundReminders(now, ph){
+  var L = (S.sndRem && S.sndRem.items) || []; if (!L.length || !ph.today) return;
+  L.forEach(function(r){ if (!r || r.on === false) return;
+    var b = remBase(r, ph, now); if (!b) return;
+    var at = b + (r.when === "after" ? 1 : -1) * (+r.min || 0) * 60000, key = r.id + "@" + Math.round(at / 60000);
+    if (now >= at && now - at < 8000 && !remFired[key]) { remFired[key] = 1; remRun(r); }
+  });
+}
 function events(now, ph){
+  try { soundReminders(now, ph); } catch(e){}
   var p = ph.cur; if (!p || p.k === "eid") return;
   var k = p.k + "@" + p.A;
   var fire = function(id, at, fn){ if (now >= at && now - at < 5000 && !fired[k + id]) { fired[k + id] = 1; fn(); } };
@@ -1118,9 +1340,20 @@ function zkSecOf(kind, text){
   if (!Z.autoSec) return Math.max(3, base);
   return Math.max(6, Math.min(120, Math.round(4 + String(text).length / 11))); // تقريباً سرعة قراءة مريحة على الشاشة
 }
-function zkPlan(kind, start){
-  var key = kind + "@" + start; if (zkPlans[key]) return zkPlans[key];
+/* قوالب الأذكار: one ذكر بعد ذكر · page صفحة مزخرفة · full صفحة بملء الشاشة بدون خلفية.
+   يمكن اختيار أكثر من قالب، فتتناوب الصلوات عليها: كل صلاة بالقالب التالي */
+var ZK_TPLS = ["one", "page", "full", "royal", "ivory", "night", "bgold", "bivory", "bgray"]; // bgold/bivory/bgray: لوحات أذكار بعد الصلاة الجاهزة (صور) // royal ملكي · ivory عاجي · night ليلي: زخارف مرسومة (SVG) حادة على أي دقة
+function zkTpls(kind){ var Z = S.zk || {}, o = Z[kind + "Tpl"], l = o ? ZK_TPLS.filter(function(k){ return o[k] && (kind === "after" || k.charAt(0) !== "b"); }) : [];
+  return l.length ? l : o ? ["one"] : [Z[kind + "Page"] === "page" ? "page" : "one"]; } // بدون اختيار: ذكر بعد ذكر، أو الإعداد القديم
+function zkTplFor(kind, key){ var l = zkTpls(kind); if (l.length < 2) return l[0];
+  var st = zkPos[kind + "T"] || {};
+  if (st.key !== key) { st = {key:key, i:st.key ? (+st.i || 0) + 1 : 0}; zkPos[kind + "T"] = st; try { localStorage.setItem("rawayie-zkpos", JSON.stringify(zkPos)); } catch(e){} }
+  return l[st.i % l.length]; }
+function zkPlan(kind, start, tpl){
+  var key = kind + "@" + start + (tpl ? "#" + tpl : ""); if (zkPlans[key]) return zkPlans[key];
   var Z = S.zk, list = zkListOf(kind) || [], n = list.length; if (!n) return null;
+  tpl = tpl || zkTplFor(kind, key);
+  if (tpl && tpl !== "one") { var pl = {page:true, tpl:tpl, list:list.slice(), total:Math.max(1, +Z[kind + "Min"] || 5) * 60000, n:n, seq:[{t:""}]}; zkPlans[key] = pl; return pl; } // صفحة ثابتة لكل الأذكار
   var maxMs = Math.max(1, +Z[kind + "Min"] || 5) * 60000, rounds = Z.noRepeat ? 1 : Math.max(1, +Z[kind + "Rounds"] || 1);
   var st = zkPos[kind] || {}, first;
   if (st.key === key) first = st.start;                                     // نفس الجلسة (مثلاً بعد إعادة تحميل الشاشة)
@@ -1136,8 +1369,93 @@ function zkPlan(kind, start){
 function txList(k, def){ var l = (S.texts[k] || []).filter(function(x){ return x && x.trim(); }); return l.length ? l : def; }
 var ovKey = "";
 function zkSize(txt){ var L = txt.length, P = layout === "P"; var s = (P ? 66 : 70)*Math.sqrt(170/Math.max(L, 60)); return Math.round(Math.max(P ? 40 : 38, Math.min(P ? 76 : 80, s))*(+((S.look.fs || {}).zk) || 1)*(+((S.look.fs || {}).ts) || 1)); }
+/* ذكر في لوحة الأذكار: العنوان القصير في السطر الأول (آية الكرسي، سيد الاستغفار) ذهبي، وعدد المرات في شارة */
+function zkItem(x){
+  var lines = String(x).split("\n"), hd = "", cnt = "";
+  if (lines.length > 1 && lines[0].length <= 26) hd = lines.shift();
+  var body = lines.join(" "), m = body.match(/\s*[(（]([^()]*(?:مرة|مرات|مره)[^()]*)[)）]\s*$/);
+  if (m) { cnt = m[1]; body = body.slice(0, m.index); }
+  if (hd && !body.trim()) { body = hd; hd = ""; } // ذكر قصير مع عدد مرات فقط: يبقى نصاً عادياً
+  return '<p>' + (hd ? '<b class="zkt">' + esc(hd) + '</b> ' : "") + esc(body) + (cnt ? ' <span class="zkn">' + esc(cnt) + '</span>' : "") + '</p>';
+}
+/* زخارف قوالب الأذكار عالية الدقة (رسم متجه SVG: حاد على شاشات 4K، ولا يحتاج صوراً ولا إنترنت) */
+function zkCorner(){ // زاوية مزخرفة: خطان متوازيان، قوس، ورقة، ونجمة ثمانية
+  return '<svg viewBox="0 0 140 140" aria-hidden="true"><g class="zkdl"><path d="M8 132 V8 H132"/><path d="M20 120 V20 H120" class="zkdt"/>' +
+    '<path d="M20 78 A58 58 0 0 1 78 20"/><path d="M20 58 A38 38 0 0 1 58 20" class="zkdt"/>' +
+    '<path d="M78 20 C92 8 108 10 116 20 C106 18 96 22 90 30"/><path d="M20 78 C8 92 10 108 20 116 C18 106 22 96 30 90"/></g>' +
+    '<g class="zkdf">' + star8(20, 20, 15, 7, "") + '<circle cx="20" cy="20" r="3.5" class="zkdh"/></g></svg>'; }
+function zkDeco(tp){
+  if (tp === "royal") return ["tl","tr","bl","br"].map(function(k){ return '<i class="zkcn ' + k + '">' + zkCorner() + '</i>'; }).join("");
+  if (tp === "night") return '<i class="zkst"></i>';
+  return "";
+}
+function zkBand(id){ // شريط نجوم هندسي متكرر
+  return '<svg class="zkband" width="100%" height="56" aria-hidden="true"><defs><pattern id="' + id + '" width="56" height="56" patternUnits="userSpaceOnUse"><g class="zkdl">' +
+    star8(28, 28, 24, 11, "") + '<circle cx="28" cy="28" r="6"/><path d="M0 28 H4 M52 28 H56 M28 0 V4 M28 52 V56"/></g></pattern></defs><rect width="100%" height="56" fill="url(#' + id + ')"/></svg>'; }
+function zkDecoTop(tp){
+  if (tp === "ivory") return zkBand("zkpt1");
+  if (tp === "night") return '<svg class="zkmoon" viewBox="0 0 240 110" aria-hidden="true"><path class="zkdf" d="M138 14 A44 44 0 1 0 138 96 A35 35 0 1 1 138 14 Z"/>' +
+    '<g class="zkdf">' + star8(160, 40, 9, 4, "") + star8(186, 24, 5, 2.3, "") + star8(60, 30, 5, 2.3, "") + star8(196, 70, 4, 1.8, "") + star8(44, 76, 4, 1.8, "") + '</g></svg>';
+  return "";
+}
+function zkDecoBot(tp){ return tp === "ivory" ? zkBand("zkpt2") : ""; }
+/* أذكار بصفحة ثابتة: كل الأذكار معاً بأكبر خط يتسع لها، وإن طالت القائمة تُقسم على صفحات متساوية المدة */
+function zkPage(now, ph, plan, m, key, el0){
+  if (/^b(gold|ivory|gray)$/.test(plan.tpl || "")) { // لوحة أذكار جاهزة بملء الشاشة: العمودية أو الأفقية حسب الشاشة
+    var bc = plan.tpl.slice(1), bsrc = "zk/after-" + bc + "-" + (layout === "P" ? "P" : "L") + ".jpg", bk = key + "|brd|" + bsrc;
+    if (ovKey !== bk) { ovKey = bk; ovEl.className = "on zk zkimg zkbrd"; ovEl.innerHTML = '<div class="zkbw" style="background:' + (bc === "ivory" ? "#f6f1ec" : "#000") + '"><img class="zkim" alt="" src="' + bsrc + '"></div>'; }
+    return; }
+  var title = t(m === "zk-after" ? "zk_after_title" : m === "zk-morning" ? "zk_morning_title" : "zk_evening_title");
+  var tp = ZK_TPLS.indexOf(plan.tpl) > 1 ? plan.tpl : "page", full = tp !== "page", img = full ? "" : (S.zk || {})[m.slice(3) + "Img"], cls = "on zk zkpage" + (full ? " zkfull" + (tp !== "full" ? " zkt-" + tp : "") : "");
+  if (img) { // لوحة أذكار جاهزة (صورة) بملء الشاشة طوال المدة
+    var ki = key + "|img|" + img; if (ovKey !== ki) { ovKey = ki; ovEl.className = "on zk zkimg"; ovEl.innerHTML = '<img class="zkim" alt="">';
+      var im = $(".zkim", ovEl); mediaURL(img).then(function(u){ if (u && im) im.src = u; }); }
+    return; }
+  var rs = layout === "P" ? 86 : 72, cn = ["tl","tr","bl","br"].map(function(k){ return '<i class="zkc ' + k + '">' + rosette(rs) + '</i>'; }).join("");
+  var head = '<div class="zkh"><div class="zkdome"><svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 120 C60 120 92 104 112 78 C132 52 150 40 172 30 C186 23 194 14 200 0 C206 14 214 23 228 30 C250 40 268 52 288 78 C308 104 340 120 400 120 Z"/></svg>' +
+    '<div class="zkb">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div><div class="o-title">' + esc(title) + '</div><div class="zkorn">' + star8(0, 0, 0, 0, "") .slice(0, 0) + '<span></span>۞<span></span></div></div>';
+  var Zf = S.zk || {}, fu = tp === "full" && Zf.fullBgImg ? specImg(Zf.fullBgImg) : "", fd = Math.max(0, Math.min(.9, Zf.fullDim == null ? .45 : +Zf.fullDim || 0));
+  var fbg = tp === "full" && Zf.fullBgImg && !fu ? "#000" : esc(Zf.fullBg || "#0b1a5c"); // صورة من الجهاز لم تُحمّل بعد: أسود مؤقتاً بدل وميض اللون
+  var fsty = fu ? 'background:linear-gradient(rgba(0,0,0,' + fd + '),rgba(0,0,0,' + fd + ')),url(&quot;' + esc(fu) + '&quot;) center/cover no-repeat,#000' : tp === "full" ? 'background-color:' + fbg : "";
+  var shell = full ? function(fs, items, pg){ return '<div class="zkfw' + (fu ? " zkfimg" : "") + '"' + (fsty ? ' style="' + fsty + '"' : "") + '><i class="zkfr"></i>' + zkDeco(tp) + '<div class="zkfh">' + zkDecoTop(tp) + '<div class="zkb">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div><div class="o-title">' + esc(title) + '</div>' +
+      '<div class="zkorn"><span></span><b>◆</b><span></span></div></div><div class="zkp"' + (fs ? ' style="font-size:' + fs + 'px"' : "") + '>' + items + '</div><div class="zkf"><span class="o-page">' + (pg || "") + '</span></div>' + zkDecoBot(tp) + '</div>'; } :
+    function(fs, items, pg){ return '<div class="zkcard"><div class="zkpat"></div>' + cn + head + '<div class="zkp"' + (fs ? ' style="font-size:' + fs + 'px"' : "") + '>' + items + '</div>' +
+    '<div class="zkf"><span class="o-page">' + (pg || "") + '</span></div></div>'; };
+  if (!plan.pages || plan.lay !== layout) { // تقسيم الصفحات بالقياس الفعلي على الشاشة
+    ovEl.className = cls; ovEl.innerHTML = shell(0, "", "");
+    var box = $(".zkp", ovEl), L = plan.list, MIN = layout === "P" ? 34 : 30, MAX = full ? (layout === "P" ? 110 : 90) : (layout === "P" ? 80 : 64);
+    var fits = function(items, fs){ box.style.fontSize = fs + "px"; box.innerHTML = items.map(zkItem).join(""); return box.scrollHeight <= box.clientHeight + 2 && box.scrollWidth <= box.clientWidth + 2; };
+    var pages = null; // القائمة الطويلة (مثل أذكار الصباح والمساء) تُقسم على صفحات بخط مقروء، والقصيرة في صفحة واحدة
+    for (var k = 1; k <= L.length && !pages; k++) { // أقل عدد صفحات يتسع فيه كل جزء بخط مقروء
+      var tot = L.reduce(function(a, x){ return a + x.length; }, 0), per = tot / k, ch = [], cur = [], acc = 0;
+      L.forEach(function(x){ if (cur.length && acc + x.length / 2 > per * (ch.length + 1) && ch.length < k - 1) { ch.push(cur); cur = []; } cur.push(x); acc += x.length; }); ch.push(cur);
+      if (ch.every(function(c){ return fits(c, MIN); })) pages = ch;
+    }
+    pages = pages || L.map(function(x){ return [x]; });
+    plan.pages = pages.map(function(c){ var lo = MIN, hi = MAX; while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (fits(c, mid)) lo = mid; else hi = mid; } return {items:c, fs:lo}; });
+    plan.lay = layout; ovKey = "";
+    if (document.fonts && document.fonts.status !== "loaded" && !plan.fw) { plan.fw = true; // القياس قبل تحميل خط الأذكار يعطي حجماً أكبر من اللازم: إعادة القياس بعد تحميله
+      document.fonts.ready.then(function(){ plan.pages = null; plan.fw = false; ovKey = ""; }); }
+  }
+  var np = plan.pages.length, pi = Math.min(np - 1, Math.floor(el0 / (plan.total / np)));
+  var k2 = key + "|p" + pi + "|" + ph.zkStart + (full ? "|" + fu + "|" + fd + "|" + fbg : "");
+  if (ovKey !== k2) { ovKey = k2; var pg = plan.pages[pi];
+    ovEl.className = cls;
+    ovEl.innerHTML = shell(pg.fs, pg.items.map(zkItem).join(""), np > 1 ? num(pi + 1) + " / " + num(np) : "");
+    var bx = $(".zkp", ovEl); // ضمان ظهور الأذكار كاملة: تصغير الخط إن تجاوز النص المساحة
+    while (bx && pg.fs > 12 && (bx.scrollHeight > bx.clientHeight + 2 || bx.scrollWidth > bx.clientWidth + 2)) { pg.fs--; bx.style.fontSize = pg.fs + "px"; } }
+  digits($(".o-clock", ovEl), fmtT(now, false, 1));
+}
+/* رمز «أغلق الجوال» مرسوم (لا يعتمد على تحميل صورة): جوال أبيض داخل دائرة حمراء بخط مائل، واضح من بعيد */
+var NOPHONE = '<svg class="o-ico" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#fff"/><rect x="34" y="18" width="32" height="64" rx="7" fill="#1d1d1f"/><rect x="38" y="25" width="24" height="44" rx="2" fill="#9fd3ff"/><circle cx="50" cy="75" r="3.2" fill="#fff"/>' +
+  '<circle cx="50" cy="50" r="42" fill="none" stroke="#e0201c" stroke-width="9"/><path d="M21 21 79 79" stroke="#e0201c" stroke-width="9" stroke-linecap="round"/></svg>';
 function overlay(now, ph){
   overlayInner(now, ph);
+  // رسالة إغلاق الجوال الطويلة: تنقسم على سطرين متوازنين، ويصغر الخط إن لزم حتى تظهر كاملة داخل الشاشة
+  var om = ovEl.querySelector(".o-msg .o-mt");
+  if (om && !om.dataset.fit) { om.dataset.fit = "1"; var box = om.parentNode; box.style.fontSize = "";
+    var fs = parseFloat(getComputedStyle(box).fontSize) || 60, lh = fs * 1.3, n = 0;
+    while (n++ < 30 && fs > 26 && (om.offsetHeight > lh * 2.4 || box.scrollWidth > box.clientWidth + 2 || box.getBoundingClientRect().width > ovEl.clientWidth * 0.98)) { fs -= 3; lh = fs * 1.3; box.style.fontSize = fs + "px"; } }
   // إضاءة خافتة للشاشة السوداء حتى لا يزعج الضوء المصلين
   if (ph.mode === "black") {
     var sty = blackBg(ph), lv = sty.lv; sty = sty.css;
@@ -1178,6 +1496,7 @@ function overlayInner(now, ph){
   if (m.indexOf("zk-") === 0) {
     var plan = ph.zkPlan, el0 = now - ph.zkStart, j = 0, acc = 0;
     if (!plan || !plan.seq.length) return;
+    if (plan.page) { zkPage(now, ph, plan, m, key, el0); return; }
     while (j < plan.seq.length - 1 && el0 >= acc + plan.seq[j].ms) { acc += plan.seq[j].ms; j++; }
     var item = plan.seq[j];
     key += "|" + j + "|" + ph.zkStart;
@@ -1223,7 +1542,7 @@ function overlayInner(now, ph){
     if (lb) { // آخر دقيقة: عداد كبير على شاشة سوداء
       if (ovKey !== key) { ovKey = key; ovEl.className = "on iq lastblk";
         ovEl.innerHTML = '<div class="o-sub">' + esc(t("remaining_for_iqamaa")) + '</div><div class="o-cnt huge"></div>' +
-          (S.notifyOn ? '<div class="o-msg"><img src="img/nophone.png" alt="">' + esc(S.notifyMsg) + '</div>' : ""); }
+          (S.notifyOn ? '<div class="o-msg">' + NOPHONE + '<span class="o-mt">' + esc(S.notifyMsg) + '</span></div>' : ""); }
       var cb = $(".o-cnt", ovEl); digits(cb, dur(left)); tcls(cb, "red", S.red90 && left <= 90);
       return;
     }
@@ -1237,7 +1556,7 @@ function overlayInner(now, ph){
           : '<div class="o-cnt big"></div>') +
         (wt ? waitTimesHTML(ph, p) : "") +
         (hadith ? '<div class="o-hadith">' + esc(S.hadithText) + '</div>' : "") +
-        (lastMin && S.notifyOn ? '<div class="o-msg"><img src="img/nophone.png" alt="">' + esc(S.notifyMsg) + '</div>' : "") + '<div class="o-clock sm"></div>' + ver; }
+        (S.notifyOn && (lastMin || S.notifyAll !== false) ? '<div class="o-msg">' + NOPHONE + '<span class="o-mt">' + esc(S.notifyMsg) + '</span></div>' : "") + '<div class="o-clock sm"></div>' + ver; }
     var cnt = $(".o-cnt", ovEl); digits(cnt, dur(left));
     var red = S.red90 && left <= 90; tcls(cnt, "red", red);
     var r1 = $(".r1", ovEl);
@@ -1312,9 +1631,10 @@ function annHTML(kind, p){
 function footHTML(){
   var site = String(S.look.footSite == null ? "" : S.look.footSite).trim(); if (/^(https?:\/\/)?(www\.)?rawayie\.sa\/?$/i.test(site)) site = ""; // نص إضافي اختياري
   var loc = S.look.showLoc === false ? "" : [String(S.addr || "").trim(), cityInfo().name].filter(Boolean).join("، ");
-  var parts = ['<span class="fsite" dir="ltr">rawayie.sa </span><span class="fver" dir="ltr">' + esc(VERSION) + '</span>'];
+  var L = S.look, head = (L.showSite === false ? "" : '<span class="fsite" dir="ltr">rawayie.sa </span>') + (L.footVer === false ? "" : '<span class="fver" dir="ltr">' + esc(VERSION) + '</span>');
+  var parts = head ? [head] : [];
   if (site) parts.push('<span class="fsite" dir="ltr">' + esc(site) + '</span>'); if (loc) parts.push('<span class="floc">' + esc(loc) + '</span>');
-  return parts.join('<span class="fsep net">|</span>') || '<span class="net">★</span>';
+  return parts.join('<span class="fsep' + (L.netStar ? ' net' : '') + '">|</span>'); // لون الاتصال فقط عند تفعيل التحقق من الاتصال
 }
 function versionText(){ return t("copy_right_for_sadja") + " · " + (window.RawayieAndroid ? "نسخة أندرويد " : "نسخة الويب ") + VERSION; }
 
@@ -1329,7 +1649,21 @@ function fitText(el, min){
   if (fs) el.style.fontSize = (fs*k).toFixed(1) + "px";
   if (k === min && el.scrollWidth > el.clientWidth + 1) el.style.whiteSpace = "normal"; // طويل جداً: سطران بخط أصغر
 }
-function fitAll(){ fitRows(); fitText(ui.mname, .5); fitText(ui.dayn, .6); fitText(ui.hij, .6); }
+function fitAll(){ fitRows(); fitText(ui.mname, .5); fitText(ui.dayn, .6); fitText(ui.hij, .6); if (ui.dbg) { fitText($(".dbm", ui.dbg), .6); fitText($(".dbm", ui.dbh), .6); } }
+/* شارات التاريخ: رقم اليوم داخل شارة، ثم الشهر، ثم السنة. الهجري من جدول أم القرى مع تعديل المشرف */
+var EN_DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+function fillBadges(z){
+  if (!ui.dbg) return;
+  var h = hijri(z.Y, z.M, z.D), dow = new Date(Date.UTC(z.Y, z.M, z.D, 12)).getUTCDay(), ar = locale() === "ar";
+  var set = function(box, d, m, y){ $(".dbn", box).textContent = num(d); $(".dbm", box).textContent = m; $(".dby", box).textContent = num(y) + (ar ? "" : " ") + y2; };
+  var y2 = t("gregorian_year_suffix"); set(ui.dbg, z.D, names().g[z.M], z.Y);
+  y2 = t("hijri_year_suffix"); set(ui.dbh, h.day, h.monthName, h.year);
+  if (ui.dayn) ui.dayn.classList.toggle("fri", dow === 5); // الجمعة بخلفية مميزة
+  if (ui.dbe) { ui.dbe.textContent = EN_DAYS[dow]; ui.dbe.classList.toggle("off", S.look.dayEn === false || locale() === "en"); } // يبقى مكانه محجوزاً فلا تختل المحاذاة
+  // شارة صغيرة في رمضان (الأيام البيض تظهر في التذكيرات فلا تتكرر هنا)
+  var lbl = ar && S.look.dateTag !== false && h.month === 9 ? "رمضان" : "";
+  if (ui.dbt) { ui.dbt.textContent = lbl; ui.dbt.hidden = !lbl; }
+}
 
 /* ===== تبديل التاريخ بين الهجري والميلادي في مكانه ===== */
 var dateTexts = [], dateIdx = 0, dateNext = 0;
@@ -1358,6 +1692,9 @@ function offCheck(now, ph){
 function tick(force){
   var now = Date.now(), z = zp(now), ph = phase(now);
   safe("off", function(){ offCheck(now, ph); });
+  safe("rotg", rotGuard);
+  safe("wxdn", wxDayNight);
+  if (stage.classList.contains("spon") && !document.getElementById("splash")) stage.classList.remove("spon"); // احتياط
   if (now - fitRowsAt > 5000) { fitRowsAt = now; safe("fitrows", fitRows); }
   var dk = z.Y + "-" + z.M + "-" + z.D;
   if (dk !== lastDay) safe("date", function(){
@@ -1365,6 +1702,7 @@ function tick(force){
     if (ui.dayn) ui.dayn.textContent = dayName(z.Y, z.M, z.D);
     if (ui.hij) { var hh0 = hijri(z.Y, z.M, z.D); dateTexts = [num(hh0.day) + " " + hh0.monthName + " " + num(hh0.year) + " " + t("hijri_year_suffix"), gregText(z.Y, z.M, z.D)];
       dateIdx = S.dateMode === "greg" ? 1 : 0; dateNext = Date.now() + (+S.dateSec)*1000; ui.hij.textContent = dateTexts[dateIdx]; }
+    fillBadges(z);
     fitAll();
     if (ui.gre) ui.gre.textContent = num(z.Y + "/" + (z.M + 1) + "/" + z.D);
     if (ui.bdate) ui.bdate.textContent = dayName(z.Y, z.M, z.D) + " · " + hijriText(z.Y, z.M, z.D);
@@ -1409,6 +1747,7 @@ function tick(force){
   safe("times", function(){ renderTimes(ph); });
   safe("night", function(){ renderNight(ph, now); });
   safe("ticker", function(){ renderTicker(); });
+  safe("ayat", function(){ renderAyat(now); });
   safe("slides", function(){ slides(now); });
   safe("boards", function(){ boards(now); });
   safe("second", function(){ secondScreen(now); });
@@ -1435,11 +1774,13 @@ function start(){
   addEventListener("resize", fit);
   loadCustomLogo();
   // الضغط على اسم صلاة الفجر: الخلفية التالية، والضغط على وقت الفجر (الأذان أو الإقامة): الخلفية السابقة
-  mainEl.addEventListener("click", function(e){ if (e.target.closest('[data-k="fajr"]')) { if (!S.pass || S.sup.fajrBg) nextBg(false, false, !!e.target.closest(".c2,.c3,.a,.i")); }
+  mainEl.addEventListener("click", function(e){ if (slideTap(e)) return; if (e.target.closest('[data-k="fajr"]')) { if (!S.pass || S.sup.fajrBg) nextBg(false, false, !!e.target.closest(".c2,.c3,.a,.i")); }
     else if (e.target.closest(".hij") && S.dateMode !== "both") { dateNext = Date.now() + (+S.dateSec)*1000; switchDate(); } });
+  var fsl = $("#fslide"); if (fsl) fsl.addEventListener("click", slideTap);
+  ovEl.addEventListener("click", function(){ if (zkPrev) { zkPreview(null); } }); // لمسة تنهي معاينة الأذكار
   var mb = $("#menu"); if (mb) mb.addEventListener("click", function(e){ e.stopPropagation(); if (window.SETTINGS) window.SETTINGS.open(); });
   fit();
-  loadCity(S.city, function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; tick(true); });
+  loadCity(uqCityId(), function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; tick(true); });
   clearInterval(timer); timer = setInterval(tick, 1000);
   ["click", "keydown", "touchstart"].forEach(function(e){ addEventListener(e, unlock, {once:false, passive:true}); });
   wake(); document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") wake(); });
@@ -1461,27 +1802,29 @@ function splash(preview){
   el.innerHTML = '<div class="sp-in"><div class="sp-bs">' + esc(String(sp.text || "").trim() || "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ") + '</div>' +
     '<div class="sp-lg"></div>' + (sp.name !== false ? '<div class="sp-nm">' + esc(S.mosque || "") + '</div>' : "") +
     (sub ? '<div class="sp-sub">' + esc(sub).replace(/\n/g, "<br>") + '</div>' : (sp.name !== false && loc ? '<div class="sp-loc">' + esc(loc) + '</div>' : "")) + '</div>';
-  stage.appendChild(el);
+  var bs0 = el.querySelector(".sp-bs"), L0 = bs0 ? bs0.textContent.length : 0; // آية طويلة: يصغر الخط حسب طولها لتظهر في سطرين أو ثلاثة
+  if (bs0 && L0 > 34) bs0.style.fontSize = Math.round((orient() === "P" ? 96 : 80) * Math.max(.5, Math.sqrt(34 / L0) * 1.15)) + "px";
+  stage.appendChild(el); stage.classList.add("spon"); // الشاشة خلف البداية مخفية: لا تظهر الساعة أو الشريط فوق شاشة البداية
   var fillLogo = function(n){ var lg = el.querySelector(".sp-lg"); if (!lg) return; var h = logoHTML("splogo");
     if (!h && S.look.logoId && n < 8) { setTimeout(function(){ fillLogo(n + 1); }, 300); return; }
     lg.innerHTML = h || '<img class="splogo" src="img/mark.png" alt="">'; };
   fillLogo(0);
   el.addEventListener("click", function(){ hide(); });
-  var gone = false, hide = function(){ if (gone) return; gone = true; el.classList.add("out"); setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 1100); };
+  var gone = false, hide = function(){ if (gone) return; gone = true; el.classList.add("out"); stage.classList.remove("spon"); setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 1100); };
   setTimeout(hide, Math.min(60, Math.max(2, +sp.sec || 6))*1000);
 }
 function wake(){ try { if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function(){}); } catch(e){} }
-function rebuild(){ zkPlans = {}; loadCustomLogo(); dayCache = {}; layout = ""; loadCity(S.city, function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }); fit(); }
+function rebuild(){ zkPlans = {}; loadCustomLogo(); dayCache = {}; layout = ""; loadCity(uqCityId(), function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }); fit(); }
 
 window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true); }, applyLook:function(){ applyLook(); }, zkList:zkListOf, lastErr:function(){ return lastErr || window.__lastErr || ""; }, splash:splash, inSched:inSched, save:save, rebuild:rebuild, IDB:IDB, mediaURL:mediaURL, uid:uid, t:t, num:num, two:two,
   wxInfo:function(){ return {status:wxStatus, wx:wx}; }, refreshWeather:function(){ wxAt = 0; fetchWeather(); },
   previewBlack:function(ms, sleep, kind){ previewSleep = !!sleep; previewKind = kind || ""; previewBlackUntil = Date.now() + ms; if (ovEl) { ovKey = ""; ovEl.dataset.bl = "~"; } },
   previewAnn:function(mode){ previewAnnMode = mode; previewAnnUntil = Date.now() + 8000; },
-  orient:function(){ return orient(); },
-  mySlot:mySlot, isSecond:isSecond, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
+  orient:function(){ return orient(); }, zkPreview:zkPreview, scrMsg:function(t){ scrMsg(t); },
+  mySlot:mySlot, isSecond:isSecond, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, uqCityId:uqCityId, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
-  setAll:function(o){ var n = merge(DEF, o); for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
-  clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
+  setAll:function(o){ var n = mvFix(merge(DEF, o)); if (n.look) n.look.rotOk = +n.look.rot || 0; for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
+  fitSlide:fitSlide, remTest:function(r){ remRun(r); }, REM_NAMES:REM_NAMES, clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 

@@ -137,6 +137,21 @@ public class MainActivity extends Activity {
         } catch (Exception e) { return false; }
     }
 
+    /* لوحة مفاتيح التطبيق مفعّلة: النافذة كلها لا تتعامل مع لوحة النظام (FLAG_ALT_FOCUSABLE_IM)،
+       فلا تظهر لحظة مع كل ضغطة كما كان يحدث (كانت تُغلق بعد ظهورها فتومض)، ولا تُصغَّر الصفحة أو تُزاح لأجلها (ADJUST_NOTHING).
+       أزرار الريموت ولوحة المفاتيح الموصولة (USB) تبقى تعمل لأنها لا تمر عبر لوحة النظام */
+    private static void applyImeBlock(Window w, boolean on) {
+        try {
+            if (on) {
+                w.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+                w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+            } else {
+                w.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+                w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+            }
+        } catch (Exception ignored) { }
+    }
+
     private void hideIme() {
         try {
             android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -170,7 +185,7 @@ public class MainActivity extends Activity {
         statusBar = isPhone() && getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("statusBar", true);
         if (statusBar) w.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         imeBlock = getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("imeBlock", true);
-        if (imeBlock) w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        applyImeBlock(w, imeBlock);
 
         // بعض الأجهزة يكون فيها «Android System WebView» معطلاً أو قيد التحديث: بدل أن يُغلق التطبيق تظهر رسالة وإعادة محاولة
         try {
@@ -225,7 +240,12 @@ public class MainActivity extends Activity {
             else if (Build.VERSION.SDK_INT >= 29) s.setForceDark(WebSettings.FORCE_DARK_OFF);
         } catch (Throwable ignored) { }                             // حجم خط النظام لا يغيّر تصميم الشاشة
         s.setUseWideViewPort(true);
-        s.setLoadWithOverviewMode(true);
+        // الصفحة بحجم الشاشة تماماً (viewport): لا تصغير «نظرة عامة» ولا تكبير بالخطأ (لمستين أو عجلة الفأرة)،
+        // لأن الصفحة المكبّرة أو المصغّرة يرسمها المحرك بدقة أقل فتظهر النصوص مبكسلة
+        s.setLoadWithOverviewMode(false);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
         s.setAllowFileAccess(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
@@ -563,7 +583,10 @@ public class MainActivity extends Activity {
     /* ===== دقة مخرج HDMI =====
        يطلب من الجهاز أعلى دقة يدعمها مخرج الشاشة (مثل 4K) بنفس معدل التحديث الحالي.
        ملاحظة: كثير من أجهزة التلفاز ترسم واجهة التطبيقات بدقة 1080p ثم تكبّرها إلى 4K، وهذا من نظام الجهاز */
-    private boolean prefer4k() { return getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("prefer4k", true); }
+    /* الافتراضي: مخرج HDMI كما اختاره الجهاز. أغلب أجهزة التلفاز ترسم التطبيقات بدقة 1080p مهما كان المخرج،
+       وفرض 4K يجعل الجهاز نفسه يكبّر الصورة (بجودة أقل من معالج التلفاز) فتظهر النصوص أنعم وأقل حدة.
+       يبقى خيار 4K في الإعدادات لمن يريده (يُحفظ عند تغييره فقط) */
+    private boolean prefer4k() { return getSharedPreferences("rawayie", MODE_PRIVATE).getBoolean("prefer4k", false); }
 
     private void applyDisplayMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
@@ -842,7 +865,7 @@ public class MainActivity extends Activity {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("imeBlock", on).apply();
             runOnUiThread(() -> {
                 boolean ch = imeBlock != on; imeBlock = on;
-                getWindow().setSoftInputMode(on ? WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN : WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+                applyImeBlock(getWindow(), on);
                 if (on) hideIme();
                 if (ch && web != null) { try { android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE); if (im != null) im.restartInput(web); } catch (Exception ignored) { } }
             });

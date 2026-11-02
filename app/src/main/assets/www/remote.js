@@ -10,21 +10,24 @@ var A = window.APP, S = A.S;
    يقرأ إعدادات الشاشة من الخادم بصلاحية المدير المسجّل، ويعرضها كما تظهر في المسجد. لا يرسل حالة ولا يحفظ ولا يربط هذا الجهاز */
 if (window.RAWAYIE_PREVIEW) { (function(){
   var q = new URLSearchParams(location.search), sv = String(q.get("server") || "").replace(/\/+$/, ""), cd = q.get("code") || "", nonce = q.get("nonce") || "", rev = -1;
-  var MG = !!window.RAWAYIE_MANAGE, dirty = false, saving = null, saveT = null, media = {}, first = true;
+  var rvHeld = false, MG = !!window.RAWAYIE_MANAGE, dirty = false, saving = null, saveT = null, media = {}, first = true;
   var bar = document.createElement("div"); bar.className = "pvbar"; bar.textContent = (MG ? "إدارة: " : "معاينة: ") + cd; document.body.appendChild(bar);
   var sep = function(u){ return u.indexOf("?") >= 0 ? "&" : "?"; };
   var cfgUrl = sv + "/screens/" + encodeURIComponent(cd) + "/config";
-  var say = function(t, bad){ bar.textContent = t; bar.classList.toggle("bad", !!bad); };
+  // الشريط يظهر أسفل الشاشة لحظات ثم يصغر في الزاوية العليا، حتى لا يغطي الشريط الإخباري والإعلانات
+  var miniT = null;
+  var say = function(t, bad){ bar.textContent = t; bar.classList.toggle("bad", !!bad); bar.classList.remove("mini"); clearTimeout(miniT); miniT = setTimeout(function(){ bar.classList.add("mini"); }, bad ? 8000 : 5000); };
   var load = function(){
     if (MG && (dirty || saving)) return; // تعديلات لم تُحفظ بعد: لا تُستبدل
     fetch(cfgUrl + sep(cfgUrl) + "_=" + Date.now(), {credentials:"same-origin", cache:"no-store", headers:{"X-WP-Nonce":nonce}})
       .then(function(r){ if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "انتهت الجلسة، افتح الشاشة من لوحة المدير مرة أخرى" : "HTTP " + r.status); return r.json(); })
       .then(function(c){ if (!c) { say(MG ? "لم ترسل هذه الشاشة إعداداتها بعد. يمكنك ضبطها هنا وتصلها عند تشغيلها" : "لم ترسل هذه الشاشة إعداداتها بعد"); if (MG && first) { first = false; open1(); } return; }
         if (c.rev === rev || (MG && (dirty || saving))) return; rev = c.rev;
-        var cfg = JSON.parse(JSON.stringify(c)); delete cfg.rev; delete cfg.by; cfg.remote = {on:false}; cfg.pass = ""; if (cfg.sup) cfg.sup.pass = ""; applying = true; A.setAll(cfg); applying = false;
-        say((MG ? "إدارة: " : "معاينة: ") + (c.mosque || cd) + (MG ? " · التعديلات تُحفظ في الموقع تلقائياً" : " · تتحدث تلقائياً"));
+        var cfg = JSON.parse(JSON.stringify(c)); delete cfg.rev; delete cfg.by; delete cfg._pend; delete cfg._rvl; cfg.remote = {on:false}; cfg.pass = ""; if (cfg.sup) cfg.sup.pass = ""; applying = true; A.setAll(cfg); applying = false;
+        var rvl = c._rvl, rvTxt = c._pend ? " · تعديلاتك بانتظار موافقة الإدارة" : rvl && rvl.st === "no" && Date.now() / 1000 - rvl.at < 3 * 86400 ? " · لم تتم الموافقة على آخر تعديل" + (rvl.why ? ": " + rvl.why : "") : "";
+        say((MG ? "إدارة: " : "معاينة: ") + (c.mosque || cd) + (MG ? " · التعديلات تُحفظ في الموقع تلقائياً" : " · تتحدث تلقائياً") + rvTxt, !!(rvl && rvl.st === "no" && !c._pend && rvTxt));
         if (MG) { if (first) { first = false; open1(); } else if (window.SETTINGS && window.SETTINGS.refresh) window.SETTINGS.refresh(); } })
-      .catch(function(e){ say((MG ? "إدارة: " : "معاينة: ") + (e.message || e), true); });
+      .catch(function(e){ var m = String(e && e.message || e); if (/fetch|network|load failed/i.test(m)) m = "تعذر الاتصال بالموقع الآن، تُعرض آخر نسخة وتتحدث تلقائياً"; say((MG ? "إدارة: " : "معاينة: ") + m, true); });
   };
   // الإدارة من الموقع: تُعرض الشاشة أولاً للمعاينة، والإعدادات بزر «إعدادات الشاشة» (أو مباشرة مع ‎&open=1)
   var open1 = function(){ if (/[?&]open=1(&|$)/.test(location.search)) setTimeout(function(){ try { if (window.SETTINGS) window.SETTINGS.open(); } catch(e){} }, 300); };
@@ -55,8 +58,8 @@ if (window.RAWAYIE_PREVIEW) { (function(){
       return fetch(cfgUrl, {method:"POST", credentials:"same-origin", cache:"no-store", headers:{"Content-Type":"application/json", "X-WP-Nonce":nonce, "X-HTTP-Method-Override":"PUT"}, body:JSON.stringify(c2)})
         .then(function(r){ return r.text().then(function(t){ var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
           if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "لا تملك صلاحية الحفظ أو انتهت الجلسة. حدّث الصفحة" : (j && j.message) || "HTTP " + r.status);
-          rev = j && j.rev || c2.rev; }); });
-    }).then(function(){ saving = null; say("تم الحفظ في الموقع ✓ يصل للشاشة خلال دقيقة"); if (dirty) { saveT = setTimeout(push, 800); } },
+          rev = j && j.rev || c2.rev; rvHeld = !!(j && j._review); }); });
+    }).then(function(){ saving = null; say(rvHeld ? "أُرسل للإدارة للمراجعة ✓ يظهر على الشاشة بعد الموافقة" : "تم الحفظ في الموقع ✓ يصل للشاشة خلال دقيقة"); if (dirty) { saveT = setTimeout(push, 800); } },
       function(e){ saving = null; dirty = true; say("لم يُحفظ: " + (e.message || e) + " · سيُعاد المحاولة", true); saveT = setTimeout(push, 15000); });
     return saving;
   };
@@ -227,11 +230,18 @@ function pollSync(){
     if (!j) return;
     if (sendSt) { state.stAt = now; state.stSig = statusSig(b); }
     if (j.slot !== undefined && +j.slot !== +(S.remote.slot || 0)) { S.remote.slot = +j.slot || 0; origSave(); try { A.rebuild(); } catch(e){} } // رقم هذا الجهاز بين شاشات المسجد
+    if (j.ver) verKick(String(j.ver));
     if (!j.has) return push();                                             // أول ربط: ترفع الشاشة إعداداتها
     if (j.config && (j.config.rev || 0) !== (S.remote.rev || 0)) applyCfg(j.config);
     return handleCmd(j.cmd);
   }).then(function(){ ok(); netOk(); }).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); netFail(); }); // موقع بإضافة قديمة: الطريقة السابقة
 }
+/* إصدار أحدث على الموقع: تطلب الشاشة التحديث فوراً (كل 3 دقائق كحد أقصى حتى يصل) */
+var verKickAt = 0;
+function verNum(v){ var p = String(v || "").split("."); return (+p[0] || 0) * 1000 + (+p[1] || 0); }
+function verKick(v){ var AN = window.RawayieAndroid, now = Date.now();
+  if (!AN || !AN.otaCheck || String(v) === String(A.VERSION) || now - verKickAt < 180000) return; // أي إصدار مختلف في الموقع (أعلى أو أقل بعد تغيير الترقيم) يُنزَّل
+  verKickAt = now; try { AN.otaCheck(); } catch(e){} }
 function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
     // المدة المتبقية بساعة الخادم إن توفرت، فلا تتأثر بساعة جهاز الشاشة
@@ -240,7 +250,15 @@ function handleCmd(cmd){
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
 }
 function runCmd(c, left){
+  if (c.type === "restart") { // إعادة تشغيل التطبيق من الموقع: يبدأ من جديد (شاشة البداية) ويطلب آخر تحديث
+    var AN1 = window.RawayieAndroid; try { if (AN1 && AN1.otaCheck) AN1.otaCheck(); } catch(e){}
+    setTimeout(function(){ try { if (AN1 && AN1.restartApp) { AN1.restartApp(); return; } if (AN1 && AN1.reload) { AN1.reload(); return; } } catch(e){}
+      // المتصفح بملء الشاشة: إعادة التحميل تخرجه من ملء الشاشة (يحتاج لمسة لإرجاعه)، فيُعاد التشغيل داخل الصفحة
+      if (window.isFS && window.isFS()) { try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function(r){ if (r) r.update(); }); } catch(e){}
+        try { A.splash(); } catch(e){} A.rebuild(); setTimeout(poll, 1500); return; }
+      location.reload(); }, 1500); return; }
   if (c.type === "reload") {
+    try { var AN0 = window.RawayieAndroid; if (AN0 && AN0.otaCheck) AN0.otaCheck(); } catch(e){} // إعادة التحميل من الموقع تجلب أحدث إصدار أيضاً
     // بملء الشاشة: تحديث كامل للعرض بدون إعادة تحميل الصفحة، فتبقى الشاشة بملء الشاشة
     if (window.isFS && window.isFS()) { A.rebuild(); setTimeout(poll, 1500); return; }
     setTimeout(function(){ location.reload(); }, 500); return; }
@@ -261,7 +279,7 @@ function showMsg(c, left){
   var stage = document.getElementById("stage"), el = document.getElementById("rmsg");
   if (!el) { el = document.createElement("div"); el.id = "rmsg"; el.className = "slide full"; stage.appendChild(el); }
   A.renderSlide(el, {title:c.title || "", body:c.text || "", tSize:c.tSize || 130, bSize:c.bSize || 80, tColor:c.tColor || "#EBD1A0", bColor:"#ffffff", bg:c.bg || "#000000", bgOp:c.bgOp == null ? .94 : c.bgOp, full:true, radius:0, align:"center", valign:"center", lineH:1.7, gap:40, pad:90});
-  el.hidden = false; el.style.zIndex = 8; stage.classList.add("rmsgon");
+  el.hidden = false; el.style.zIndex = 8; stage.classList.add("rmsgon"); try { A.fitSlide(el); } catch(e){}
   clearTimeout(msgT); msgT = setTimeout(hideMsg, until - Date.now());
 }
 function hideMsg(){ var el = document.getElementById("rmsg"); if (el) el.hidden = true; var sg = document.getElementById("stage"); if (sg) sg.classList.remove("rmsgon"); clearTimeout(msgT); }
@@ -417,7 +435,7 @@ function linkSession(site, cb){
   var emit = function(t, d){ if (alive) try { cb(t, d); } catch(e){} };
   var start = function(){
     clearTimeout(timer); emit("busy");
-    postJSON(siteCandidates(site, "/link/start"), {dev:dev, name:S.mosque || ""}).then(function(r){ if (!alive) return;
+    postJSON(siteCandidates(site, "/link/start"), {dev:dev, name:S.mosque || "", ver:A.VERSION, apk:(function(){ try { return window.RawayieAndroid && RawayieAndroid.version ? String(RawayieAndroid.version()) : ""; } catch(e){ return ""; } })(), scr:screen.width + "×" + screen.height}).then(function(r){ if (!alive) return;
       cur = r.j; base = r.url.replace(/link\/start$/, ""); cur.until = Date.now() + (cur.ttl || 600) * 1000; emit("code", cur); timer = setTimeout(poll, 3000); },
       function(e){ emit("error", e); if (e.code !== "rws_noqr" && e.status !== 400) timer = setTimeout(start, 15000); });
   };
