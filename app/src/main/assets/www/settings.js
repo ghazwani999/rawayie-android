@@ -437,6 +437,13 @@ function licCard(){
       (s.active ? "" : '<a class="btn" href="' + s.waLink + '" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">تواصل عبر واتساب ' + esc(s.wa) + '</a>') + '</div>',
     s.active ? "" : "يُفعَّل الترخيص من لوحة الإدارة فقط. أرسل رقم الجهاز عبر واتساب " + s.wa + "، ثم اكتب كود التفعيل (6 أرقام) الذي يصلك.");
 }
+/* سطر تشخيص: يساعد الدعم على معرفة دقة الرسم الفعلية وطريقة العرض ونسخة محرك العرض في الجهاز */
+function dispTech(d){
+  var fm = {"1":"RGBA8888","2":"RGBX8888","4":"RGB565","-1":"opaque","-3":"translucent"}, cv = (navigator.userAgent.match(/Chrome\/([\d.]+)/) || [])[1] || "?";
+  var zm = !!document.getElementById("stagebox"), st = document.getElementById("stage");
+  return "DPR " + (window.devicePixelRatio || 1) + " · page " + innerWidth + "×" + innerHeight + " · render " + (zm ? "zoom" : "scale") + (st && st.style.zoom ? " " + (+st.style.zoom).toFixed(3) : "") +
+    " · win " + (d.fmt != null ? (fm[String(d.fmt)] || d.fmt) : "?") + (d.lowram ? " · low-RAM" : "") + " · WebView " + (d.webview || cv) + (d.model ? " · " + d.model : "") + (d.android ? " · Android " + d.android : "");
+}
 /* دقة العرض على التلفاز (تطبيق أندرويد فقط) */
 function hdmiCard(){
   if (window.RAWAYIE_MANAGE) return devOnly("دقة العرض على التلفاز (HDMI)", "تظهر دقة العرض وخيار مخرج HDMI في تطبيق أندرويد على جهاز المسجد نفسه، لأنها تخص الجهاز وليست من إعدادات الشاشة.");
@@ -446,8 +453,9 @@ function hdmiCard(){
   var mx = d.maxW ? Math.max(d.maxW, d.maxH) + "×" + Math.min(d.maxW, d.maxH) : "";
   var uiLow = d.uiW && Math.max(d.uiW, d.uiH) < 1900, up = d.outW && d.uiW && Math.max(d.outW, d.outH) > Math.max(d.uiW, d.uiH) + 10;
   return card("دقة العرض على التلفاز (HDMI)",
-    '<div class="fld"><span><b>مخرج HDMI الآن</b><small><span dir="ltr">' + esc(out) + '</span>' + (mx && mx !== out.split(" ")[0] ? ' · أعلى دقة يدعمها الجهاز: <span dir="ltr">' + esc(mx) + '</span>' : "") + '</small></span></div>' +
-    '<div class="fld"><span><b>دقة رسم الشاشة في الجهاز</b><small><span dir="ltr">' + esc(ui) + '</span>' + (uiLow ? " ⚠ منخفضة" : "") + (up ? ' ثم يكبّرها الجهاز إلى <span dir="ltr">' + esc(out.split(" ")[0]) + '</span>' : "") + '</small></span></div>' +
+    '<div class="fld"><span><b>مخرج HDMI الآن</b><small class="val"><span dir="ltr">' + esc(out) + '</span>' + (mx && mx !== out.split(" ")[0] ? ' · أعلى دقة يدعمها الجهاز: <span dir="ltr">' + esc(mx) + '</span>' : "") + '</small></span></div>' +
+    '<div class="fld"><span><b>دقة رسم الشاشة في الجهاز</b><small class="val"><span dir="ltr">' + esc(ui) + '</span>' + (uiLow ? " ⚠ منخفضة" : "") + (up ? ' ثم يكبّرها الجهاز إلى <span dir="ltr">' + esc(out.split(" ")[0]) + '</span>' : "") + '</small></span></div>' +
+    '<div class="fld"><span><b>معلومات تقنية للدعم</b><small class="val" dir="ltr" style="text-align:left">' + esc(dispTech(d)) + '</small></span></div>' +
     '<label class="fld tog" for="hd4k"><span><b>تشغيل مخرج HDMI بأعلى دقة يدعمها الجهاز</b><small>مثل 4K إن كان الجهاز والتلفاز يدعمانها</small></span><input type="checkbox" id="hd4k"' + (d.prefer4k !== false ? " checked" : "") + '><i></i></label>' +
     '<p class="note">' + esc(uiLow ? "الجهاز يرسم الشاشة بدقة أقل من 1080، فتظهر النصوص أقل حدة. من إعدادات الجهاز ← العرض (Display) ← الدقة (Resolution) اختر 1080p أو 4K، وإن وُجد خيار «دقة واجهة المستخدم» أو «UI resolution» فاجعله 1080p أو أعلى." :
       "أغلب أجهزة أندرويد للتلفاز ترسم واجهة التطبيقات بدقة 1080p ثم تكبّرها إلى 4K. هذا من نظام الجهاز وليس من التطبيق، وتبقى الصورة واضحة إذا ضُبط ما يلي:") + '</p>' +

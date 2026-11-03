@@ -452,6 +452,11 @@ function orient(){
   if (window.RAWAYIE_PREVIEW && !window.RawayieAndroid) { var r0 = (((+S.look.rot || 0) % 360) + 360) % 360; if (r0 === 90 || r0 === 270) return "P"; }
   return h >= w ? "P" : "L";
 }
+/* هل يُعرض المسرح بـ zoom (حاد) أم بـ scale (الطريقة القديمة)؟ */
+function rwsZoomOK(){
+  try { if (localStorage.getItem("rawayie-render") === "scale") return false; } catch(e){}
+  try { return !window.CSS || !CSS.supports || CSS.supports("zoom", "2"); } catch(e){ return true; }
+}
 function fit(){
   if (!stage) return; // الإعدادات وصلت من الموقع قبل تجهيز الصفحة (لوحة التعديل تُفتح مخفية): يُرسم عند بدء التشغيل
   var o = orient(), W = o === "P" ? 1080 : 1920, H = o === "P" ? 1920 : 1080, r = rotCSS();
@@ -472,8 +477,23 @@ function fit(){
   window.RWS_PXK = sc * dpr; // بكسلات الجهاز لكل بكسل في التصميم: لضبط سرعة الشريط على بكسلات كاملة
   var side = r === 90 || r === 270, bw = (side ? H : W)*sc, bh = (side ? W : H)*sc, x0 = (RW - bw)/2, y0 = (RH - bh)/2;
   var tx = r === 90 || r === 180 ? x0 + bw : x0, ty = r === 180 || r === 270 ? y0 + bh : y0;
+  /* الرسم الحاد: كان التصميم (1080×1920 أو 1920×1080) يُرسم بمقاسه ثم يُصغَّر أو يُكبَّر بـ transform: scale()،
+     فتقع النصوص وحواف الصفوف والبطاقات على أجزاء من البكسل وتظهر ناعمة ومشوشة، خاصة على أجهزة 720p.
+     الآن يُعرض المسرح بـ zoom: المتصفح يعيد تخطيط كل شيء بمقاسه الحقيقي على الشاشة ويثبّت الحواف على بكسلات كاملة.
+     التدوير والتموضع في غلاف خارجي (#stagebox) بلا تكبير، فلا يختلف السلوك بين نسخ WebView القديمة والحديثة.
+     التصميم نفسه لم يتغير: نفس المقاسات بوحدات التصميم. للمقارنة: localStorage «rawayie-render» = «scale» يعيد الطريقة القديمة */
+  var useZoom = rwsZoomOK();
+  var box = stage.parentNode && stage.parentNode.id === "stagebox" ? stage.parentNode : null;
+  if (useZoom && !box) { box = document.createElement("div"); box.id = "stagebox"; stage.parentNode.insertBefore(box, stage); box.appendChild(stage); }
   stage.style.left = "0"; stage.style.top = "0"; stage.style.transformOrigin = "0 0";
-  stage.style.transform = "translate(" + px(tx) + "px," + px(ty) + "px) rotate(" + r + "deg) scale(" + sc + ")";
+  if (useZoom) {
+    box.style.cssText = "position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;transform:translate(" + px(tx) + "px," + px(ty) + "px) rotate(" + r + "deg)";
+    stage.style.transform = "none"; stage.style.zoom = String(sc);
+  } else {
+    if (box) box.style.transform = "none";
+    stage.style.zoom = "";
+    stage.style.transform = "translate(" + px(tx) + "px," + px(ty) + "px) rotate(" + r + "deg) scale(" + sc + ")";
+  }
   // طبقة الإعدادات ولوحة المفاتيح: كانت تتوسط الشاشة بـ translate(-50%,-50%) فتقع على نصف بكسل في كثير من الأجهزة
   // (الجوالات والأجهزة اللوحية خاصة مع التدوير) فتظهر كل النصوص ضبابية. الآن تُثبّت من الزاوية على بكسلات كاملة
   var uiL = document.getElementById("ui");
@@ -1455,7 +1475,7 @@ function overlay(now, ph){
   var om = ovEl.querySelector(".o-msg .o-mt");
   if (om && !om.dataset.fit) { om.dataset.fit = "1"; var box = om.parentNode; box.style.fontSize = "";
     var fs = parseFloat(getComputedStyle(box).fontSize) || 60, lh = fs * 1.3, n = 0;
-    while (n++ < 30 && fs > 26 && (om.offsetHeight > lh * 2.4 || box.scrollWidth > box.clientWidth + 2 || box.getBoundingClientRect().width > ovEl.clientWidth * 0.98)) { fs -= 3; lh = fs * 1.3; box.style.fontSize = fs + "px"; } }
+    while (n++ < 30 && fs > 26 && (om.offsetHeight > lh * 2.4 || box.scrollWidth > box.clientWidth + 2 || box.offsetWidth > ovEl.clientWidth * 0.98)) { fs -= 3; lh = fs * 1.3; box.style.fontSize = fs + "px"; } }
   // إضاءة خافتة للشاشة السوداء حتى لا يزعج الضوء المصلين
   if (ph.mode === "black") {
     var sty = blackBg(ph), lv = sty.lv; sty = sty.css;

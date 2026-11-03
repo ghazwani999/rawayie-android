@@ -167,6 +167,10 @@ public class MainActivity extends Activity {
         super.onCreate(saved);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window w = getWindow();
+        /* ألوان 32 بت للنافذة: بعض أجهزة التلفاز (Allwinner H313 مثل Tanix H313 وX96Q، وأجهزة أخرى بذاكرة قليلة)
+           تعطي النافذة افتراضياً ألوان 16 بت (RGB565)، فتظهر الصور والتدرجات متقطعة وحواف النصوص مسننة وغير واضحة.
+           تطبيقات Flutter لا تتأثر لأنها ترسم على سطح خاص بألوان 32 بت، وهنا نطلبها للنافذة نفسها */
+        try { w.setFormat(android.graphics.PixelFormat.RGBA_8888); } catch (Exception ignored) { }
         w.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_FULLSCREEN
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
@@ -624,6 +628,9 @@ public class MainActivity extends Activity {
                 j.append(",\"maxW\":").append(mw).append(",\"maxH\":").append(mh);
             }
             j.append(",\"prefer4k\":").append(prefer4k());
+            j.append(",\"fmt\":").append(getWindow().getAttributes().format);
+            try { android.content.pm.PackageInfo wv = Build.VERSION.SDK_INT >= 26 ? WebView.getCurrentWebViewPackage() : null; if (wv != null) j.append(",\"webview\":\"").append(String.valueOf(wv.versionName).replace("\"", "")).append("\""); } catch (Throwable ignored) { }
+            try { j.append(",\"lowram\":").append(((android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE)).isLowRamDevice()); } catch (Throwable ignored) { }
             j.append(",\"model\":\"").append((Build.MANUFACTURER + " " + Build.MODEL).replace("\"", "")).append("\"");
             j.append(",\"android\":\"").append(Build.VERSION.RELEASE).append("\"");
         } catch (Exception e) { j.append("\"err\":\"").append(String.valueOf(e.getMessage()).replace("\"", "")).append("\""); }
