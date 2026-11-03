@@ -766,7 +766,7 @@ public class MainActivity extends Activity {
         cssRot = ((r % 360) + 360) % 360;
         if (cursor != null) cursor.setRotation(cssRot);
         if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && web.hasPointerCapture()) web.releasePointerCapture();
-        if (cssRot == 0 && cursor != null) cursor.setVisibility(View.GONE);
+        if (cssRot == 0) hideCursor();
     }
 
     @Override
@@ -794,6 +794,28 @@ public class MainActivity extends Activity {
         if (cursor == null || web == null) return;
         if (vx < 0) { vx = web.getWidth() / 2f; vy = web.getHeight() / 2f; }
         cursor.setVisibility(View.VISIBLE); cursor.setX(vx); cursor.setY(vy); cursor.bringToFront();
+        ui.removeCallbacks(cursorIdle); ui.postDelayed(cursorIdle, CURSOR_IDLE_MS);
+    }
+
+    /* إخفاء المؤشر الخاص: إطفاء وضع الفأرة في الريموت لا يرسل للتطبيق أي إشارة، فكان المؤشر يبقى معلقاً على الشاشة.
+       يختفي الآن بعد ثوانٍ بلا حركة، وفوراً عند استخدام أزرار الريموت، ويعود في مكانه مع أول حركة للفأرة.
+       الفأرة تبقى ممسوكة (لا يُفلت الإمساك) حتى لا يظهر مؤشر النظام غير المدوّر */
+    static final long CURSOR_IDLE_MS = 4000;
+    private final Runnable cursorIdle = () -> {
+        if (vDown) { ui.postDelayed(this.cursorIdle, CURSOR_IDLE_MS); return; } // أثناء السحب لا يختفي
+        if (cursor != null) cursor.setVisibility(View.GONE);
+    };
+
+    private void hideCursor() {
+        ui.removeCallbacks(cursorIdle);
+        if (cursor != null) cursor.setVisibility(View.GONE);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN && cursor != null && cursor.getVisibility() == View.VISIBLE
+                && !e.isFromSource(InputDevice.SOURCE_MOUSE) && !vDown) hideCursor();
+        return super.dispatchKeyEvent(e);
     }
 
     private boolean onVMouse(MotionEvent ev) {
