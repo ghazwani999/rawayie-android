@@ -20,7 +20,7 @@
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:banner="@drawable/banner"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -66,5 +66,7 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".WakeReceiver" android:exported="false" />
+        <!-- حارس الشاشة: يعيد فتح التطبيق إذا خرج منه الجهاز بدون قصد -->
+        <receiver android:name=".KeepAlive" android:exported="false" />
     </application>
 </manifest>

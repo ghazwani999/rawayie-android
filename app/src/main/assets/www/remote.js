@@ -265,7 +265,7 @@ function runCmd(c, left){
   if (c.type === "msg") showMsg(c, left);
   // من لوحة الإدارة: إلغاء كلمة سر الإعدادات المنسية (المدير والمشرف) فيضبط المسؤول كلمة جديدة
   // من صفحة الإدارة: كلمات سر جديدة للإعدادات (الفارغ لا يغيّر)
-  if (c.type === "setpass") { if (c.p) S.pass = String(c.p); if (c.sp && S.sup && c.sp !== S.pass) S.sup.pass = String(c.sp); origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} }
+  if (c.type === "setpass") { if (c.p) S.pass = String(c.p); if (c.sp && S.sup && c.sp !== S.pass) S.sup.pass = String(c.sp); origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} try { if (window.SETTINGS && SETTINGS.lock) SETTINGS.lock(); } catch(e){} }
   if (c.type === "resetpass") { S.pass = ""; if (S.sup) S.sup.pass = ""; origSave(); try { localStorage.removeItem("rws-unlock-keep"); sessionStorage.removeItem("rws-unlock"); } catch(e){} }
   if (c.type === "clear") hideMsg();
 }

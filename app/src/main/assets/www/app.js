@@ -12,12 +12,12 @@ var DEF = {
   adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, shift:0, summer:false, ramadan30:false, hijriAdj:0,
   iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
-  hidePrayer:true, blackTime:true, blackDate:false, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
+  hidePrayer:true, blackTime:true, blackDate:false, blackMsg:true, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
   offPrayer:false, offSleep:false, lockMin:15, devOpen:false, devSecs:["rotate","sounds"], sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
   azanScreen:true, azanDur:4, duaAfterAzan:true,
-  lastMinOnly:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
+  lastMinOnly:false, noIqWait:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
-  snd:{azan:"short", iqama:"short", beep:true, vol:1},
+  snd:{azan:"short", iqama:"short", beep:true, vol:1, mute:false},
   sndRem:{items:[]},
   ayat:{on:false, sec:20, mode:"default", list:"", pos:"mid"},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -40,7 +40,7 @@ var DEF = {
         fontText:"Amiri", fontNum:"Amiri", fontZekr:"Amiri",
         h24:false, seconds:true, arabicDigits:false, dimPast:true, shadow:true,
         centerP:true, centerL:true, bigL:false, homeClock:false, bigCounter:false, nextSec:false, showCount:true, bigIqCnt:false, iqClock:false, ovGlass:true, nightTimes:true, nightShow:"maghrib", nightAfter:0, nightFrom:"21:00", nightTo:"04:00", nightMid:true, nightThird:true, netStar:false, dateSide:false, dateStyle:"badges", dayEn:true, dateTag:true, bigP:true, badgeShape:"dome", badgeShadow:false, badgeBorder:3,
-        hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, ovClock:true, ovClkWait:true, ovSec:true, ovClkSize:1, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", nbCustom:false, nbSize:1, nbShadow:0.3, nbBlur:18, nbRadius:26, nbBgOp:0.3, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, showSite:true, fitMode:"fill", autoFS:true, shortcuts:true},
+        iqColorOn:false, iqColor:"#F4D58D", hiCustom:false, hiColor:"#1F5A8A", hiOpacity:0.85, hiTextOn:false, hiTextColor:"#ffffff", hiFrame:false, hiOn:true, hiZoom:false, ovClock:true, ovClkWait:true, ovSec:true, ovClkSize:1, tblStyle:"cards", tcName:"#FFD54A", tcAdhan:"#FFFFFF", tcIqama:"#FFD54A", tcHi:"#3B93E3", nbCustom:false, nbSize:1, nbShadow:0.3, nbBlur:18, nbRadius:26, nbBgOp:0.3, sysRot:false, safeArea:true, phoneBar:true, wm:true, wmOp:0.12, wmSize:0.85, wmImg:"", flag:false, rowColor:"#000000", rowOpacity:0.3, newsShade:true, newsShadeOp:0, rowAuto:true, rowShadow:0.22, rowRadius:26, rowGap:10, scMode:"move", menuBtn:true, bgMode:"manual", bgEvery:30, bgShuffle:false, bgKey:"", fs:{ts:1, ns:1, name:1, date:1, clock:1, count:1, pname:1, ptime:1, fixed:1, news:1, zk:1}, showName:true, showDay:true, showDate:true, fullClock:false, zeroH:"off", thead:true, iqFmt:"time", logoColor:"silver", logoCustom:"#EBD1A0", autoColor:true, logoOp:1, embSize:0.7, logo:true, hideVersion:false, showLoc:true, footSite:"rawayie.sa", footVer:true, showSite:true, fitMode:"fill", autoFS:true, shortcuts:true},
   dateMode:"alt", dateSec:8, offlineAllBg:false, vkb:"on", textEditor:true, blackLight:0.08, blackStyle:"bg", blackColor:"#3a2a12", blackImg:"",
   sleepBg:{isha:{style:"black", color:"#0b1a2e", light:0.2, img:""}, sunrise:{style:"black", color:"#0b1a2e", light:0.2, img:""}},
   weather:{on:true, src:"auto", lat:"", lng:"", pos:"mid"},
@@ -61,7 +61,9 @@ try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catc
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
 try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 13; } catch(e){}
-function mvFix(o){ if (o && o.slides && !o.slides.mv2) { o.slides.move = "ltr"; o.slides.mv2 = 1; } if (o && !o.nmV) { o.nm = o.nm || {}; o.nm.frame = false; o.nmV = 1; } return o; } // 13.8: الشرائح النصية سطر واحد متحرك تحت الساعة افتراضياً
+/* 17.63: شاشة «الصلاة قائمة» أثناء الصلاة صار لها خيار. من اختار سابقاً «الشاشة الرئيسية دائماً» (بدون أذان ولا انتظار ولا إقامة) تُوقف عنده تلقائياً */
+function prayScreenFix(o){ if (o && o.prayScreen === undefined) o.prayScreen = !(o.azanScreen === false && o.noIqWait === true && o.iqNowOn === false && o.hidePrayer === false); return o; }
+function mvFix(o){ prayScreenFix(o); if (o && o.slides && !o.slides.mv2) { o.slides.move = "ltr"; o.slides.mv2 = 1; } if (o && !o.nmV) { o.nm = o.nm || {}; o.nm.frame = false; o.nmV = 1; } return o; } // 13.8: الشرائح النصية سطر واحد متحرك تحت الساعة افتراضياً
 mvFix(S);
 S.slides.items = S.slides.items.map(function(x){ return typeof x === "string" ? {id:"s" + x, img:x, imgMode:"contain", active:true} : x; });
 if ((S.lookV || 0) < 3) { // تصميم التطبيق الجديد: يعيد المظهر والذكر الثابت للافتراضي مرة واحدة
@@ -321,9 +323,10 @@ function phase(now){
   if (now < A + az && S.azanScreen && now < I) res.mode = "azan";
   else if (p.fri && now < I) res.mode = "khutbah";
   else if (S.duaAfterAzan && now < A + az + M60 && now < I) res.mode = "dua";
-  else if (now < I) res.mode = (S.lastMinOnly !== true || I - now <= M60) ? "iqcount" : "";
+  // بدون شاشة انتظار الإقامة إطلاقاً (رغبة بعض المؤذنين): تبقى الشاشة الرئيسية ظاهرة حتى وقت الإقامة
+  else if (now < I) res.mode = S.noIqWait === true ? "" : (S.lastMinOnly !== true || I - now <= M60) ? "iqcount" : "";
   else if (S.iqNowOn !== false && now < I + Math.max(5, +S.iqNowSec || 30)*1000) res.mode = "iqnow"; // شاشة الإقامة قبل الشاشة السوداء
-  else if (now < I + p.pd*M60) res.mode = ((p.fri ? S.fri.hide : S.hidePrayer) ? "black" : "praying");
+  else if (now < I + p.pd*M60) { res.inPrayer = true; res.mode = ((p.fri ? S.fri.hide : S.hidePrayer) ? "black" : S.prayScreen === false ? "" : "praying"); } // بدون شاشة «الصلاة قائمة»: تبقى الشاشة الرئيسية
   else {
     var tt = I + p.pd*M60, Z = S.zk, aOn = Z.after && (!Z.afterOn || Z.afterOn[p.k === "jumuah" ? "dhuhr" : p.k] !== false);
     var pa = aOn ? zkPlan("after", tt) : null;
@@ -580,7 +583,7 @@ function applyLook(){
   var NM = S.nm || {}; st.setProperty("--nms", String(Math.max(.5, Math.min(1.8, +NM.size || 1)))); st.setProperty("--nmsh", String(Math.max(0, Math.min(1, NM.shadow == null ? .4 : +NM.shadow)))); // رسالة إغلاق الجوال: الحجم والظل والإطار
   st.setProperty("--nmbc", NM.frameColor ? NM.frameColor : "rgba(255,217,160,.35)"); st.setProperty("--nmbw", Math.max(0, Math.min(8, NM.frameW == null ? 2 : +NM.frameW)) + "px"); st.setProperty("--nmbg", String(Math.max(0, Math.min(.9, NM.bg == null ? .35 : +NM.bg))));
   stage.classList.toggle("nmnofr", NM.frame === false);
-  ["name","date","clock","count","pname","ptime","fixed","news"].forEach(function(k){ st.setProperty("--s-" + k, +(fs[k] || 1)); });
+  ["name","date","clock","count","pname","ptime","iq","fixed","news"].forEach(function(k){ st.setProperty("--s-" + k, +(fs[k] || 1)); });
   st.setProperty("--logoop", L.logoOp == null ? 1 : +L.logoOp);
   st.setProperty("--emb", L.embSize == null ? .7 : +L.embSize);
   var lc = L.logoColor === "custom" ? (L.logoCustom || "#EBD1A0") : (light ? (auto ? acc : shade(L.accent)) : (auto ? accRaw : L.accent));
@@ -607,6 +610,7 @@ function applyLook(){
   st.setProperty("--fn", "'" + S.look.fontNum + "', 'Cairo', Tahoma, sans-serif");
   st.setProperty("--fz", "'" + S.look.fontZekr + "', 'Amiri', serif");
   stage.classList.toggle("shadow", !!S.look.shadow);
+  stage.classList.toggle("iqc", !!S.look.iqColorOn); st.setProperty("--iqc", S.look.iqColor || "#F4D58D");
   stage.classList.toggle("arch", b.arch && !S.look.customBg);
   // تغيّرت الخلفية بين محراب وغيره (تلقائياً أو يدوياً): يُعاد بناء رأس التاريخ بالشكل المناسب
   if (!inBuild && builtDB !== null && builtDB !== wantDB()) setTimeout(build, 0);
@@ -751,10 +755,13 @@ function setStageBg(url){
 }
 function preloadNextBg(){
   try { var o = orient(), list = bgList(o), cur = o === "P" ? S.look.bgP : S.look.bgL;
-    for (var j = 0; j < list.length; j++) if (list[j][0] === cur) { var nx = "bg/" + list[(j + 1) % list.length][0]; if (!bgPre[nx]) bgPre[nx] = loadImg(nx, function(){}); break; } } catch(e){}
+    for (var j = 0; j < list.length; j++) if (list[j][0] === cur) { var nx = "bg/" + list[(j + 1) % list.length][0]; if (!bgPre[nx]) { for (var k in bgPre) { try { bgPre[k].src = ""; } catch(e){} } bgPre = {}; bgPre[nx] = loadImg(nx, function(){}); } break; } /* صورة واحدة فقط مجهزة مسبقاً: الأجهزة ضعيفة الذاكرة كانت تمتلئ ذاكرتها مع كثرة التبديل فيُغلق التطبيق */ } catch(e){}
 }
 
-/* الضغط على صلاة الفجر يغيّر الخلفية */
+/* الضغط على صلاة الفجر يغيّر الخلفية. ضغطة واحدة كل 0.8 ثانية على الأكثر: الضغط المتتابع السريع كان يفك صوراً كثيرة معاً
+   في الأجهزة ضعيفة الذاكرة فتتأخر الشاشة ثم يُغلق التطبيق */
+var bgTapAt = 0;
+function bgTapOK(){ var n = Date.now(); if (n - bgTapAt < 800) return false; bgTapAt = n; return true; }
 function nextBg(random, keepCustom, back){
   var o = orient(), list = bgList(o), cur = o === "P" ? S.look.bgP : S.look.bgL, i = 0;
   for (var j = 0; j < list.length; j++) if (list[j][0] === cur) i = j;
@@ -1128,7 +1135,7 @@ function renderSlide(el, raw){
 var alertKey = "";
 function alerts(now, ph){
   var el = document.getElementById("salert"), z = zp(now), cur = null;
-  if (ph.mode !== "praying" && ph.mode !== "black" && ph.mode !== "iqnow")
+  if (ph.mode !== "praying" && ph.mode !== "black" && ph.mode !== "iqnow" && !ph.inPrayer)
     (S.galerts || []).concat(S.alerts || []).forEach(function(x){ if (!cur && x && x.on !== false && (x.text || x.title) && inSched(x, z)) cur = x; }); // الإعلانات العامة من إدارة الموقع أولاً
   if (!cur) { if (el && !el.hidden) { el.hidden = true; stage.classList.remove("salerton"); } alertKey = ""; return; }
   if (!el) { el = document.createElement("div"); el.id = "salert"; el.className = "slide full"; stage.appendChild(el); }
@@ -1302,6 +1309,7 @@ function unlock(){
 // التشغيل التلقائي (وضع الكشك): يفعّل الصوت بدون ضغط إذا سمح المتصفح بذلك
 setTimeout(unlock, 1200);
 function play(kind){
+  if (S.snd && S.snd.mute === true) return; // كتم كل الأصوات
   var src = "";
   if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "long" ? "snd/azan_long.mp3" : "";
   if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : "";
@@ -1507,7 +1515,7 @@ function overlayInner(now, ph){
       var sl = ph.sleep ? (S.sleepLook || "black") : "";
       ovEl.innerHTML = (sl === "black" ? "" : sl === "clock" ? '<div class="o-clock sleepclk"></div>' :
         (S.blackTime ? '<div class="o-clock"></div>' : "") + (S.blackDate ? '<div class="o-date"></div>' : "") +
-        (ph.sleep ? "" : '<div class="o-sub">' + esc(t("prayer_is_currently_being_performed")) + '</div>') + (ph.sleep ? "" : ver)) +
+        (ph.sleep || S.blackMsg === false ? "" : '<div class="o-sub">' + esc(t("prayer_is_currently_being_performed")) + '</div>') + (ph.sleep || S.blackMsg === false ? "" : ver)) +
         (smsg ? '<div class="o-sleepmsg">' + esc(smsg).replace(/\n/g, "<br>") + '</div>' : ""); }
     var c = $(".o-clock", ovEl); if (c) { digits(c, fmtT(now, S.look.seconds, 1)); if (c.scrollWidth > c.clientWidth + 1 || c.style.fontSize) fitText(c, .4); }
     var d = $(".o-date", ovEl); if (d) { var dt = dayName(z.Y, z.M, z.D) + " · " + hijriText(z.Y, z.M, z.D); if (d.textContent !== dt) d.textContent = dt; if (d.scrollWidth > d.clientWidth + 1) fitText(d, .5); }
@@ -1794,7 +1802,7 @@ function start(){
   addEventListener("resize", fit);
   loadCustomLogo();
   // الضغط على اسم صلاة الفجر: الخلفية التالية، والضغط على وقت الفجر (الأذان أو الإقامة): الخلفية السابقة
-  mainEl.addEventListener("click", function(e){ if (slideTap(e)) return; if (e.target.closest('[data-k="fajr"]')) { if (!S.pass || S.sup.fajrBg) nextBg(false, false, !!e.target.closest(".c2,.c3,.a,.i")); }
+  mainEl.addEventListener("click", function(e){ if (slideTap(e)) return; if (e.target.closest('[data-k="fajr"]')) { if (S.sup.fajrBg !== false && bgTapOK()) nextBg(false, false, !!e.target.closest(".c2,.c3,.a,.i")); }
     else if (e.target.closest(".hij") && S.dateMode !== "both") { dateNext = Date.now() + (+S.dateSec)*1000; switchDate(); } });
   var fsl = $("#fslide"); if (fsl) fsl.addEventListener("click", slideTap);
   ovEl.addEventListener("click", function(){ if (zkPrev) { zkPreview(null); } }); // لمسة تنهي معاينة الأذكار

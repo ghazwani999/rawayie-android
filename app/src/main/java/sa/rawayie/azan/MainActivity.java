@@ -165,6 +165,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        installCrashGuard();
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window w = getWindow();
         /* ألوان 32 بت للنافذة: بعض أجهزة التلفاز (Allwinner H313 مثل Tanix H313 وX96Q، وأجهزة أخرى بذاكرة قليلة)
@@ -499,6 +500,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        KeepAlive.shown(this); // حارس الشاشة: يعيدها إذا خرج منها الجهاز بدون قصد
         if (web != null) { web.onResume(); web.resumeTimers(); }
         otaKick(); // الشاشة عادت للواجهة: تحقق من تحديث ملفات الشاشة
         hideBars();
@@ -507,6 +509,27 @@ public class MainActivity extends Activity {
     }
 
     // لا نوقف المؤقتات عند الخروج المؤقت حتى تبقى المواقيت والأذان تعمل
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isChangingConfigurations()) KeepAlive.hidden(this);
+    }
+
+    private static boolean crashGuard = false;
+    /** خطأ غير متوقع في التطبيق: تُعاد الشاشة بعد ثوانٍ بدل أن تبقى مغلقة */
+    private void installCrashGuard() {
+        if (crashGuard) return; crashGuard = true;
+        final android.content.Context app = getApplicationContext();
+        final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                SharedPreferences sp = app.getSharedPreferences(KeepAlive.P, MODE_PRIVATE);
+                if (!sp.getBoolean("userExit", false)) { sp.edit().putBoolean("fg", true).commit(); KeepAlive.schedule(app, 4000); }
+            } catch (Throwable ignored) { }
+            if (prev != null) prev.uncaughtException(t, e); else System.exit(2);
+        });
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {
@@ -542,8 +565,8 @@ public class MainActivity extends Activity {
     /* الخروج: الشاشة المرتبطة بالموقع لا تُغلق إلا بكلمة سر المدير (RWS_EXIT في settings.js يطلبها ثم يستدعي exit).
        ملفات شاشة قديمة بدون RWS_EXIT: يخرج كما كان */
     private void askExit() {
-        if (web == null) { finish(); return; }
-        web.evaluateJavascript("(function(){try{return window.RWS_EXIT?RWS_EXIT():'go'}catch(e){return 'go'}})()", v -> { if (v == null || "\"go\"".equals(v) || "null".equals(v)) finish(); });
+        if (web == null) { KeepAlive.userExit(this); finish(); return; }
+        web.evaluateJavascript("(function(){try{return window.RWS_EXIT?RWS_EXIT():'go'}catch(e){return 'go'}})()", v -> { if (v == null || "\"go\"".equals(v) || "null".equals(v)) { KeepAlive.userExit(this); finish(); } });
     }
 
     // زر القائمة في الريموت يفتح الإعدادات
@@ -881,7 +904,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean canAutostart() { return MainActivity.canAutostart(MainActivity.this); }
         @JavascriptInterface public void requestAutostart() { runOnUiThread(MainActivity.this::openOverlaySettings); }
         @JavascriptInterface public void reload() { runOnUiThread(() -> { if (web != null) web.reload(); }); }
-        @JavascriptInterface public void exit() { runOnUiThread(MainActivity.this::finish); }
+        @JavascriptInterface public void exit() { runOnUiThread(() -> { KeepAlive.userExit(MainActivity.this); finish(); }); }
         // نسخة من بيانات الفترة التجريبية والتفعيل داخل التطبيق نفسه
         // معرّف ثابت للجهاز (لا يتغير بحذف التطبيق وإعادة تثبيته) حتى يبقى «رقم الجهاز» وكود التفعيل صالحين
         @JavascriptInterface public String deviceId() {
