@@ -331,7 +331,7 @@ public class MainActivity extends Activity {
        ثم تُبلَّغ الشاشة فتعيد التحميل خارج أوقات الأذان والإقامة والصلاة (نفس آلية checkVersion في app.js) */
     private static volatile Ota ota;
     private static final java.util.concurrent.atomic.AtomicBoolean otaLoop = new java.util.concurrent.atomic.AtomicBoolean(false);
-    private static volatile MainActivity current;
+    static volatile MainActivity current;
     private static final Object otaLock = new Object();
     private static volatile boolean otaKicked = false;
     private static volatile long otaLast = 0;
@@ -501,6 +501,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         KeepAlive.shown(this); // حارس الشاشة: يعيدها إذا خرج منها الجهاز بدون قصد
+        AppUpdate.resume(this); // تحديث منزّل ينتظر إذن تثبيت التحديثات
         if (web != null) { web.onResume(); web.resumeTimers(); }
         otaKick(); // الشاشة عادت للواجهة: تحقق من تحديث ملفات الشاشة
         hideBars();
@@ -960,6 +961,9 @@ public class MainActivity extends Activity {
         /** حالة التحديث التلقائي لملفات الشاشة: الإصدار المعتمد ونتيجة آخر تحقق ووقته (JSON) */
         /** الشاشة تطلب تحققاً فورياً من تحديث ملفاتها (بعد عودة الاتصال بالموقع) */
         @JavascriptInterface public void otaCheck() { otaNow(); }
+        /** لوحة الإدارة طلبت تحديث التطبيق: تنزيل آخر نسخة ثم طلب موافقة مشرف المسجد على التثبيت */
+        @JavascriptInterface public void appUpdate(String url) { AppUpdate.start(MainActivity.this, url); }
+        @JavascriptInterface public String appUpdateState() { return AppUpdate.json(); }
         @JavascriptInterface public String mediaInfo() { MediaCache m = media; return m != null ? m.info() : "{}"; }
         @JavascriptInterface public String otaInfo() {
             Ota o = ota; if (o == null) return "{}";

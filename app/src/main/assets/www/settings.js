@@ -39,7 +39,7 @@ var SECTIONS = [
   ["times","المواقيت والأذان والإقامة","دقائق الإقامة وتعديل الأوقات، وشاشة الأذان وعداد الإقامة ورسالة الجوال والحديث","clock","base"],
   ["calendar","تقويم أم القرى","عرض مواقيت أي يوم وتعديلها يدوياً","cal","base"],
   ["friday","الجمعة والعيد","الخطبة وصلاة الجمعة وصلاة العيد","mosq","base"],
-  ["hide","الإخفاء ووضع السكون","الشاشة السوداء أثناء الصلاة والإخفاء ليلاً وضحى","moon","prayer"],
+  ["hide","الإخفاء ووضع السكون","مدة كل صلاة، وإطفاء الشاشة، والإخفاء ليلاً وضحى","moon","prayer"],
   ["sounds","الأصوات","صوت الأذان والإقامة والتنبيهات","sound","prayer"],
   ["adhkar","الأذكار","أذكار بعد الصلاة والصباح والمساء ومدة كل ذكر","beads","content"],
   ["news","الإعلانات","إعلانات أسفل الشاشة (الشريط المتحرك) وأعلى الشاشة (الشرائح) والرسائل العاجلة","mega","content"],
@@ -87,7 +87,10 @@ var ICONS = {
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'
 };
 function ico(k){ return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[k] || "") + '</svg>'; }
-function secOf(k){ for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i][0] === k) return SECTIONS[i]; if (typeof HUBS !== "undefined") for (var j = 0; j < HUBS.length; j++) if (HUBS[j][0] === k) return HUBS[j]; return null; }
+/* الأقسام الثلاثة لطريقة العرض في القائمة الجانبية تحت «الرئيسية والبحث»: الضغط على القسم يفعّله ويعرض خياراته */
+var modeUnlocked = false; // القسم المفعّل مقفل: لا يتغير إلا بعد «إلغاء القفل»، ثم يُقفل تلقائياً بعد اختيار القسم الجديد
+var MODE_SECS = [["m_full","الشاشة الكاملة","","board","mode","full"],["m_main","الشاشة الرئيسية دائماً","","home","mode","main"],["m_short","الشاشة المختصرة","","moon","mode","short"]];
+function secOf(k){ for (var m = 0; m < MODE_SECS.length; m++) if (MODE_SECS[m][0] === k) return MODE_SECS[m]; for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i][0] === k) return SECTIONS[i]; if (typeof HUBS !== "undefined") for (var j = 0; j < HUBS.length; j++) if (HUBS[j][0] === k) return HUBS[j]; return null; }
 function groupName(g){ for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][0] === g) return GROUPS[i][1]; return ""; }
 var R = {};
 var ADMIN_ONLY = {perms:1, general:1, remote:1};
@@ -106,7 +109,7 @@ var HUBS = [
   ["h_mosque", "المسجد والمواقيت", "اسم المسجد ودقائق الإقامة والمدينة والجمعة", "mosq", "hub",
     [["mosque", "المدينة وطريقة حساب المواقيت"], ["times", "تعديل أوقات الأذان وتفاصيل الإقامة"], ["calendar", "عرض مواقيت أي يوم وتعديلها"], ["friday", "الخطبة وصلاة الجمعة والعيد"]]],
   ["h_prayer", "وقت الأذان والصلاة", "ما يظهر وقت الأذان والإقامة، والصوت، والشاشة السوداء", "clock", "hub",
-    [["hide", "الشاشة السوداء أثناء الصلاة والإخفاء ليلاً"], ["sounds", "كل إعدادات الصوت والتنبيهات المجدولة"], ["times", "تفاصيل شاشة الأذان وعداد الإقامة"]]],
+    [["hide", "مدة كل صلاة والإخفاء ليلاً"], ["sounds", "كل إعدادات الصوت والتنبيهات المجدولة"], ["times", "تفاصيل شاشة الأذان وعداد الإقامة"]]],
   ["h_news", "الإعلانات والرسائل", "الشريط المتحرك والشرائح ولوحات العرض", "mega", "hub",
     [["news", "كتابة الإعلانات والشرائح والرسائل العاجلة"], ["boards", "لوحات معلومات بملء الشاشة"]]],
   ["h_adhkar", "الأذكار والأدعية", "أذكار بعد الصلاة والصباح والمساء، والدعاء الثابت", "beads", "hub",
@@ -122,7 +125,7 @@ function hubLinks(h){ var L = h[5].filter(function(c){ return allowed(c[0]); });
   return card("خيارات أخرى", '<div class="tiles hublinks">' + L.map(function(c){ var sc = secOf(c[0]) || [c[0], c[0], "", "gear"];
     return '<button type="button" class="tile" data-sec="' + c[0] + '"><span class="ti">' + ico(sc[3]) + '</span><span class="tt"><b>' + esc(sc[1]) + '</b><small>' + esc(c[1]) + '</small></span></button>'; }).join("") + '</div>'); }
 function allowed(sec){ if (MERGED[sec]) return MERGED[sec].some(allowedOne); return allowedOne(sec); }
-function allowedOne(sec){ if (sec === "home") return true;
+function allowedOne(sec){ if (sec === "home") return true; if (/^m_/.test(sec)) return allowedOne("screens");
   if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
     return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0) || (w === "screens" && ms.indexOf("times") >= 0)); } if (siteLocked()) { sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && devSecs().indexOf(sec) >= 0; }
   if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
@@ -377,7 +380,6 @@ R.h_mosque = function(){
 };
 R.h_prayer = function(){
   var h = "";
-  if (allowedOne("screens")) h += scrModeCard();
   if (allowedOne("sounds")) h += card("الصوت",
     togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت في هذه الشاشة") +
     (S.snd.mute ? "" : sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["long","الأذان كاملاً"]].concat(S.snd.azan === "custom" ? [["custom","ملف MP3 من الجهاز"]] : [])) +
@@ -400,12 +402,12 @@ R.h_device = function(){ return hubLinks(HUBS[5]).replace("خيارات أخرى
 /* ===== طريقة عرض الأذان والإقامة: اختيار جاهز واحد بدل ضبط خيارات كثيرة =====
    كل وضع يضبط مجموعة الخيارات المتعلقة دفعة واحدة، والخيارات التفصيلية تبقى متاحة تحت «خيارات متقدمة» */
 var SCR_MODES = [
-  ["full", "كامل (الافتراضي)", "شاشة الأذان، ثم عداد انتظار الإقامة، ثم شاشة الإقامة، ثم الشاشة السوداء أثناء الصلاة",
+  ["full", "الشاشة الكاملة (الافتراضي)", "شاشة الأذان، ثم عداد انتظار الإقامة، ثم شاشة الإقامة، ثم الشاشة السوداء أثناء الصلاة",
     {azanScreen:true, duaAfterAzan:true, noIqWait:false, lastMinOnly:false, iqNowOn:true, hidePrayer:true, prayScreen:true, blackMsg:true}],
-  ["short", "مختصر", "تبقى الشاشة الرئيسية ظاهرة من الأذان حتى الإقامة، ثم شاشة سوداء عليها الساعة والتاريخ فقط أثناء الصلاة",
-    {azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:true, prayScreen:true, blackStyle:"black", blackTime:true, blackDate:true, blackMsg:false}],
-  ["main", "الشاشة الرئيسية دائماً", "بدون أي شاشات للأذان أو الإقامة، وبدون إخفاء أثناء الصلاة",
-    {azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:false, prayScreen:false}]
+  ["main", "الشاشة الرئيسية دائماً", "بدون شاشات للأذان أو الإقامة: الشاشة الرئيسية ظاهرة حتى انتهاء مدة الصلاة، ثم الأذكار، ثم تعود للشاشة الرئيسية",
+    {azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:false, prayScreen:false}],
+  ["short", "الشاشة المختصرة", "تبقى الشاشة الرئيسية ظاهرة من الأذان حتى الإقامة، ثم شاشة سوداء عليها الساعة والتاريخ فقط أثناء الصلاة",
+    {azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:true, prayScreen:true, blackStyle:"black", blackTime:true, blackDate:true, blackMsg:false}]
 ];
 function scrModeNow(){
   for (var i = 0; i < SCR_MODES.length; i++) { var v = SCR_MODES[i][3], ok = true;
@@ -415,19 +417,64 @@ function scrModeNow(){
 }
 var scrAdvOpen = false, allSecsOpen = false;
 // تعديل خيار من «خيارات متقدمة»: يتحدث الوضع المظلل فوراً (كامل/مختصر/…/مخصص) بدون إعادة رسم الصفحة
-function scrModeRefresh(){
+function scrModeRefresh(){ return; // القسم يتغير بالضغط عليه فقط، وخياراته داخل .mopts فلا تُعاد كتابتها أثناء التعديل
   var box = $("#set .mopts"); if (!box) return;
   var tmp = document.createElement("div"); tmp.innerHTML = scrModeCard(); var nb = tmp.querySelector(".mopts");
   if (nb && nb.innerHTML !== box.innerHTML) box.innerHTML = nb.innerHTML;
 }
+/* ثلاثة أقسام رئيسية لطريقة العرض: كل قسم تظهر تحته خياراته فقط، ويحفظ إعداداته وحده (S.modes)،
+   فالانتقال لقسم آخر ثم الرجوع يعيد إعداداته كما كانت. نفس المنطق في لوحة ووردبريس (admin.js) */
+var MODE_KEYS = ["azanScreen","duaAfterAzan","azanDur","noIqWait","lastMinOnly","circle","iqTimes","red90","lastMinBlack","iqNowOn","iqNowSec","hidePrayer","prayScreen","blackStyle","blackColor","blackLight","blackImg","blackTime","blackDate","blackMsg"];
+var MODE_FIXED = {short:{azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:true},
+  main:{azanScreen:false, duaAfterAzan:false, noIqWait:true, iqNowOn:false, hidePrayer:false, prayScreen:false}};
+function modeOf(){ return S.scrMode === "full" || S.scrMode === "short" || S.scrMode === "main" ? S.scrMode : (function(m){ return m === "custom" ? "full" : m; })(scrModeNow()); }
+function modeSwitch(x){
+  var cur = modeOf(); if (cur === x) return; S.modes = S.modes || {};
+  var snap = {}; MODE_KEYS.forEach(function(k){ snap[k] = S[k] !== undefined ? S[k] : A.DEF[k]; }); S.modes[cur] = snap;
+  var prof = S.modes[x] || {}, init = {}; SCR_MODES.forEach(function(m){ if (m[0] === x) init = m[3]; });
+  MODE_KEYS.forEach(function(k){ if (prof[k] !== undefined) S[k] = prof[k]; else if (init[k] !== undefined) S[k] = init[k]; });
+  var fx = MODE_FIXED[x] || {}; for (var k in fx) S[k] = fx[k];
+  S.scrMode = x;
+}
+function blackOpts(){
+  return tog("إظهار الوقت على الشاشة السوداء", "blackTime") + tog("إظهار التاريخ على الشاشة السوداء", "blackDate") + tog("إظهار عبارة «الصلاة قائمة» على الشاشة السوداء", "blackMsg", "عند إيقافه لا يظهر غير الوقت والتاريخ") +
+    rangeIn("حجم النصوص في الشاشة السوداء", "blackSize", 0.5, 2.2, 0.05, "%") +
+    '<h4 class="subh">خلفية الشاشة السوداء</h4>' + bgSpecUI({style:"blackStyle", color:"blackColor", light:"blackLight", img:"blackImg"}, false) +
+    '<div class="row-end">' + btn("معاينة الشاشة السوداء 10 ثوانٍ", "blkPrev", "ghost") + '</div>';
+}
+function blackCard(t){ return card(t || "الشاشة السوداء أثناء الصلاة", blackOpts()); }
+function modeOpts(m){
+  if (m === "main") { var pdTxt = ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return PN[k] + " " + (+((S.pd || {})[k]) || A.DEF.pd[k]); }).join("، ");
+    var st = [["وقت الأذان", "تبقى الشاشة الرئيسية ظاهرة، بدون شاشة الأذان. يُسمع صوت الأذان إذا كان مفعّلاً."],
+      ["انتظار الإقامة", "الشاشة الرئيسية ظاهرة، بدون عداد انتظار الإقامة."],
+      ["وقت الإقامة", "الشاشة الرئيسية ظاهرة، بدون شاشة الإقامة. يُسمع صوت الإقامة إذا كان مفعّلاً."],
+      ["أثناء الصلاة", "الشاشة الرئيسية ظاهرة طوال مدة الصلاة المحددة، بدون إخفاء. المدة بالدقائق من وقت الإقامة: " + pdTxt + "."],
+      ["بعد انتهاء مدة الصلاة", "تظهر أذكار بعد الصلاة. وبعد الفجر أذكار الصباح، وبعد العصر أذكار المساء، إذا كانت مفعّلة."],
+      ["بعد الأذكار", "تعود الشاشة إلى الرئيسية حتى الصلاة التالية."]];
+    return card("خطوات هذا القسم", '<ol class="msteps">' + st.map(function(x){ return '<li><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>' +
+      '<div class="row-end">' + (allowed("hide") ? '<button type="button" class="btn ghost" data-sec="hide">تعديل مدة كل صلاة</button>' : "") + (allowed("adhkar") ? '<button type="button" class="btn ghost" data-sec="adhkar">إعدادات الأذكار</button>' : "") + '</div>',
+      "لا خيارات أخرى في هذا القسم."); }
+  if (m === "short") return card("ترتيب الشاشة", '<p class="note">تبقى الشاشة الرئيسية من الأذان حتى الإقامة، ثم الشاشة السوداء أثناء الصلاة.</p>') + blackCard();
+  return card("شاشة الأذان", tog("إظهار شاشة الأذان", "azanScreen") + tog("إظهار دعاء ما بعد الأذان", "duaAfterAzan") + numIn("مدة الأذان", "azanDur", 1, 10, 1, "دقيقة")) +
+    card("انتظار الإقامة", togInv("إظهار شاشة انتظار الإقامة", "noIqWait", "عند «لا» تبقى الشاشة الرئيسية ظاهرة من الأذان حتى الإقامة") +
+      (S.noIqWait === true ? "" : tog("العد التنازلي للإقامة آخر دقيقة فقط", "lastMinOnly", "لا تظهر شاشة الانتظار إلا في آخر دقيقة قبل الإقامة") + tog("إظهار أوقات الصلوات أثناء انتظار الإقامة", "iqTimes") +
+        tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") + tog("تكبير العداد على شاشة سوداء عند آخر دقيقة", "lastMinBlack"))) +
+    card("عند الإقامة", tog("عرض شاشة الإقامة", "iqNowOn", "رسالة «حان الآن موعد الإقامة»") + (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "")) +
+    card("أثناء الصلاة", tog("إخفاء الشاشة أثناء الصلاة (الشاشة السوداء)", "hidePrayer") +
+      (S.hidePrayer ? "" : tog("إظهار شاشة «الصلاة قائمة» أثناء الصلاة", "prayScreen", "عند «لا» تبقى الشاشة الرئيسية ظاهرة أثناء الصلاة"))) +
+    (S.hidePrayer ? blackCard() : "");
+}
 function scrModeCard(){
-  var cur = scrModeNow();
+  var cur = modeOf();
   return card("طريقة عرض الأذان والإقامة",
     '<div class="mopts">' + SCR_MODES.map(function(m){ var on = cur === m[0];
-      return '<button type="button" class="mopt' + (on ? " on" : "") + '" data-act="scrMode" data-x="' + m[0] + '" aria-pressed="' + on + '"><i class="vdot' + (on ? " on" : "") + '"></i><span><b>' + esc(m[1]) + '</b><small>' + esc(m[2]) + '</small></span></button>'; }).join("") +
-    (cur === "custom" ? '<p class="note">الإعدادات الحالية مخصصة من «خيارات متقدمة». اختر أحد الأوضاع أعلاه للرجوع إلى وضع جاهز.</p>' : "") + '</div>',
-    "اختر طريقة واحدة، وتُضبط كل الخيارات المتعلقة بها تلقائياً.");
+      return '<button type="button" class="mopt' + (on ? " on" : "") + '" data-act="scrMode" data-x="' + m[0] + '" aria-pressed="' + on + '"><i class="vdot' + (on ? " on" : "") + '"></i><span><b>' + esc(m[1]) + '</b><small>' + esc(m[2]) + '</small></span></button>' + (on ? '<div class="mbody">' + modeOpts(cur) + '</div>' : ""); }).join("") + '</div>',
+    "اختر قسماً لتظهر خياراته. كل قسم يحفظ إعداداته وحده، فإذا انتقلت لقسم آخر ثم رجعت تجد إعداداتك كما هي.");
 }
+MODE_SECS.forEach(function(m){ R[m[0]] = function(){
+  var lockBox = '<div class="mlock' + (modeUnlocked ? " open" : "") + '"><span>' + (modeUnlocked ? "🔓 القفل ملغى: اختر القسم الذي تريده من القائمة، ويُقفل تلقائياً بعد اختياره." : "🔒 هذا القسم مفعّل ومقفل. لا يتغير إلى قسم آخر حتى تضغط «إلغاء القفل».") + '</span>' +
+    '<button type="button" class="btn ' + (modeUnlocked ? "ghost" : "") + '" data-act="modeLock">' + (modeUnlocked ? "إعادة القفل" : "إلغاء القفل") + '</button></div>';
+  return lockBox + '<p class="note mnow">كل قسم يحفظ إعداداته وحده: إذا انتقلت لقسم آخر ثم رجعت تجد إعداداتك كما هي.</p>' + modeOpts(m[5]); }; });
 R.screens = function(noMode){
   return (noMode ? "" : scrModeCard()) + '<button type="button" class="btn ghost advbtn" data-act="scrAdv" aria-expanded="' + scrAdvOpen + '">' + (scrAdvOpen ? "إخفاء الخيارات المتقدمة ▲" : "خيارات متقدمة ▼") + '</button>' +
     (scrAdvOpen ? R.screensAdv() : "");
@@ -438,16 +485,8 @@ R.screensAdv = function(){
     (S.ann.on !== false ? txt("رسالة الأذان", "ann.azan", "اكتب {الصلاة} مكان اسم الصلاة و{المسجد} مكان اسم المسجد") + txt("رسالة الإقامة", "ann.iqama", "يمكن استخدام {الصلاة} و{المسجد}") +
       '<div class="row-end">' + btn("استعادة النص الافتراضي", "annReset", "ghost") + btn("معاينة الأذان", "annPrevA", "ghost") + btn("معاينة الإقامة", "annPrevI", "ghost") + '</div>' : ""),
     "مثال: حان الآن موعد أذان صلاة الظهر، وذلك في مسجد الحي") +
-  card("شاشة الأذان",
-    tog("إظهار شاشة الأذان", "azanScreen") + tog("إظهار دعاء ما بعد الأذان", "duaAfterAzan") + numIn("مدة الأذان", "azanDur", 1, 10, 1, "دقيقة")) +
-  card("شاشة الإقامة",
-    togInv("إظهار شاشة انتظار الإقامة", "noIqWait", "عند «لا» تبقى الشاشة الرئيسية ظاهرة من الأذان حتى الإقامة، بدون عداد ولا رسالة الجوال ولا الحديث") +
-    tog("العد التنازلي للإقامة آخر دقيقة فقط", "lastMinOnly", "عند تفعيله لا تظهر شاشة انتظار الإقامة إلا في آخر دقيقة قبل الإقامة") +
-    '<p class="note warn" id="lmwarn"' + (S.lastMinOnly ? "" : " hidden") + '>⚠ مفعّل الآن: لن تظهر شاشة انتظار الإقامة بعد الأذان، وتبقى الشاشة الرئيسية ظاهرة، ثم يظهر العداد في آخر دقيقة فقط قبل الإقامة. لإظهار العداد طوال فترة الانتظار أوقف هذا الخيار.</p>' + tog("إظهار الوقت المتبقي للإقامة داخل دائرة", "circle") + (S.circle !== false ? sel("شكل الدائرة", "ringStyle", [["clock","ساعة حائط واقعية"],["plain","الشكل العادي"]], "الساعة بدون عقارب، والعداد في منتصفها") : "") +
-    tog("إظهار أوقات الصلوات أثناء انتظار الإقامة", "iqTimes", "أوقات الأذان فقط (بدون أوقات الإقامة) أسفل العداد، مع تمييز الصلاة الحالية") +
-    tog("تغيير لون العداد إلى الأحمر في آخر 90 ثانية", "red90") +
-    tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة") +
-    tog("تكبير العداد على شاشة سوداء عند آخر دقيقة", "lastMinBlack", "قبل الإقامة بدقيقة يملأ العداد شاشة سوداء")) +
+  card("مظهر عداد الإقامة",
+    tog("إظهار الوقت المتبقي داخل دائرة", "circle") + tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة")) +
   card("رسالة إغلاق الجوال",
     tog("رسالة التنبيه بالصوت عند آخر دقيقة قبل الإقامة", "notifyOn") + (S.notifyOn ? tog("إظهار رسالة إغلاق الجوال طوال وقت انتظار الإقامة", "notifyAll", "عند إيقافه تظهر في آخر دقيقة فقط، والصوت يبقى في آخر دقيقة") : "") + txt("رسالة التنبيه", "notifyMsg") +
     (S.notifyOn ? '<div class="subbox"><p class="note">شكل رسالة إغلاق الجوال على شاشة الإقامة</p>' +
@@ -458,9 +497,6 @@ R.screensAdv = function(){
     "") +
   card("الحديث قبل الإقامة",
     tog("عرض حديث الرسول ﷺ قبل الإقامة", "hadithOn") + numIn("توقيت عرض الحديث", "hadithSec", 10, 600, 5, "ثانية قبل الإقامة") + txt("نص الحديث", "hadithText", "", true)) +
-  card("عند الإقامة",
-    tog("عرض شاشة الإقامة قبل الشاشة السوداء", "iqNowOn", "رسالة «حان الآن موعد الإقامة» ثم تُخفى الشاشة أثناء الصلاة") +
-    (S.iqNowOn !== false ? numIn("مدة شاشة الإقامة", "iqNowSec", 5, 180, 5, "ثانية") : "")) +
   card("ساعة ومظهر شاشات الأذان والإقامة",
     tog("الساعة أعلى شاشات الأذان والإقامة والأذكار", "look.ovClock", "الوقت الحالي أعلى الشاشة أثناء الأذان وانتظار الإقامة والأذكار") +
     tog("شاشات شبه شفافة للأذان والإقامة والأذكار", "look.ovGlass", "تظهر الخلفية خلفها. عند الإيقاف تكون بلون ثابت") +
@@ -484,13 +520,9 @@ function offCard(){
     '<div class="row-end">' + btn("تجربة: إطفاء 30 ثانية ثم تشغيل", "offTest", "ghost") + '</div>');
 }
 R.hide = function(){
-  return offCard() + card("إخفاء الشاشة أثناء الصلاة",
-    tog("تفعيل إخفاء الشاشة أثناء الصلاة", "hidePrayer") +
-    (S.hidePrayer ? "" : tog("إظهار شاشة «الصلاة قائمة» أثناء الصلاة", "prayScreen", "عند إيقافه تبقى الشاشة الرئيسية ظاهرة أثناء الصلاة")) +
-    '<div class="grid2">' + ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return numIn("مدة صلاة " + PN[k], "pd." + k, 3, 40, 1, "دقيقة"); }).join("") + '</div>' +
-    '<h4 class="subh">خلفية شاشة الإخفاء</h4>' + bgSpecUI({style:"blackStyle", color:"blackColor", light:"blackLight", img:"blackImg"}, false) +
-    '<div class="row-end">' + btn("معاينة شاشة الإخفاء 10 ثوانٍ", "blkPrev", "ghost") + '</div>' + tog("إظهار الوقت على الشاشة السوداء", "blackTime") + tog("إظهار التاريخ على الشاشة السوداء", "blackDate") + tog("إظهار عبارة «الصلاة قائمة» على الشاشة السوداء", "blackMsg", "عند إيقافه لا يظهر غير الوقت والتاريخ (حسب اختيارك أعلاه)") + rangeIn("حجم النصوص في شاشة الإخفاء", "blackSize", 0.5, 2.2, 0.05, "%", "الوقت والتاريخ وعبارة «الصلاة قائمة»") +
-    "") +
+  return offCard() + card("مدة كل صلاة",
+    '<div class="grid2">' + ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return numIn("مدة صلاة " + PN[k], "pd." + k, 3, 40, 1, "دقيقة"); }).join("") + '</div>',
+    "تُحسب من وقت الإقامة، وبعدها تبدأ أذكار بعد الصلاة. إخفاء الشاشة أثناء الصلاة وشكل الشاشة السوداء في «طريقة عرض الأذان والإقامة».") +
   card("إخفاء الشاشة في أوقات الفراغ (وضع السكون)",
     tog("إخفاء الشاشة بعد العشاء", "sleepIsha", "تختفي الشاشة ليلاً وتعود وحدها قبل أذان الفجر") +
     (S.sleepIsha ? numIn("تختفي بعد انتهاء صلاة العشاء بـ", "hideIsha", 0, 300, 5, "دقيقة") + numIn("تعود قبل أذان الفجر بـ", "wakeFajr", 0, 180, 5, "دقيقة") : "") +
@@ -509,7 +541,7 @@ R.hide = function(){
     '<div class="row-end">' + btn("معاينة شاشة السكون " + (sbTab() === "isha" ? "بعد العشاء" : "بعد الشروق") + " 10 ثوانٍ", "sleepPrevK", "ghost", sbTab()) + '</div>',
     "لكل فترة خلفيتها: الأسود يوفر الطاقة أكثر، ويمكن اختيار صورة أو لون خافت مع رسالة السكون") : "") +
   card("منع السكون في الجهاز",
-    '<div class="fld"><span><b>الحالة</b><small>' + esc(awakeText()) + '</small></span></div>' +
+    '<div class="fld"><span><b>الحالة</b></span><span class="fval">' + esc(awakeText()) + '</span></div>' +
     '<p class="note">يمنع التطبيق المتصفح والجهاز من إطفاء الشاشة أو الدخول في السكون طوال الوقت. في بعض أجهزة التلفاز أوقف أيضاً من إعداداتها: «توفير الطاقة» و«الإيقاف التلقائي» و«مؤقت النوم»، وفي الكمبيوتر: إعدادات الطاقة ← عدم إيقاف الشاشة أبداً.</p>');
 };
 /* ترخيص الشاشة: يصدر من موقع الإدارة فقط ويتجدد تلقائياً */
@@ -582,6 +614,7 @@ function sleepText(){
 }
 function awakeText(){
   var w = window.STAY_AWAKE || {};
+  if (window.RawayieAndroid) return "يعمل ✓ (تطبيق أندرويد يُبقي الشاشة مضاءة دائماً)"; // الحالة لم تكن تظهر في الوضع المبسط لأنها كانت ملاحظة صغيرة
   return w.method === "wakelock" ? "يعمل ✓ (قفل الشاشة من المتصفح)" : w.method === "video" ? "يعمل ✓ (طريقة بديلة للمتصفحات القديمة)" :
     w.method === "pending" ? "يبدأ عند أول لمسة أو ضغطة زر" : "غير مدعوم في هذا المتصفح. استخدم Chrome أو Fully Kiosk مع خيار Keep Screen On";
 }
@@ -1935,6 +1968,7 @@ function render(){
   if (!allowed(cur)) cur = "home";
   var hubNow = secOf(cur) && secOf(cur)[4] === "hub" ? secOf(cur) : hubOf(cur);
   $$("button[data-sec]", nav).forEach(function(b){ b.hidden = !allowed(b.dataset.sec); b.classList.toggle("on", b.dataset.sec === cur || (!!hubNow && b.dataset.sec === hubNow[0] && !allSecsOpen)); });
+  var mNow = modeOf(); $$(".nmodes button", nav).forEach(function(b){ var on = secOf(b.dataset.sec)[5] === mNow; b.classList.toggle("mact", on); b.classList.toggle("mlocked", !on && !modeUnlocked); var d = $(".vdot", b); if (d) d.classList.toggle("on", on); });
   var nl = $(".nalls", nav), na = $(".nall", nav); if (nl) nl.hidden = !allSecsOpen; if (na) { na.setAttribute("aria-expanded", String(!!allSecsOpen)); na.classList.toggle("on", !!allSecsOpen); }
   $$(".ngrp", nav).forEach(function(g){ g.hidden = !$$("button[data-sec]", g).some(function(b){ return !b.hidden; }); });
   var cs = $("#curs"); if (cs) { var sc0 = secOf(cur); cs.textContent = sc0 ? "· " + sc0[1] : ""; }
@@ -1944,8 +1978,8 @@ function render(){
   var sc1 = secOf(cur);
   var hb = sc1[4] === "hub" ? null : hubOf(cur);
   body.innerHTML = '<div class="shead"><button type="button" class="crumb" data-sec="home">' + ico("home") + 'الإعدادات</button>' +
-    (sc1[4] === "hub" ? "" : hb && allowed(hb[0]) ? '<span class="crumb-sep">‹</span><button type="button" class="crumb" data-sec="' + hb[0] + '">' + esc(hb[1]) + '</button>' : '<span class="crumb-sep">‹</span><span class="crumb g">' + esc(groupName(sc1[4])) + '</span>') +
-    '<h2>' + ico(sc1[3]) + esc(sc1[1]) + '</h2><p class="sdesc">' + esc(sc1[2]) + '</p></div>' + R[cur]() + nextHTML(cur);
+    (sc1[4] === "hub" || sc1[4] === "mode" ? "" : hb && allowed(hb[0]) ? '<span class="crumb-sep">‹</span><button type="button" class="crumb" data-sec="' + hb[0] + '">' + esc(hb[1]) + '</button>' : '<span class="crumb-sep">‹</span><span class="crumb g">' + esc(groupName(sc1[4])) + '</span>') +
+    '<h2>' + ico(sc1[3]) + esc(sc1[1]) + '</h2>' + (sc1[2] ? '<p class="sdesc">' + esc(sc1[2]) + '</p>' : "") + '</div>' + R[cur]() + nextHTML(cur);
   groupTogs(body);
   $$("[data-media]", body).forEach(function(im){ A.mediaURL(im.dataset.media).then(function(u){ if (u) im.src = u; }); });
   if (cur === "news" && allowedOne("slides")) { slPaint(); mvPreview(); }
@@ -1990,7 +2024,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if ($("#set .mopts")) scrModeRefresh(); if (el.dataset.p === "snd.mute") render(); if (/^zk\.\w+Tpl\./.test(el.dataset.p)) render(); if ($("#shprev")) setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(A.uqCityId ? A.uqCityId() : S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(nm\.frame|marquee|notifyOn|sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|hidePrayer|look\.hiCustom|look\.iqColorOn|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(nm\.frame|marquee|notifyOn|sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|hidePrayer|noIqWait|iqNowOn|look\.hiCustom|look\.iqColorOn|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
@@ -2074,7 +2108,7 @@ var confirmAct = null;
 function onClick(e){
   var b = e.target.closest("button"); if (!b) return;
   if (b.dataset.step) { step(b); return; }
-  if (b.dataset.sec) { if (!allowed(b.dataset.sec)) return; panel.classList.remove("navopen"); $("#hamb").setAttribute("aria-expanded", "false"); if (newsDraftSave()) toast("حُفظت الرسالة المكتوبة"); cur = b.dataset.sec; calEdit = null; newsEdit = null; boardEdit = null; slEdit = null; slDraft = null; render(); body.scrollTop = 0; return; }
+  if (b.dataset.sec) { if (!allowed(b.dataset.sec)) return; panel.classList.remove("navopen"); $("#hamb").setAttribute("aria-expanded", "false"); if (newsDraftSave()) toast("حُفظت الرسالة المكتوبة"); var ms = secOf(b.dataset.sec); if (ms && ms[4] === "mode" && modeOf() !== ms[5]) { if (!modeUnlocked) { toast("القسم المفعّل مقفل: اضغط «إلغاء القفل» أولاً"); var ma = MODE_SECS.filter(function(x){ return x[5] === modeOf(); })[0]; if (ma && cur !== ma[0]) { cur = ma[0]; render(); } return; } modeSwitch(ms[5]); modeUnlocked = false; commit(); toast("تم التفعيل والقفل: " + ms[1]); } cur = b.dataset.sec; calEdit = null; newsEdit = null; boardEdit = null; slEdit = null; slDraft = null; render(); body.scrollTop = 0; return; }
   var a = b.dataset.act, x = b.dataset.x; if (!a) return;
   var danger = {reset:1, nClear:1, sClear:1, bClear:1};
   if (danger[a] && confirmAct !== a) { confirmAct = a; b.textContent = "اضغط مرة أخرى للتأكيد"; setTimeout(function(){ if (confirmAct === a) { confirmAct = null; render(); } }, 3500); return; }
@@ -2085,9 +2119,10 @@ function onClick(e){
       commit(); render(); break;
     case "spImg": var q2 = x.split("|"), old = get(q2[0]); if (old && old.indexOf("file:") < 0 && !/^(https?:)?\/\//.test(old)) A.IDB.del(old); put(q2[0], q2[1] || ""); commit(); render(); break;
     case "sbTab": R.hide.sb = x; render(); break;
-    case "scrMode": SCR_MODES.forEach(function(m){ if (m[0] === x) { var v = m[3]; for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) S[k] = v[k]; } });
+    case "scrMode": modeSwitch(x);
       commit(); render(); toast("تم الضبط: " + (SCR_MODES.filter(function(m){ return m[0] === x; })[0] || ["", ""])[1]); break;
     case "scrAdv": scrAdvOpen = !scrAdvOpen; render(); break;
+    case "modeLock": modeUnlocked = !modeUnlocked; render(); toast(modeUnlocked ? "أُلغي القفل: اختر القسم من القائمة" : "تم القفل"); break;
     case "allSecs": allSecsOpen = !allSecsOpen; render(); break;
     case "sleepPrevK": close(); A.previewBlack(10000, true, x); break;
     case "autoApk": try { window.RawayieAndroid.requestAutostart(); } catch(e){} setTimeout(render, 4000); break;
@@ -2298,7 +2333,7 @@ function open(){
   if (window.RAWAYIE_PREVIEW && !window.RAWAYIE_MANAGE) return; // المعاينة للعرض فقط، والتعديل من لوحة المدير
   if (!panel) build();
   // تفتح الإعدادات دائماً على قائمة الأقسام فقط: لا تظهر أي خيارات إلا بعد اختيار القسم المطلوب
-  if (panel.hidden) { cur = "home"; allSecsOpen = false; scrAdvOpen = false; panel.classList.remove("navopen"); }
+  if (panel.hidden) { cur = "home"; allSecsOpen = false; scrAdvOpen = false; modeUnlocked = false; panel.classList.remove("navopen"); }
   sIndex = null;
   panel.hidden = false; document.body.classList.add("setopen");
   var mg = $("#mgd"), lk = siteLocked() && !devSecs().length; // لا قسم مسموح: رسالة فقط
@@ -2338,6 +2373,7 @@ function build(){
     '<button type="button" class="btn ghost" data-act="close">إغلاق</button></div>' +
     '<form id="lock" class="lock" hidden><h2>فتح تعديل الإعدادات</h2><p class="note warn lkwarn"><b>تنبيه:</b> يُمنع تعديل إعدادات الشاشة إلا من قِبل مشرف المسجد.</p><label class="fld" for="lockpw"><span><b>كلمة السر</b></span><input type="password" id="lockpw" autocomplete="current-password"></label><p class="err" id="lockerr" hidden>كلمة السر غير صحيحة</p><button class="btn" type="submit">فتح التعديل</button><button type="button" class="lkforgot" id="lkforgot">نسيت كلمة السر؟</button><p class="note" id="lkhelp" hidden></p></form>' +
     '<div id="setwrap"><div class="navshade" id="navshade"></div><nav class="snav" id="snav"><button type="button" class="nhome" data-sec="home">' + ico("home") + '<span>الرئيسية والبحث</span></button>' +
+      '<div class="ngrp nmodes">' + MODE_SECS.map(function(m){ return '<button type="button" data-sec="' + m[0] + '"><i class="vdot"></i><span>' + esc(m[1]) + '</span></button>'; }).join("") + '</div>' +
       '<div class="ngrp nhubs">' + HUBS.map(function(h){ return '<button type="button" data-sec="' + h[0] + '">' + ico(h[3]) + '<span>' + esc(h[1]) + '</span></button>'; }).join("") + '</div>' +
       '<button type="button" class="nall" data-act="allSecs" aria-expanded="false">' + ico("sliders") + '<span>كل الأقسام بالتفصيل</span></button>' +
       '<div class="nalls" hidden>' + GROUPS.map(function(g){
@@ -2532,7 +2568,7 @@ document.addEventListener("contextmenu", function(e){
 (function(){
   var T0 = R.times, N0 = R.news;
   // طريقة العرض الجاهزة أولاً (أكثر ما يحتاجه المشرف)، ثم المواقيت، ثم تفاصيل شاشات الأذان والإقامة مطوية
-  R.times = function(){ return (allowedOne("screens") ? scrModeCard() : "") + (allowedOne("times") ? subSec("المواقيت والإقامة", "دقائق الإقامة وتعديل أوقات الأذان") + T0() : "") +
+  R.times = function(){ return (allowedOne("times") ? subSec("المواقيت والإقامة", "دقائق الإقامة وتعديل أوقات الأذان") + T0() : "") +
     (allowedOne("screens") ? subSec("شاشات الأذان والإقامة", "رسالة الأذان وشاشة الأذان وعداد الإقامة ورسالة الجوال والحديث") + R.screens(true) : ""); };
   R.news = function(){ return (allowedOne("news") ? subSec("① إعلانات أسفل الشاشة", "الشريط المتحرك والرسائل والتذكيرات") + N0() : "") +
     (allowedOne("slides") ? subSec("② إعلانات أعلى الشاشة", "الشرائح: صور ونصوص تظهر بالتناوب أعلى الشاشة") + R.slides() : ""); };

@@ -1263,6 +1263,32 @@ html[data-rot="270"] #ui{transform:translate(-50%,-50%) rotate(270deg)}
 #set .fld.tog>span:first-child{flex:1 1 auto}#set .fld.tog{gap:22px;max-width:760px}
 /* لون مختار لأوقات الإقامة */
 #stage.iqc .rows .row .c3,#stage.iqc .card .i{color:var(--iqc)!important}
+#set .fld .fval{font-weight:700;color:var(--stext,#e8edf5);text-align:start}
+/* خيارات القسم المختار في طريقة العرض */
+#set .mbody{margin:-6px 0 12px;border-top:0;border-top-left-radius:0;border-top-right-radius:0;padding:4px 14px 10px;border:1px solid var(--sline);border-radius:12px;background:rgba(127,127,127,.05)}
+/* الأقسام الثلاثة جهة اليمين، ومحتوى القسم المختار بجانبها جهة اليسار. في الشاشات الضيقة تحت القسم */
+#set .mopts{display:grid;grid-template-columns:minmax(210px,34%) 1fr;grid-template-rows:auto auto auto 1fr;gap:10px 16px;align-items:start}
+#set .mopts>.mopt{grid-column:1}
+#set .mopts>.mbody{grid-column:2;grid-row:1/span 4;margin:0;border:1px solid var(--sline);border-radius:12px;min-height:100%;box-sizing:border-box}
+#set .mopts>.mopt.on{border-color:var(--sacc,#2f7fd8)}
+#ui.cq760 #set .mopts{display:flex}
+#ui.cq760 #set .mopts>.mbody{margin:-6px 0 12px;border-top:0;border-radius:0 0 12px 12px;min-height:0}
+/* الأقسام الثلاثة في القائمة الجانبية: النقطة الممتلئة = القسم المفعّل على الشاشة */
+.snav .nmodes{margin:6px 0 4px}
+.snav .nmodes button .vdot{width:18px;height:18px;flex:none}
+.snav .nmodes button.mact span{font-weight:700}
+/* خطوات «الشاشة الرئيسية دائماً» */
+#set .msteps{list-style:none;counter-reset:ms;margin:6px 0 10px;padding:0}
+#set .msteps li{counter-increment:ms;position:relative;padding:10px 46px 10px 0;border-bottom:1px solid var(--sline)}
+#set .msteps li:last-child{border-bottom:0}
+#set .msteps li::before{content:counter(ms);position:absolute;right:0;top:10px;width:32px;height:32px;border-radius:50%;background:#2f7fd8;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+#set .msteps b{display:block;font-size:17px}
+#set .msteps span{display:block;color:var(--smuted);font-size:15px;margin-top:2px}
+/* قفل القسم المفعّل */
+#set .mlock{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 10px;padding:12px 16px;border-radius:12px;border:1px solid #b8862b;background:rgba(184,134,43,.12)}
+#set .mlock.open{border-color:#2f7fd8;background:rgba(47,127,216,.12)}
+#set .mlock span{font-weight:700}
+.snav .nmodes button.mlocked{opacity:.55}
 </style>
 
 <div id="stage" class="stage"><div id="main" class="main"></div><div id="fslide" class="slide full" hidden></div><div id="ov"></div><button id="menu" type="button" aria-label="الإعدادات"><span></span><span></span><span></span></button></div>

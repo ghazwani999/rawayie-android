@@ -68,6 +68,7 @@ public class KeepAlive extends BroadcastReceiver {
         if (visible) return;
         long now = System.currentTimeMillis();
         if (sp.getLong("offUntil", 0) > now) return; // الشاشة مطفأة عمداً وقت الصلاة أو السكون
+        if (sp.getLong("updWaitUntil", 0) > now) return; // طلب تحديث التطبيق ظاهر وينتظر موافقة مشرف المسجد
         try {
             PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
             if (pm != null && !(Build.VERSION.SDK_INT >= 20 ? pm.isInteractive() : pm.isScreenOn())) return;

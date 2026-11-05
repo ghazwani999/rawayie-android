@@ -221,8 +221,8 @@ function statusBody(){
 /* تطبيق أندرويد: حالة التحديث التلقائي لملفات الشاشة (الإصدار المعتمد ونتيجة آخر تحقق) وإصدار التطبيق نفسه */
 function otaInfo(){ var AN = window.RawayieAndroid; if (!AN) return null; var o = null;
   try { if (AN.otaInfo) o = JSON.parse(AN.otaInfo()); } catch(e){}
-  o = o || {}; try { if (AN.version) o.apkName = String(AN.version()); } catch(e){} return o; }
-function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left, b.ota && b.ota.st].join("|"); }
+  o = o || {}; try { if (AN.version) o.apkName = String(AN.version()); } catch(e){} try { if (AN.appUpdateState) { var u = JSON.parse(AN.appUpdateState()); if (u && u.st) { o.upd = u.st; o.updAt = u.at; } } } catch(e){} return o; }
+function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left, b.ota && b.ota.st, b.ota && b.ota.upd].join("|"); }
 function pollSync(){
   var b = statusBody(), now = Date.now(), sendSt = !state.stAt || now - state.stAt > 5*60000 || statusSig(b) !== state.stSig;
   var body = {rev:S.remote.rev || 0, cmdAt:S.remote.lastCmd || 0}; if (sendSt) body.status = b;
@@ -246,7 +246,7 @@ function handleCmd(cmd){
     if (!cmd || !cmd.at) return;
     // المدة المتبقية بساعة الخادم إن توفرت، فلا تتأثر بساعة جهاز الشاشة
     var left = cmd.exp && cmd.now ? cmd.exp - cmd.now : (cmd.until ? cmd.until - Date.now() : 0), age = cmd.now ? cmd.now - cmd.at : Date.now() - cmd.at;
-    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || cmd.type === "setpass" || age < 180000) runCmd(cmd, left); }
+    if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || cmd.type === "setpass" || (cmd.type === "appupdate" && age < 3 * 864e5) || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
 }
 function runCmd(c, left){
@@ -262,6 +262,8 @@ function runCmd(c, left){
     // بملء الشاشة: تحديث كامل للعرض بدون إعادة تحميل الصفحة، فتبقى الشاشة بملء الشاشة
     if (window.isFS && window.isFS()) { A.rebuild(); setTimeout(poll, 1500); return; }
     setTimeout(function(){ location.reload(); }, 500); return; }
+  /* تحديث تطبيق أندرويد (10.5 فما فوق): ينزّل آخر نسخة من الموقع ثم يطلب موافقة مشرف المسجد بضغطة «تثبيت» */
+  if (c.type === "appupdate") { var ANu = window.RawayieAndroid; if (ANu && ANu.appUpdate) { var su = String(window.RAWAYIE_SITE || "").replace(/\/+$/, ""); if (su) { try { ANu.appUpdate(su + "/?rawayie-apk=file&t=" + Date.now()); } catch(e){} } } }
   if (c.type === "msg") showMsg(c, left);
   // من لوحة الإدارة: إلغاء كلمة سر الإعدادات المنسية (المدير والمشرف) فيضبط المسؤول كلمة جديدة
   // من صفحة الإدارة: كلمات سر جديدة للإعدادات (الفارغ لا يغيّر)

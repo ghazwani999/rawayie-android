@@ -11,6 +11,8 @@
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- تحديث التطبيق بأمر من لوحة الإدارة وموافقة مشرف المسجد -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- إعادة تشغيل الشاشة بدقة بعد انتهاء الصلاة -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
@@ -68,5 +70,6 @@
         <receiver android:name=".WakeReceiver" android:exported="false" />
         <!-- حارس الشاشة: يعيد فتح التطبيق إذا خرج منه الجهاز بدون قصد -->
         <receiver android:name=".KeepAlive" android:exported="false" />
+        <receiver android:name=".AppUpdate" android:exported="false" />
     </application>
 </manifest>

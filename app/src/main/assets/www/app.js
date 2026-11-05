@@ -62,6 +62,9 @@ try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catc
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
 try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 13; } catch(e){}
 /* 17.63: شاشة «الصلاة قائمة» أثناء الصلاة صار لها خيار. من اختار سابقاً «الشاشة الرئيسية دائماً» (بدون أذان ولا انتظار ولا إقامة) تُوقف عنده تلقائياً */
+/* مدة الصلاة بالدقائق: إذا كانت فارغة أو صفراً في الإعدادات (مثلاً قالب من الموقع بدون مدد) تُستخدم المدة الافتراضية،
+   وإلا بدأت الأذكار بعد الإقامة مباشرة */
+function pdOf(k){ var v = +((S.pd || {})[k]); return v >= 1 ? v : (+DEF.pd[k] || 10); }
 function prayScreenFix(o){ if (o && o.prayScreen === undefined) o.prayScreen = !(o.azanScreen === false && o.noIqWait === true && o.iqNowOn === false && o.hidePrayer === false); return o; }
 function mvFix(o){ prayScreenFix(o); if (o && o.slides && !o.slides.mv2) { o.slides.move = "ltr"; o.slides.mv2 = 1; } if (o && !o.nmV) { o.nm = o.nm || {}; o.nm.frame = false; o.nmV = 1; } return o; } // 13.8: الشرائح النصية سطر واحد متحرك تحت الساعة افتراضياً
 mvFix(S);
@@ -297,7 +300,7 @@ function dayTimes(Y, M, D){
     else if (k === "dhuhr" && fri) iqMin = (+S.azanDur) + (+S.fri.khutbah);
     else iqMin = +S.iq[k];
     return {k:k, name: (k === "dhuhr" && fri) ? t("friday") : t(k), A:A, I:A + iqMin*60000, fri: k === "dhuhr" && fri,
-            pd: (k === "dhuhr" && fri) ? +S.fri.dur : +(S.pd[k] || 0), edited: !!ov[k]};
+            pd: (k === "dhuhr" && fri) ? (+S.fri.dur || 15) : pdOf(k), edited: !!ov[k]};
   });
   var eid = null;
   if (S.eid.fitrOn && h.month === 10 && h.day === 1) eid = {k:"eid", name:t("eid_al_fitr"), A:zms(Y, M, D, 0, hm(S.eid.fitr))};
@@ -1770,7 +1773,7 @@ function tick(force){
     Array.prototype.forEach.call(mainEl.querySelectorAll(".net"), function(n){ n.classList.toggle("off", navigator.onLine === false || rf); n.title = rf ? "تعذر الاتصال بلوحة المدير" : ""; }); });
   if (ui.hij && S.dateMode === "alt" && dateTexts.length && now >= dateNext) safe("switchDate", function(){ dateNext = now + (+S.dateSec)*1000; switchDate(); });
   safe("bg", function(){ autoBg(now, ph); });
-  if (verReload && !ph.mode && !document.body.classList.contains("setopen")) { var vr = verReload; verReload = ""; // إعادة التحميل خارج أوقات الصلاة
+  if (verReload && !ph.mode && !ph.inIqama && !ph.inPrayer && !(ph.next && ph.next.A - now < 3*60000) && !document.body.classList.contains("setopen")) { /* ولا بين الأذان ونهاية الصلاة في وضع «الشاشة الرئيسية دائماً»، ولا قبل الأذان بـ 3 دقائق */ var vr = verReload; verReload = ""; // إعادة التحميل خارج أوقات الصلاة
     try { sessionStorage.setItem("rws-ver-reload", vr); } catch(e){} setTimeout(function(){ location.reload(); }, 300); }
   safe("times", function(){ renderTimes(ph); });
   safe("night", function(){ renderNight(ph, now); });
