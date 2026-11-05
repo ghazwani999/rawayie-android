@@ -32,6 +32,7 @@ public class AppUpdate extends BroadcastReceiver {
     static volatile String state = "";      // "" | dl:<نسبة> | same:<إصدار> | perm | wait | done | cancel | err:<سبب>
     static volatile long stateAt = 0;
     private static volatile boolean busy = false;
+    private static volatile boolean askedOverlay = false;
     private static volatile File pending = null; // نسخة منزّلة تنتظر إذن «تثبيت التطبيقات غير المعروفة»
     static final long WAIT_MS = 30 * 60000L;  // حارس الشاشة لا يغطي طلب التثبيت خلال هذه المدة
 
@@ -85,6 +86,15 @@ public class AppUpdate extends BroadcastReceiver {
             }
             return;
         }
+        // حتى يعود التطبيق وحده بعد التثبيت: أندرويد 10 فما فوق يحتاج إذن «الظهور فوق التطبيقات الأخرى» (يُطلب مرة واحدة، والتحديث يكمل ولو رُفض)
+        if (Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(app) && !askedOverlay) {
+            askedOverlay = true; set(app, "perm");
+            try {
+                Toast.makeText(a, "حتى تعود الشاشة وحدها بعد التحديث: اسمح بالظهور فوق التطبيقات الأخرى، ثم ارجع للشاشة", Toast.LENGTH_LONG).show();
+                a.startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + app.getPackageName())));
+                return;
+            } catch (Throwable ignored) { }
+        }
         pending = null;
         new Thread(() -> install(app, f), "rawayie-appinstall").start();
     }
@@ -104,6 +114,7 @@ public class AppUpdate extends BroadcastReceiver {
             s.fsync(out); out.close(); in.close();
             int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 31 ? 0x02000000 /* FLAG_MUTABLE */ : 0);
             PendingIntent cb = PendingIntent.getBroadcast(app, 7702, new Intent(app, AppUpdate.class), fl);
+            app.getSharedPreferences(KeepAlive.P, Context.MODE_PRIVATE).edit().putBoolean("fg", true).putBoolean("userExit", false).commit(); // بعد التثبيت يُعاد فتح الشاشة
             s.commit(cb.getIntentSender());
             s.close();
             set(app, "wait");

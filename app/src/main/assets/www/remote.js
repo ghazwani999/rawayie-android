@@ -221,8 +221,8 @@ function statusBody(){
 /* تطبيق أندرويد: حالة التحديث التلقائي لملفات الشاشة (الإصدار المعتمد ونتيجة آخر تحقق) وإصدار التطبيق نفسه */
 function otaInfo(){ var AN = window.RawayieAndroid; if (!AN) return null; var o = null;
   try { if (AN.otaInfo) o = JSON.parse(AN.otaInfo()); } catch(e){}
-  o = o || {}; try { if (AN.version) o.apkName = String(AN.version()); } catch(e){} try { if (AN.appUpdateState) { var u = JSON.parse(AN.appUpdateState()); if (u && u.st) { o.upd = u.st; o.updAt = u.at; } } } catch(e){} return o; }
-function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left, b.ota && b.ota.st, b.ota && b.ota.upd].join("|"); }
+  o = o || {}; try { if (AN.version) o.apkName = String(AN.version()); } catch(e){} try { if (AN.canAutostart) o.auto = !!AN.canAutostart(); } catch(e){} try { if (AN.appUpdateState) { var u = JSON.parse(AN.appUpdateState()); if (u && u.st) { o.upd = u.st; o.updAt = u.at; } } } catch(e){} return o; }
+function statusSig(b){ return [b.name, b.city, b.version, b.orient, b.rot, b.screen, b.err, b.lic && b.lic.state, b.lic && b.lic.left, b.ota && b.ota.st, b.ota && b.ota.upd, b.ota && b.ota.auto].join("|"); }
 function pollSync(){
   var b = statusBody(), now = Date.now(), sendSt = !state.stAt || now - state.stAt > 5*60000 || statusSig(b) !== state.stSig;
   var body = {rev:S.remote.rev || 0, cmdAt:S.remote.lastCmd || 0}; if (sendSt) body.status = b;

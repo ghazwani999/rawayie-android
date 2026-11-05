@@ -14,6 +14,8 @@ public class BootReceiver extends BroadcastReceiver {
         if (a == null) return;
         if (!a.equals(Intent.ACTION_BOOT_COMPLETED) && !a.equals("android.intent.action.QUICKBOOT_POWERON")
                 && !a.equals("com.htc.intent.action.QUICKBOOT_POWERON") && !a.equals(Intent.ACTION_MY_PACKAGE_REPLACED)) return;
+        // احتياط: حارس الشاشة يحاول فتحها مرة أخرى بعد ثوانٍ إذا لم تُفتح الآن (بعد التحديث أو التشغيل)
+        try { ctx.getSharedPreferences(KeepAlive.P, Context.MODE_PRIVATE).edit().putBoolean("fg", true).putLong("updWaitUntil", 0).apply(); KeepAlive.schedule(ctx, 20000); } catch (Throwable ignored) { }
         final PendingResult pr = goAsync();
         // مهلة قصيرة حتى يكتمل تشغيل النظام والشبكة
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
