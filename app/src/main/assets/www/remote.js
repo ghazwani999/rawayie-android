@@ -249,6 +249,23 @@ function handleCmd(cmd){
     if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || cmd.type === "setpass" || (cmd.type === "appupdate" && age < 3 * 864e5) || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
 }
+/* رسائل على الشاشة أثناء تحديث التطبيق، حتى يعرف من أمام الشاشة ما يحدث */
+var updLast = "";
+function updWatch(){
+  var AN = window.RawayieAndroid, n = 0; if (!AN || !AN.appUpdateState) return; updLast = "";
+  var say = function(t){ try { if (A.scrMsg) A.scrMsg(t); } catch(e){} };
+  say("وصل طلب تحديث التطبيق من لوحة الإدارة…");
+  var t = setInterval(function(){ n++; var st = ""; try { st = (JSON.parse(AN.appUpdateState()) || {}).st || ""; } catch(e){}
+    var k = st.split(":")[0];
+    if (k === "dl") { var pc = +st.split(":")[1] || 0; if (updLast !== "dl" + Math.floor(pc / 25)) { updLast = "dl" + Math.floor(pc / 25); say("جاري تنزيل تحديث التطبيق " + pc + "%"); } }
+    else if (k && k !== updLast) { updLast = k;
+      if (k === "same") say("التطبيق محدّث: لديك آخر نسخة (" + (st.split(":")[1] || "") + ")");
+      else if (k === "wait") say("التحديث جاهز: اضغط «تثبيت» للموافقة");
+      else if (k === "perm") say("اسمح لتطبيق روائع الأذان بتثبيت التحديثات، ثم ارجع للشاشة");
+      else if (k === "err") say("تعذّر تحديث التطبيق، حاول لاحقاً");
+      if (k !== "perm" && k !== "wait") clearInterval(t); }
+    if (n > 300) clearInterval(t); }, 2000);
+}
 function runCmd(c, left){
   if (c.type === "restart") { // إعادة تشغيل التطبيق من الموقع: يبدأ من جديد (شاشة البداية) ويطلب آخر تحديث
     var AN1 = window.RawayieAndroid; try { if (AN1 && AN1.otaCheck) AN1.otaCheck(); } catch(e){}
@@ -263,7 +280,7 @@ function runCmd(c, left){
     if (window.isFS && window.isFS()) { A.rebuild(); setTimeout(poll, 1500); return; }
     setTimeout(function(){ location.reload(); }, 500); return; }
   /* تحديث تطبيق أندرويد (10.5 فما فوق): ينزّل آخر نسخة من الموقع ثم يطلب موافقة مشرف المسجد بضغطة «تثبيت» */
-  if (c.type === "appupdate") { var ANu = window.RawayieAndroid; if (ANu && ANu.appUpdate) { var su = String(window.RAWAYIE_SITE || "").replace(/\/+$/, ""); if (su) { try { ANu.appUpdate(su + "/?rawayie-apk=file&t=" + Date.now()); } catch(e){} } } }
+  if (c.type === "appupdate") { var ANu = window.RawayieAndroid; if (ANu && ANu.appUpdate) { var su = String(window.RAWAYIE_SITE || "").replace(/\/+$/, ""); if (su) { try { ANu.appUpdate(su + "/?rawayie-apk=file&t=" + Date.now()); } catch(e){} updWatch(); } } }
   if (c.type === "msg") showMsg(c, left);
   // من لوحة الإدارة: إلغاء كلمة سر الإعدادات المنسية (المدير والمشرف) فيضبط المسؤول كلمة جديدة
   // من صفحة الإدارة: كلمات سر جديدة للإعدادات (الفارغ لا يغيّر)
