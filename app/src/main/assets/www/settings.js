@@ -98,7 +98,8 @@ var ADMIN_ONLY = {perms:1, general:1, remote:1};
 var MANAGE_HIDE = {}; // كل أقسام التطبيق تظهر في الموقع، وما يخص الجهاز نفسه يظهر كبطاقة توضيح
 var WP_SEC = {mosque:"mosque", times:"times", calendar:"times", friday:"times", screens:"screens", hide:"screens", sounds:"screens", adhkar:"adhkar", news:"news", texts:"texts", slides:"slides", boards:"slides",
   opts:"look", display:"look", look:"look", hilite:"look", fonts:"look", layout:"look", shadow:"look", weather:"look", rotate:"rotate"};
-function manageSecs(){ var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
+function manageSecs(){ if (window.RAWAYIE_SECS !== undefined) return window.RAWAYIE_SECS; // من الخادم (المصدر المعتمد)
+  var m = /[?&]secs=([^&]*)/.exec(location.search); return m ? decodeURIComponent(m[1]).split(",") : null; }
 /* أقسام مدمجة: «الإعلانات» = الشريط السفلي + الشرائح، و«المواقيت والأذان والإقامة» = المواقيت + شاشات الأذان والإقامة.
    يظهر القسم إذا سُمح بأي جزء منه، وكل جزء يظهر حسب صلاحيته */
 var MERGED = {news:["news","slides"], times:["times","screens"]};

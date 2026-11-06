@@ -20,7 +20,10 @@ if (window.RAWAYIE_PREVIEW) { (function(){
   var load = function(){
     if (MG && (dirty || saving)) return; // تعديلات لم تُحفظ بعد: لا تُستبدل
     fetch(cfgUrl + sep(cfgUrl) + "_=" + Date.now(), {credentials:"same-origin", cache:"no-store", headers:{"X-WP-Nonce":nonce}})
-      .then(function(r){ if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "انتهت الجلسة، افتح الشاشة من لوحة المدير مرة أخرى" : "HTTP " + r.status); return r.json(); })
+      .then(function(r){ if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "انتهت الجلسة، افتح الشاشة من لوحة المدير مرة أخرى" : "HTTP " + r.status);
+        // صلاحيات المشرف من الخادم: لا تعتمد على الرابط، فلا تظهر له إلا أقسامه مهما كان طريق فتح الصفحة
+        var hs = r.headers.get("X-RWS-Secs"); if (hs !== null) window.RAWAYIE_SECS = hs === "*" ? null : hs.split(",").filter(Boolean);
+        return r.json(); })
       .then(function(c){ if (!c) { say(MG ? "لم ترسل هذه الشاشة إعداداتها بعد. يمكنك ضبطها هنا وتصلها عند تشغيلها" : "لم ترسل هذه الشاشة إعداداتها بعد"); if (MG && first) { first = false; open1(); } return; }
         if (c.rev === rev || (MG && (dirty || saving))) return; rev = c.rev;
         var cfg = JSON.parse(JSON.stringify(c)); delete cfg.rev; delete cfg.by; delete cfg._pend; delete cfg._rvl; cfg.remote = {on:false}; cfg.pass = ""; if (cfg.sup) cfg.sup.pass = ""; applying = true; A.setAll(cfg); applying = false;
