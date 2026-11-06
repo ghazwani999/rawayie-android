@@ -17,7 +17,7 @@ var DEF = {
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, noIqWait:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
-  snd:{azan:"short", iqama:"short", tone:"short", beep:true, vol:1, mute:false},
+  snd:{azan:"short", iqama:"short", tone:"short", beep:true, beepFile:"beep_07a", fajrLong:true, vol:1, mute:false},
   sndRem:{items:[]},
   ayat:{on:false, sec:20, mode:"default", list:"", pos:"mid"},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -1325,17 +1325,20 @@ function unlock(){
 }
 // التشغيل التلقائي (وضع الكشك): يفعّل الصوت بدون ضغط إذا سمح المتصفح بذلك
 setTimeout(unlock, 1200);
-function play(kind){
+function play(kind, pk){
   if (S.snd && S.snd.mute === true) return; // كتم كل الأصوات
   var src = "";
-  if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "long" ? "snd/azan_long.mp3" : "";
-  if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : "";
-  if (kind === "beep") src = S.snd.beep ? "snd/beep_07a.mp3" : "";
+  // أذان الفجر كاملاً فيه «الصلاة خير من النوم»
+  if (kind === "azanFajr") { kind = "azan"; pk = "fajr"; }
+  if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "short2" ? "snd/azan_old.mp3" : S.snd.azan === "long" ? (pk === "fajr" && S.snd.fajrLong !== false ? "snd/azan_fajr.mp3" : "snd/azan_long.mp3") : "";
+  if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : S.snd.iqama === "short2" ? "snd/iqama_old.mp3" : "";
+  var BEEPS = {beep_07a:1, beep_b:1, beep_t:1, drop1:1, drop3:1};
+  if (kind === "beep") src = S.snd.beep ? "snd/" + (BEEPS[S.snd.beepFile] ? S.snd.beepFile : "beep_07a") + ".mp3" : "";
   var custom = (kind === "azan" && S.snd.azan === "custom") ? S.snd.azanId : (kind === "iqama" && S.snd.iqama === "custom") ? S.snd.iqamaId : "";
   // نغمة التطبيق: تُسمع عند الأذان والإقامة إذا لم يُختر صوت أذان أو إقامة (مثل تطبيق روائع السابق)
-  var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/tone.wav" : tn === "short" ? "snd/tone.mp3" : "";
+  var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/alert3.mp3" : tn === "short" ? "snd/alert1.mp3" : ""; // نغمات تطبيق روائع السابق
   if (kind === "tone") src = tsrc;
-  if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/tone.wav" : "snd/tone.mp3"; // تجربة نغمة من الإعدادات
+  if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/alert3.mp3" : "snd/alert1.mp3"; // تجربة نغمة من الإعدادات
   if ((kind === "azan" || kind === "iqama") && !src && !custom) src = tsrc;
   var go = function(u){ if (!u) return; try { audio.pause(); audio.src = u; audio.volume = +S.snd.vol; var p = audio.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} };
   if (custom) mediaURL(custom).then(go); else go(src);
@@ -1374,7 +1377,7 @@ function events(now, ph){
   var p = ph.cur; if (!p || p.k === "eid") return;
   var k = p.k + "@" + p.A;
   var fire = function(id, at, fn){ if (now >= at && now - at < 5000 && !fired[k + id]) { fired[k + id] = 1; fn(); } };
-  fire("a", p.A, function(){ play("azan"); });
+  fire("a", p.A, function(){ play("azan", p.k); });
   if (S.notifyOn) fire("b", p.I - 60000, function(){ play("beep"); });
   fire("i", p.I, function(){ play("iqama"); });
 }

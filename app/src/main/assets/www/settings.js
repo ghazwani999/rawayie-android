@@ -382,8 +382,8 @@ R.h_prayer = function(){
   var h = "";
   if (allowedOne("sounds")) h += card("الصوت",
     togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت في هذه الشاشة") +
-    (S.snd.mute ? "" : sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["long","الأذان كاملاً"]].concat(S.snd.azan === "custom" ? [["custom","ملف MP3 من الجهاز"]] : [])) +
-      sel("صوت الإقامة", "snd.iqama", [["none","بدون صوت"],["short","صوت إقامة قصير"]].concat(S.snd.iqama === "custom" ? [["custom","ملف MP3 من الجهاز"]] : []))));
+    (S.snd.mute ? "" : sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["short2","صوت أذان قصير (التطبيق السابق)"],["long","الأذان كاملاً"]].concat(S.snd.azan === "custom" ? [["custom","ملف MP3 من الجهاز"]] : [])) +
+      sel("صوت الإقامة", "snd.iqama", [["none","بدون صوت"],["short","صوت إقامة قصير"],["short2","صوت إقامة قصير (التطبيق السابق)"]].concat(S.snd.iqama === "custom" ? [["custom","ملف MP3 من الجهاز"]] : []))));
   return h + hubLinks(HUBS[1]);
 };
 R.h_news = function(){
@@ -626,12 +626,12 @@ function toneCard(){
   var opt = function(k, t, d, test){ return '<div class="bgm snd' + (tn === k ? " on" : "") + '"><button type="button" class="bgmr" data-act="toneSet" data-x="' + k + '" role="radio" aria-checked="' + (tn === k) + '"><i></i><span><b>' + t + '</b><small>' + d + '</small></span></button>' +
     (test ? '<button type="button" class="spk" data-act="test" data-x="' + test + '" aria-label="تجربة ' + t + '">' + SPK + '</button>' : '<span class="spk off">' + SPK0 + '</span>') + '</div>'; };
   var chk = function(act, x, on, t, dis){ return '<button type="button" class="tchk' + (on ? " on" : "") + '" role="checkbox" aria-checked="' + on + '"' + (dis ? ' disabled' : ' data-act="' + act + '" data-x="' + x + '"') + '><i></i><span>' + t + '</span></button>'; };
-  var nmA = {short:"صوت أذان قصير", long:"الأذان كاملاً", custom:"صوت أذان من الجهاز"}[useA ? T.azan : "short"], nmI = {short:"صوت إقامة قصير", custom:"صوت إقامة من الجهاز"}[useI ? T.iqama : "short"];
+  var nmA = {short:"صوت أذان قصير", short2:"صوت أذان قصير", long:"الأذان كاملاً", custom:"صوت أذان من الجهاز"}[useA ? T.azan : "short"], nmI = {short:"صوت إقامة قصير", short2:"صوت إقامة قصير", custom:"صوت إقامة من الجهاز"}[useI ? T.iqama : "short"];
   return card("نغمة التطبيق",
     '<div class="bgms" role="radiogroup">' +
     opt("none", "بدون نغمة", "إيقاف صوت التنبيه للأذان والإقامة") +
     opt("short", "نغمة قصيرة", "MP3 - مناسبة لمعظم شاشات الأندرويد", "toneShort") +
-    opt("clear", "نغمة واضحة", "WAV - صوت تنبيه بديل إذا لم تُسمع القصيرة جيداً", "toneClear") + '</div>' +
+    opt("clear", "نغمة واضحة", "تنبيه متكرر ثلاث مرات - صوت تنبيه بديل", "toneClear") + '</div>' +
     '<div class="tuse">' + chk("sndUse", "", use, "استخدم الصوت للأذان (MP3)") +
     '<div class="tsub">' + chk("sndOne", "azan", useA, nmA, !use) + chk("sndOne", "iqama", useI, nmI, !use) + '</div></div>' +
     (S.snd.mute ? '<p class="note warn">⚠ الأصوات مكتومة الآن في هذه الشاشة من «تشغيل الأصوات» أدناه.</p>' : ""),
@@ -642,13 +642,15 @@ R.sounds = function(){
   return toneCard() + card("ضبط صوت الأذان والإقامة",
     togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت: الأذان والإقامة والتنبيه قبل الإقامة والتنبيهات المجدولة") +
     (S.snd.mute ? '<p class="note warn">⚠ الأصوات مكتومة الآن في هذه الشاشة.</p>' : "") +
-    sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["long","الأذان كاملاً"],["custom","ملف MP3 من الجهاز"]]) +
+    sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["short2","صوت أذان قصير (التطبيق السابق)"],["long","الأذان كاملاً"],["custom","ملف MP3 من الجهاز"]]) +
     (S.snd.azan === "custom" ? '<div class="fld"><span><b>ملف الأذان</b>' + (S.snd.azanId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="azan"></div>' : "") +
-    sel("صوت الإقامة", "snd.iqama", [["none","بدون صوت"],["short","صوت إقامة قصير"],["custom","ملف MP3 من الجهاز"]]) +
+    sel("صوت الإقامة", "snd.iqama", [["none","بدون صوت"],["short","صوت إقامة قصير"],["short2","صوت إقامة قصير (التطبيق السابق)"],["custom","ملف MP3 من الجهاز"]]) +
     (S.snd.iqama === "custom" ? '<div class="fld"><span><b>ملف الإقامة</b>' + (S.snd.iqamaId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="iqama"></div>' : "") +
+    (S.snd.azan === "long" ? tog("أذان الفجر كاملاً بـ«الصلاة خير من النوم»", "snd.fajrLong", "صوت مستقل لأذان الفجر، وبقية الصلوات بالأذان الكامل المعتاد") : "") +
     tog("صوت تنبيه قبل الإقامة بدقيقة", "snd.beep") +
+    (S.snd.beep ? sel("نغمة التنبيه قبل الإقامة", "snd.beepFile", [["beep_07a","نغمة 1 (الحالية)"],["beep_b","نغمة 2: صفارة"],["beep_t","نغمة 3: قصيرة جداً"],["drop1","نغمة 4: قطرة"],["drop3","نغمة 5: ثلاث قطرات"]]) : "") +
     numIn("مستوى الصوت", "snd.vol", 0, 1, 0.1) +
-    '<div class="row-end">' + btn("تجربة الأذان", "test", "ghost", "azan") + btn("تجربة الإقامة", "test", "ghost", "iqama") + btn("تجربة التنبيه", "test", "ghost", "beep") + '</div>',
+    '<div class="row-end">' + btn("تجربة الأذان", "test", "ghost", "azan") + (S.snd.azan === "long" && S.snd.fajrLong !== false ? btn("تجربة أذان الفجر", "test", "ghost", "azanFajr") : "") + btn("تجربة الإقامة", "test", "ghost", "iqama") + btn("تجربة التنبيه", "test", "ghost", "beep") + '</div>',
     "تمنع المتصفحات تشغيل الصوت قبل أول لمسة. بعد فتح الشاشة اضغط زر «تفعيل الصوت» مرة واحدة.") + remCard();
 };
 /* التنبيهات الصوتية المجدولة: قبل/بعد صلاة أو عند منتصف الليل والثلث الأخير */
@@ -2088,7 +2090,7 @@ function onChange(e){
   put(el.dataset.p, v); commit(); if ($("#set .mopts")) scrModeRefresh(); if (el.dataset.p === "snd.mute") render(); if (/^zk\.\w+Tpl\./.test(el.dataset.p)) render(); if ($("#shprev")) setTimeout(shPreview, 30); if (/^look\.hi/.test(el.dataset.p)) updHiPrev();
   if (/^remote\./.test(el.dataset.p) && window.REMOTE) { window.REMOTE.start(); setTimeout(function(){ if (cur === "remote") render(); }, 2000); }
   if (el.dataset.p === "city" || el.dataset.p === "custom.on") A.loadCity(A.uqCityId ? A.uqCityId() : S.city, function(){ A.clearCache(); if (cur === "times" || cur === "calendar") render(); });
-  if (/^(nm\.frame|marquee|notifyOn|sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|hidePrayer|noIqWait|iqNowOn|look\.hiCustom|look\.iqColorOn|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.azan|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
+  if (/^(nm\.frame|marquee|notifyOn|sleepIsha|sleepSunrise|sleepMsgOn|hideIsha|wakeFajr|hideSunrise|wakeDhuhr|zk\.(after|morning|evening|autoSec|noRepeat)|custom\.on|look\.logo|hidePrayer|noIqWait|iqNowOn|look\.hiCustom|look\.iqColorOn|look\.nativeRot|look\.wm|look\.hiTextOn|look\.hiFrame|look\.nbCustom|look\.ovClock|look\.tblStyle|look\.hiOn|look\.shadow|look\.logo|look\.rowAuto|look\.scMode|remote\.on|look\.bgMode|blackStyle|look\.homeClock|iqNowOn|look\.nightTimes|look\.nightShow|look\.newsShade$|look\.logoColor|look\.autoColor|snd\.(azan|beep)|snd\.iqama|weather\.src|lang|city)$/.test(el.dataset.p)) render();
 }
 function step(b){ var inp = b.parentNode.querySelector("input"), s = parseFloat(b.dataset.step), v = (parseFloat(inp.value) || 0) + s;
   v = Math.round(v*10000)/10000; inp.value = v; inp.dispatchEvent(new Event("change", {bubbles:true})); }
