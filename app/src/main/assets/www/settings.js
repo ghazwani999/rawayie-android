@@ -1894,7 +1894,7 @@ function licStrip(){ if (window.RAWAYIE_MANAGE) return "";
   return '<button type="button" class="licstrip' + (s.expired ? " bad" : "") + '" data-act="goto" data-x="general|رقم الجهاز"><span><b>' + (s.trial ? "نسخة تجريبية: متبقي " + s.leftDays + (s.leftDays === 1 ? " يوم" : " أيام") : s.pending ? "جارٍ التحقق من ترخيص الشاشة" : esc(s.msg || "الشاشة غير مفعّلة")) + '</b><small>أرسل رقم الجهاز عبر واتساب ' + esc(s.wa) + ' لطلب كود التفعيل من الإدارة</small></span><span class="lsid"><small>رقم الجهاز</small><b dir="ltr">' + esc(s.idText) + '</b></span></button>';
 }
 function homeHTML(){
-  return '<div class="shome"><h2>' + ico("gear") + 'الإعدادات</h2><p class="sdesc">اختر القسم الذي تريد ضبطه، أو ابحث عن أي خيار باسمه.</p>' +
+  return '<div class="shome"><h2>' + ico("gear") + 'الإعدادات</h2><p class="sdesc">اختر القسم الذي تريد ضبطه، أو ابحث عن أي خيار باسمه.</p>' + (typeof helpHTML === "function" ? helpHTML("home") : "") +
     '<label class="ssearch" for="sq">' + ico("search") + '<input type="search" id="sq" placeholder="ابحث في الإعدادات… مثل: الإقامة، الخلفية، الخط، السكون" autocomplete="off"></label>' +
     licStrip() +
     '<div id="sres" class="sres" hidden></div><div id="sgroups">' +
@@ -1979,7 +1979,7 @@ function render(){
   var hb = sc1[4] === "hub" ? null : hubOf(cur);
   body.innerHTML = '<div class="shead"><button type="button" class="crumb" data-sec="home">' + ico("home") + 'الإعدادات</button>' +
     (sc1[4] === "hub" || sc1[4] === "mode" ? "" : hb && allowed(hb[0]) ? '<span class="crumb-sep">‹</span><button type="button" class="crumb" data-sec="' + hb[0] + '">' + esc(hb[1]) + '</button>' : '<span class="crumb-sep">‹</span><span class="crumb g">' + esc(groupName(sc1[4])) + '</span>') +
-    '<h2>' + ico(sc1[3]) + esc(sc1[1]) + '</h2>' + (sc1[2] ? '<p class="sdesc">' + esc(sc1[2]) + '</p>' : "") + '</div>' + R[cur]() + nextHTML(cur);
+    '<h2>' + ico(sc1[3]) + esc(sc1[1]) + '</h2>' + (sc1[2] ? '<p class="sdesc">' + esc(sc1[2]) + '</p>' : "") + '</div>' + (typeof helpHTML === "function" ? helpHTML(cur) : "") + R[cur]() + nextHTML(cur);
   groupTogs(body);
   $$("[data-media]", body).forEach(function(im){ A.mediaURL(im.dataset.media).then(function(u){ if (u) im.src = u; }); });
   if (cur === "news" && allowedOne("slides")) { slPaint(); mvPreview(); }
@@ -2181,7 +2181,7 @@ function onClick(e){
     case "autoLinux": dl("rawayie.desktop", linuxDesk(), "text/plain"); toast("انقل الملف إلى ‎~/.config/autostart‎"); break;
     case "autoCopy": var rl = $("#runlk"); if (rl) { rl.select(); try { (navigator.clipboard ? navigator.clipboard.writeText(rl.value) : Promise.reject()).catch(function(){ document.execCommand("copy"); }); } catch(e){ document.execCommand("copy"); } toast("تم نسخ الرابط"); } break;
     case "saveAll": saveAll(); break;
-    case "hints": var hon = !panel.classList.contains("showhints"); panel.classList.toggle("showhints", hon); try { localStorage.setItem("rawayie-hints", hon ? "1" : "0"); } catch(e){} toast(hon ? "يظهر شرح كل خيار تحته" : "أُخفي الشرح: قائمة مختصرة"); break;
+    case "hints": var hon = !panel.classList.contains("showhints"); panel.classList.toggle("showhints", hon); try { localStorage.setItem("rawayie-hints", hon ? "1" : "0"); } catch(e){} toast(hon ? "يظهر شرح القسم في أعلاه، وشرح كل خيار تحته" : "أُخفي الشرح: قائمة مختصرة"); break;
     case "sleepPrev": close(); A.previewBlack(10000, true); break;
     case "fsNow": close(); toggleFS(); break;
     case "actOpen": close(); actOpen(); break;
@@ -2365,7 +2365,7 @@ function close(){ if (newsDraftSave()) toast("حُفظت الرسالة المك
 function build(){
   panel = $("#set"); panel.classList.add("simple"); // قائمة مختصرة واضحة: سطر لكل خيار، والشرح عند الطلب
   try { if (localStorage.getItem("rawayie-hints") === "1") panel.classList.add("showhints"); } catch(e){}
-  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><span class="tkarrows"><button type="button" class="tkbtn" data-act="pgUp" aria-label="لأعلى">▲</button><button type="button" class="tkbtn" data-act="pgDn" aria-label="لأسفل">▼</button></span><button type="button" class="btn ghost hintbtn" data-act="hints" id="hintbtn" title="إظهار شرح كل خيار تحته">الشرح</button><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
+  panel.innerHTML = '<div class="sbar"><button type="button" class="hamb" id="hamb" aria-label="أقسام الإعدادات" aria-expanded="false"><span></span><span></span><span></span></button><img src="img/mark.png" alt=""><b>الإعدادات</b><span class="curs" id="curs"></span><small>ضبط مواقيت الصلاة والإقامة والشاشة</small><span class="who" id="who"></span><span class="tkarrows"><button type="button" class="tkbtn" data-act="pgUp" aria-label="لأعلى">▲</button><button type="button" class="tkbtn" data-act="pgDn" aria-label="لأسفل">▼</button></span><button type="button" class="btn ghost hintbtn" data-act="hints" id="hintbtn" title="إظهار شرح القسم وطريقة عمله، وشرح كل خيار">الشرح</button><button type="button" class="btn savebtn" data-act="saveAll" id="saveall">حفظ الإعدادات</button><button type="button" class="btn ghost" data-act="close">إغلاق الإعدادات</button></div>' +
     '<div id="mgd" class="lock" hidden><h2>إعدادات هذه الشاشة تُدار من الموقع</h2>' +
     '<p class="note">لا يمكن تعديل الإعدادات من جهاز المسجد. التعديل من الموقع: «شاشاتي» للمشرف، و«شاشات المساجد» للمدير، ويصل للشاشة خلال دقيقة.</p>' +
     '<p class="note">لفتحها من هذا الجهاز: يضع مدير الموقع كلمة سر للشاشة من تحرير الشاشة ← الصلاحيات.</p>' +
