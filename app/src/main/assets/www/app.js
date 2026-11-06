@@ -17,7 +17,7 @@ var DEF = {
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, noIqWait:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
-  snd:{azan:"short", iqama:"short", beep:true, vol:1, mute:false},
+  snd:{azan:"short", iqama:"short", tone:"short", beep:true, vol:1, mute:false},
   sndRem:{items:[]},
   ayat:{on:false, sec:20, mode:"default", list:"", pos:"mid"},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -57,7 +57,9 @@ function merge(def, v){
   return o;
 }
 var S;
-try { S = merge(DEF, JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catch(e){ S = clone(DEF); }
+/* 17.87: «نغمة التطبيق» عند الأذان والإقامة. الإعدادات المحفوظة قبلها تبقى بدون نغمة، فلا يتغير صوت مسجد اختار الصمت */
+function sndFix(o){ if (o && o.snd && typeof o.snd === "object" && o.snd.tone === undefined) o.snd.tone = "none"; return o; }
+try { S = merge(DEF, sndFix(JSON.parse(localStorage.getItem(LS_KEY) || "null"))); } catch(e){ S = clone(DEF); }
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
 try { if (!localStorage.getItem(LS_KEY) && !S.lookV) S.lookV = 13; } catch(e){}
@@ -1330,6 +1332,11 @@ function play(kind){
   if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : "";
   if (kind === "beep") src = S.snd.beep ? "snd/beep_07a.mp3" : "";
   var custom = (kind === "azan" && S.snd.azan === "custom") ? S.snd.azanId : (kind === "iqama" && S.snd.iqama === "custom") ? S.snd.iqamaId : "";
+  // نغمة التطبيق: تُسمع عند الأذان والإقامة إذا لم يُختر صوت أذان أو إقامة (مثل تطبيق روائع السابق)
+  var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/tone.wav" : tn === "short" ? "snd/tone.mp3" : "";
+  if (kind === "tone") src = tsrc;
+  if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/tone.wav" : "snd/tone.mp3"; // تجربة نغمة من الإعدادات
+  if ((kind === "azan" || kind === "iqama") && !src && !custom) src = tsrc;
   var go = function(u){ if (!u) return; try { audio.pause(); audio.src = u; audio.volume = +S.snd.vol; var p = audio.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} };
   if (custom) mediaURL(custom).then(go); else go(src);
 }
@@ -1872,7 +1879,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   orient:function(){ return orient(); }, zkPreview:zkPreview, scrMsg:function(t){ scrMsg(t); },
   mySlot:mySlot, isSecond:isSecond, dualOn:dualOn, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, uqCityId:uqCityId, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
-  setAll:function(o){ var n = mvFix(merge(DEF, o)); if (n.look) n.look.rotOk = +n.look.rot || 0; for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
+  setAll:function(o){ var n = mvFix(merge(DEF, sndFix(o))); if (n.look) n.look.rotOk = +n.look.rot || 0; for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
   fitSlide:fitSlide, remTest:function(r){ remRun(r); }, REM_NAMES:REM_NAMES, clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

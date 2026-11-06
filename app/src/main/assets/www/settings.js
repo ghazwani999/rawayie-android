@@ -619,8 +619,27 @@ function awakeText(){
     w.method === "pending" ? "يبدأ عند أول لمسة أو ضغطة زر" : "غير مدعوم في هذا المتصفح. استخدم Chrome أو Fully Kiosk مع خيار Keep Screen On";
 }
 
+/* نغمة التطبيق (مثل تطبيق روائع السابق): نغمة تنبيه عند الأذان والإقامة، أو صوت الأذان والإقامة بدلاً منها */
+var SPK = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', SPK0 = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function toneCard(){
+  var T = S.snd, tn = T.tone || "short", useA = T.azan !== "none", useI = T.iqama !== "none", use = useA || useI;
+  var opt = function(k, t, d, test){ return '<div class="bgm snd' + (tn === k ? " on" : "") + '"><button type="button" class="bgmr" data-act="toneSet" data-x="' + k + '" role="radio" aria-checked="' + (tn === k) + '"><i></i><span><b>' + t + '</b><small>' + d + '</small></span></button>' +
+    (test ? '<button type="button" class="spk" data-act="test" data-x="' + test + '" aria-label="تجربة ' + t + '">' + SPK + '</button>' : '<span class="spk off">' + SPK0 + '</span>') + '</div>'; };
+  var chk = function(act, x, on, t, dis){ return '<button type="button" class="tchk' + (on ? " on" : "") + '" role="checkbox" aria-checked="' + on + '"' + (dis ? ' disabled' : ' data-act="' + act + '" data-x="' + x + '"') + '><i></i><span>' + t + '</span></button>'; };
+  var nmA = {short:"صوت أذان قصير", long:"الأذان كاملاً", custom:"صوت أذان من الجهاز"}[useA ? T.azan : "short"], nmI = {short:"صوت إقامة قصير", custom:"صوت إقامة من الجهاز"}[useI ? T.iqama : "short"];
+  return card("نغمة التطبيق",
+    '<div class="bgms" role="radiogroup">' +
+    opt("none", "بدون نغمة", "إيقاف صوت التنبيه للأذان والإقامة") +
+    opt("short", "نغمة قصيرة", "MP3 - مناسبة لمعظم شاشات الأندرويد", "toneShort") +
+    opt("clear", "نغمة واضحة", "WAV - صوت تنبيه بديل إذا لم تُسمع القصيرة جيداً", "toneClear") + '</div>' +
+    '<div class="tuse">' + chk("sndUse", "", use, "استخدم الصوت للأذان (MP3)") +
+    '<div class="tsub">' + chk("sndOne", "azan", useA, nmA, !use) + chk("sndOne", "iqama", useI, nmI, !use) + '</div></div>' +
+    (S.snd.mute ? '<p class="note warn">⚠ الأصوات مكتومة الآن في هذه الشاشة من «تشغيل الأصوات» أدناه.</p>' : ""),
+    use ? "عند الأذان يُسمع " + (useA ? nmA : "النغمة") + "، وعند الإقامة " + (useI ? nmI : "النغمة") + ". النغمة تُسمع فقط في الوقت الذي لم يُختر له صوت."
+        : "تُسمع النغمة عند الأذان وعند الإقامة. فعّل «استخدم الصوت للأذان» لسماع صوت الأذان والإقامة بدلاً منها.");
+}
 R.sounds = function(){
-  return card("ضبط صوت الأذان والإقامة",
+  return toneCard() + card("ضبط صوت الأذان والإقامة",
     togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت: الأذان والإقامة والتنبيه قبل الإقامة والتنبيهات المجدولة") +
     (S.snd.mute ? '<p class="note warn">⚠ الأصوات مكتومة الآن في هذه الشاشة.</p>' : "") +
     sel("صوت الأذان", "snd.azan", [["none","بدون صوت"],["short","صوت أذان قصير"],["long","الأذان كاملاً"],["custom","ملف MP3 من الجهاز"]]) +
@@ -2187,6 +2206,14 @@ function onClick(e){
       if (Object.keys(o).length) S.overrides[x] = o; else delete S.overrides[x];
       calEdit = null; commit(); render(); toast("تم التعديل"); break;
     case "calReset": delete S.overrides[x]; commit(); render(); break;
+    case "toneSet": S.snd.tone = x; A.save(); render(); if (x !== "none") { A.unlock(); setTimeout(function(){ A.play(x === "clear" ? "toneClear" : "toneShort"); }, 350); } break;
+    case "sndUse": (function(){ var T = S.snd;
+      if (T.azan !== "none" || T.iqama !== "none") { T.prevAzan = T.azan; T.prevIqama = T.iqama; T.azan = "none"; T.iqama = "none"; }
+      else { T.azan = T.prevAzan && T.prevAzan !== "none" ? T.prevAzan : "short"; T.iqama = T.prevIqama && T.prevIqama !== "none" ? T.prevIqama : "short"; }
+      A.save(); render(); })(); break;
+    case "sndOne": (function(){ var T = S.snd, pk = x === "azan" ? "prevAzan" : "prevIqama";
+      if (T[x] !== "none") { T[pk] = T[x]; T[x] = "none"; } else T[x] = T[pk] && T[pk] !== "none" ? T[pk] : "short";
+      A.save(); render(); })(); break;
     case "test": A.unlock(); setTimeout(function(){ A.play(x); }, 350); break;
     case "nAdd": newsEdit = "new"; render(); break;
     case "nEdit": newsEdit = x; render(); break;
