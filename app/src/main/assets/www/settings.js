@@ -1362,7 +1362,7 @@ R.look = function(){
       (svg ? "background-image:url(bg/" + b[0] + ")" : "background-position:0 " + (-(b[3] != null ? b[3] : i)*(tab === "P" ? 160 : 90)) + "px") + '" data-n="' + (i + 1) + '" aria-label="خلفية ' + (i + 1) + '"></button>'; };
   // الخلفية المستخدمة الآن: صورتها ورقمها واسم ملفها ونوعها وطريقة تغييرها
   var ci = -1; list.forEach(function(b, i){ if (b[0] === curBg) ci = i; });
-  var modes = {manual:"يدوي", prayer:"تتغير عند كل صلاة", day:"تتغير كل يوم", month:"تتغير كل شهر", random:"تتغير عشوائياً كل " + (S.look.bgEvery || 30) + " دقيقة"};
+  var modes = {manual:"يدوي", prayer:"تتغير عند كل صلاة", day:"تتغير كل يوم", dayPick:"تتغير كل يوم عشوائياً من قائمة مختارة", month:"تتغير كل شهر", random:"تتغير عشوائياً كل " + (S.look.bgEvery || 30) + " دقيقة"};
   var curBox = '<div class="bgcur">' + (S.look.customBg ? "" :
       ci >= 0 ? bgBtn(list[ci], ci).replace('<button type="button" class="bgt', '<span class="bgt cur').replace(/data-act="bg" /, "").replace("</button>", "</span>") : "") +
     '<div class="bgci"><b>الخلفية المستخدمة الآن (' + (tab === "P" ? "رأسي" : "أفقي") + ')</b>' +
@@ -1377,15 +1377,12 @@ R.look = function(){
   var bgs = [0, 1, 2].map(function(g){ return list.map(function(b, i){ return grp(b[0]) === g ? wrap(b, i) : ""; }).join(""); }).join("");
   var nHid = list.filter(function(b){ return hid.indexOf(b[0]) >= 0; }).length;
   var accents = ["#E7B65B","#F4D58D","#FFFFFF","#7FD1C7","#9CC7FF","#F2A07B","#C9E265"];
-  return card("صورة الخلفية",
+  return bgModeCard(tab, list, curBg, ci, bgBtn) + card("صورة الخلفية",
     curBox + '<div class="seg"><button type="button" data-act="bgTab" data-x="P" class="' + (tab === "P" ? "on" : "") + '">رأسي</button><button type="button" data-act="bgTab" data-x="L" class="' + (tab === "L" ? "on" : "") + '">أفقي</button></div>' +
     (showHid ? '<p class="note">الخلفيات المحذوفة: اضغط ↺ لإعادتها إلى القائمة.</p>' : del ? '<p class="note">اضغط × على أي خلفية لحذفها من هذه الشاشة وذاكرة الجهاز. للحذف النهائي من التطبيق نفسه: لوحة ووردبريس ← إعدادات الربط ← حذف الخلفيات نهائياً، أو احذف ملفها من مجلد bg في النسخة المحلية.</p>' : "") +
     '<div class="bgs' + (del || showHid ? " bgdel" : "") + '">' + (bgs || '<p class="note">لا توجد خلفيات محذوفة.</p>') + '</div>' +
     '<div class="row-end">' + (showHid ? btn("رجوع", "bgHidView", "ghost") : btn(del ? "تم" : "حذف خلفيات", "bgDelMode", del ? "" : "ghost") + (nHid ? btn("المحذوفة (" + nHid + ")", "bgHidView", "ghost") : "")) + '</div>' +
     '<div class="row-end"><label class="btn ghost">صورة من الجهاز<input type="file" accept="image/*" data-up="bg" hidden></label>' + (S.look.customBg ? btn("إلغاء الصورة المخصصة", "bgClear", "ghost") : "") + '</div>' +
-    sel("تغيير الخلفية", "look.bgMode", [["manual","يدوي: اسم الفجر للتالية، ووقت الفجر للسابقة"],["prayer","عند كل صلاة"],["day","كل يوم"],["month","كل شهر"],["random","عشوائي كل مدة"]], "يعمل مع خلفيات التطبيق، ويتوقف عند اختيار صورة من الجهاز") +
-    (S.look.bgMode === "random" ? numIn("تغيير الخلفية كل", "look.bgEvery", 5, 1440, 5, "دقيقة") : "") +
-    (S.look.bgMode && S.look.bgMode !== "manual" && S.look.bgMode !== "random" ? tog("اختيار الخلفية التالية عشوائياً", "look.bgShuffle", "عند إيقافه تتغير الخلفيات بالترتيب") : "") +
     sel("لون النصوص", "look.tone", [["auto","تلقائي حسب الخلفية"],["dark","نصوص فاتحة (خلفية داكنة)"],["light","نصوص داكنة (خلفية فاتحة)"]])) +
   card("الألوان",
     tog("تلوين النصوص تلقائياً حسب الخلفية", "look.autoColor", "يختار ألوان النصوص والظل والتمييز من ألوان الخلفية. أوقفه لاستخدام اللون المخصص أدناه") +
@@ -1395,6 +1392,36 @@ R.look = function(){
     tog("إظهار العلامة المائية خلف جدول المواقيت", "look.wm", "صورة شفافة خلف أوقات الصلوات") +
     (S.look.wm !== false ? '<div class="fld"><span><b>صورة العلامة المائية</b><small>' + (S.look.wmImg ? "صورة مخصصة" : "الهلال والمسجد (الافتراضية)") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الصورة<input type="file" accept="image/*" data-up="wm" hidden></label>' + (S.look.wmImg ? btn("الصورة الافتراضية", "wmReset", "sm ghost") : "") + '</span></div>' + rangeIn("درجة الظهور", "look.wmOp", 0.03, 0.5, 0.01, "%", "كلما قلّت صارت أخف") + rangeIn("الحجم", "look.wmSize", 0.4, 1.2, 0.05, "%", "نسبةً إلى ارتفاع الجدول") : ""));
 };
+/* تغيير خلفية الشاشة (مثل تطبيق روائع السابق): يدوياً بالأسهم، عند كل صلاة، كل يوم، أو كل يوم عشوائياً من قائمة أرقام */
+function bgModeCard(tab, list, curBg, ci, bgBtn){
+  var m = S.look.bgMode || "manual", hid = S.look.bgHidden || [], pk = S.look[tab === "P" ? "bgPickP" : "bgPickL"] || [];
+  var vis = list.filter(function(b){ return hid.indexOf(b[0]) < 0; });
+  var opt = function(k, t, d, extra){ return '<div class="bgm' + (m === k ? " on" : "") + '"><button type="button" class="bgmr" data-act="bgMode" data-x="' + k + '" role="radio" aria-checked="' + (m === k) + '"><i></i><span><b>' + t + '</b><small>' + d + '</small></span></button>' + (extra || "") + '</div>'; };
+  // المعاينة: صورة الخلفية الحالية ورقمها مع سهمين للتنقل
+  var thumb = S.look.customBg ? '<span class="bgt ' + tab + ' cur bgnone">صورة<br>مخصصة</span>' : ci >= 0 ? bgBtn(list[ci], ci).replace('<button type="button" class="bgt', '<span class="bgt cur').replace(/data-act="bg" /, "").replace("</button>", "</span>") : "";
+  var step = '<div class="bgstep"><button type="button" class="bgarr" data-act="bgStep" data-x="-1" aria-label="الخلفية السابقة">‹</button>' + thumb +
+    '<b class="bgsn">' + (S.look.customBg ? "-" : ci + 1) + '</b><button type="button" class="bgarr" data-act="bgStep" data-x="1" aria-label="الخلفية التالية">›</button></div>';
+  var nums = '<div class="bgnums" role="group" aria-label="أرقام الخلفيات">' + list.map(function(b, i){ if (hid.indexOf(b[0]) >= 0) return "";
+    return '<button type="button" data-act="bgPick" data-x="' + b[0] + '" class="' + (pk.indexOf(b[0]) >= 0 ? "on" : "") + '">' + (i + 1) + '</button>'; }).join("") + '</div>' +
+    '<p class="note">' + (pk.filter(function(f){ return vis.some(function(b){ return b[0] === f; }); }).length ? "المختار: <b class=\"bgpc\">" + pk.filter(function(f){ return vis.some(function(b){ return b[0] === f; }); }).length + "</b> خلفية" : "لم تُختر أرقام بعد، فتُستخدم كل الخلفيات") + '. الأرقام هي نفسها المكتوبة على صور الخلفيات أدناه.</p>' +
+    '<div class="row-end">' + btn("تحديد الكل", "bgPickAll", "sm ghost", "all") + btn("إلغاء التحديد", "bgPickAll", "sm ghost", "none") + '</div>';
+  var more = m === "month" || m === "random";
+  return card("تغيير خلفية الشاشة",
+    '<div class="seg"><button type="button" data-act="bgTab" data-x="P" class="' + (tab === "P" ? "on" : "") + '">رأسي</button><button type="button" data-act="bgTab" data-x="L" class="' + (tab === "L" ? "on" : "") + '">أفقي</button></div>' +
+    '<div class="bgms" role="radiogroup">' +
+    opt("manual", "تغيير الخلفية يدوياً", "بالسهمين هنا، أو في الشاشة: الضغط على اسم الفجر للتالية وعلى وقت الفجر للسابقة", step) +
+    opt("prayer", "تغيير الخلفية عند كل صلاة", "تتغير عند دخول وقت كل صلاة، والضغط على أي صلاة في الشاشة يغيّرها") +
+    opt("day", "تغيير الخلفية كل يوم", "تتغير مرة كل يوم، والضغط على اسم اليوم في الشاشة يغيّرها") +
+    opt("dayPick", "تغيير الخلفية كل يوم بشكل عشوائي من هذه القائمة", "اضغط على أرقام الخلفيات لاختيارها، فتتغير كل يوم إلى واحدة منها عشوائياً. والضغط على اسم اليوم يغيّرها", m === "dayPick" ? nums : "") +
+    (more || R.look.more ? opt("month", "تغيير الخلفية كل شهر", "مرة في بداية كل شهر") + opt("random", "تغيير الخلفية عشوائياً كل مدة", "كل عدد من الدقائق تحدده") : "") +
+    '</div>' +
+    (more || R.look.more ? "" : '<div class="row-end">' + btn("طرق أخرى", "bgMore", "sm ghost") + '</div>') +
+    (m === "random" ? numIn("تغيير الخلفية كل", "look.bgEvery", 5, 1440, 5, "دقيقة") : "") +
+    (m === "prayer" || m === "day" || m === "month" ? tog("اختيار الخلفية التالية عشوائياً", "look.bgShuffle", "عند إيقافه تتغير الخلفيات بالترتيب") : "") +
+    (S.look.customBg ? '<p class="note warn">التغيير التلقائي متوقف لأن الخلفية الحالية صورة من الجهاز. اضغط أحد السهمين أو «إلغاء الصورة المخصصة» للعودة لخلفيات التطبيق.</p>' : "") +
+    (S.sup.fajrBg === false ? '<p class="note">التغيير بالضغط على الشاشة متوقف من صلاحيات المشرف.</p>' : ""),
+    "تُحفظ الطريقة فور اختيارها. التغيير بالضغط يعمل لأي شخص أمام الشاشة، ويمكن إيقافه من: صلاحيات المشرف ← «تغيير الخلفية بالضغط على صلاة الفجر».");
+}
 /* تمييز الصلاة القادمة: لون الشريط وشفافيته ولون نصوصه، أو إطار فقط، مع معاينة */
 function hexRgba(h, a){ h = String(h || "#000000").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var n = parseInt(h, 16) || 0; return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")"; }
 function hiPrevHTML(){
@@ -2284,6 +2311,16 @@ function onClick(e){
       if (hadCustom) render(); break;
     case "bgFind": (function(){ var o = document.querySelector(".bgs .bgt.on"); if (!o) return; try { o.scrollIntoView({block:"center", inline:"center", behavior:"smooth"}); } catch (e2) { o.scrollIntoView(); } o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); }, 2400); })(); break;
     case "bgTab": R.look.tab = x; render(); break;
+    case "bgMode": S.look.bgMode = x; S.look.bgKey = ""; A.save(); render(); toast("تم الحفظ"); break;
+    case "bgMore": R.look.more = true; render(); break;
+    case "bgStep": (function(){ var tb = R.look.tab || A.orient(), l = A.bgList(tb), cur = tb === "P" ? S.look.bgP : S.look.bgL, i = -1;
+      l.forEach(function(q, k){ if (q[0] === cur) i = k; });
+      var n = i < 0 ? 0 : (i + (+x) + l.length) % l.length; if (S.look.customBg) { A.IDB.del(S.look.customBg); S.look.customBg = ""; n = i < 0 ? 0 : i; }
+      if (tb === "P") S.look.bgP = l[n][0]; else S.look.bgL = l[n][0];
+      A.save(); A.applyLook(); render(); })(); break;
+    case "bgPick": (function(){ var tb = R.look.tab || A.orient(), key = tb === "P" ? "bgPickP" : "bgPickL", L0 = S.look[key] = S.look[key] || [], k = L0.indexOf(x);
+      if (k >= 0) L0.splice(k, 1); else L0.push(x); A.save(); render(); })(); break;
+    case "bgPickAll": (function(){ var tb = R.look.tab || A.orient(); S.look[tb === "P" ? "bgPickP" : "bgPickL"] = x === "all" ? A.bgList(tb).map(function(q){ return q[0]; }) : []; A.save(); render(); })(); break;
     case "bgDelMode": R.look.delMode = !R.look.delMode; R.look.showHid = false; render(); break;
     case "bgHidView": R.look.showHid = !R.look.showHid; R.look.delMode = false; render(); break;
     case "bgHide":
