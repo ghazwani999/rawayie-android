@@ -1339,7 +1339,7 @@ function play(kind, pk){
   if (kind === "azanFajr") { kind = "azan"; pk = "fajr"; }
   if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "short2" ? "snd/azan_old.mp3" : S.snd.azan === "long" ? (pk === "fajr" && S.snd.fajrLong !== false ? "snd/azan_fajr.mp3" : "snd/azan_long.mp3") : "";
   if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : S.snd.iqama === "short2" ? "snd/iqama_old.mp3" : "";
-  var BEEPS = {beep_07a:1, beep_06:1, beep_b:1, beep_t:1, drop1:1, drop3:1, alert1:1, alert3:1};
+  var BEEPS = {beep_07a:1, beep_06:1, beep_b:1, beep_t:1};
   // نغمتا التنبيه قبل الأذان وقبل الإقامة («beep» للتنبيهات المجدولة بنغمة ما قبل الإقامة)
   var toneSrc = function(f){ return f === "beep_04w" ? "snd/beep_04.wav" : f === "beep_04" ? "snd/beep_04.mp3" : "snd/" + (BEEPS[f] ? f : "beep_07a") + ".mp3"; };
   if (kind === "preA") src = toneSrc((S.snd.preA || {}).file);

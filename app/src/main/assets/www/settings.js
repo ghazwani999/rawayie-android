@@ -620,11 +620,13 @@ function awakeText(){
 var SPK = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', SPK0 = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 /* الأصوات: المساجد فيها مؤذن، فلا صوت أذان ولا إقامة. نغمة تنبيه قبل الأذان، ونغمة تنبيه قبل الإقامة فقط */
 var TONES = [["beep_04","نغمة 1","beep-04 · MP3"],["beep_04w","نغمة 2","beep-04 · WAV"],["beep_07a","نغمة 3","beep-07a"],["beep_06","نغمة 4","beep-06"],["beep_b","نغمة 5: صفارة","wbeeep"],
-  ["beep_t","نغمة 6: قصيرة جداً","wteet"],["drop1","نغمة 7: قطرة","w1drop"],["drop3","نغمة 8: ثلاث قطرات","w3drop"],["alert1","نغمة 9: تنبيه","alert1"],["alert3","نغمة 10: تنبيه متكرر","w3alerts"]];
+  ["beep_t","نغمة 6: قصيرة جداً","wteet"]];
 function toneCard(){
   var T = S.snd;
   if (!T.preA) T.preA = {on:false, file:"beep_04", min:1};
   if (!T.preI) T.preI = {on:true, file:"beep_07a", min:1};
+  var okT = function(f){ return TONES.some(function(o){ return o[0] === f; }); };
+  if (!okT(T.preA.file)) T.preA.file = "beep_04"; if (!okT(T.preI.file)) T.preI.file = "beep_07a";
   var row = function(on, act, x, t, d, test){ return '<div class="bgm snd' + (on ? " on" : "") + '"><button type="button" class="bgmr" data-act="' + act + '" data-x="' + x + '" role="radio" aria-checked="' + on + '"><i></i><span><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : "") + '</span></button>' +
     '<button type="button" class="spk" data-act="test" data-x="' + test + '" aria-label="تجربة ' + t + '">' + SPK + '</button></div>'; };
   var head = function(t, d){ return '<div class="ssub"><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : "") + '</div>'; };
