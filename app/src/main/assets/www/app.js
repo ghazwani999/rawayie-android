@@ -1338,6 +1338,7 @@ function play(kind, pk){
   // نغمة التطبيق: تُسمع عند الأذان والإقامة إذا لم يُختر صوت أذان أو إقامة (مثل تطبيق روائع السابق)
   var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/beep_04.wav" : tn === "short" ? "snd/beep_04.mp3" : ""; // نغمتا تطبيق روائع السابق (نفس النغمة بصيغتين)
   if (kind === "tone") src = tsrc;
+  if (/^sf:[\w.-]+\.mp3$/.test(kind)) src = "snd/" + kind.slice(3); // تجربة صوت معيّن من الإعدادات
   if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/beep_04.wav" : "snd/beep_04.mp3"; // تجربة نغمة من الإعدادات
   if ((kind === "azan" || kind === "iqama") && !src && !custom) src = tsrc;
   var go = function(u){ if (!u) return; try { audio.pause(); audio.src = u; audio.volume = +S.snd.vol; var p = audio.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} };
