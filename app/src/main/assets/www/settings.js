@@ -485,7 +485,7 @@ R.screensAdv = function(){
   card("مظهر عداد الإقامة",
     tog("إظهار الوقت المتبقي داخل دائرة", "circle") + tog("تكبير العد التنازلي على شاشة الإقامة", "look.bigIqCnt", "أرقام أكبر في عداد انتظار الإقامة")) +
   card("رسالة إغلاق الجوال",
-    tog("رسالة التنبيه بالصوت عند آخر دقيقة قبل الإقامة", "notifyOn") + (S.notifyOn ? tog("إظهار رسالة إغلاق الجوال طوال وقت انتظار الإقامة", "notifyAll", "عند إيقافه تظهر في آخر دقيقة فقط، والصوت يبقى في آخر دقيقة") : "") + txt("رسالة التنبيه", "notifyMsg") +
+    tog("رسالة إغلاق الجوال عند آخر دقيقة قبل الإقامة", "notifyOn") + (S.notifyOn ? tog("إظهار رسالة إغلاق الجوال طوال وقت انتظار الإقامة", "notifyAll", "عند إيقافه تظهر في آخر دقيقة فقط، والصوت يبقى في آخر دقيقة") : "") + txt("رسالة التنبيه", "notifyMsg") +
     (S.notifyOn ? '<div class="subbox"><p class="note">شكل رسالة إغلاق الجوال على شاشة الإقامة</p>' +
       rangeIn("حجم الرسالة", "nm.size", 0.6, 1.6, 0.05, "%") +
       tog("إطار حول الرسالة", "nm.frame") +
@@ -618,42 +618,33 @@ function awakeText(){
 
 /* نغمة التطبيق (مثل تطبيق روائع السابق): نغمة تنبيه عند الأذان والإقامة، أو صوت الأذان والإقامة بدلاً منها */
 var SPK = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', SPK0 = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-/* كل أصوات الشاشة في بطاقة واحدة: كل صوت باسمه وزر لتجربته.
-   «(من ملفاتك)» = الأصوات التي أُرسلت من تطبيق روائع السابق */
+/* الأصوات: المساجد فيها مؤذن، فلا صوت أذان ولا إقامة. نغمة تنبيه قبل الأذان، ونغمة تنبيه قبل الإقامة فقط */
+var TONES = [["beep_04","نغمة 1","beep-04 · MP3"],["beep_04w","نغمة 2","beep-04 · WAV"],["beep_07a","نغمة 3","beep-07a"],["beep_06","نغمة 4","beep-06"],["beep_b","نغمة 5: صفارة","wbeeep"],
+  ["beep_t","نغمة 6: قصيرة جداً","wteet"],["drop1","نغمة 7: قطرة","w1drop"],["drop3","نغمة 8: ثلاث قطرات","w3drop"],["alert1","نغمة 9: تنبيه","alert1"],["alert3","نغمة 10: تنبيه متكرر","w3alerts"]];
 function toneCard(){
-  var T = S.snd, tn = T.tone || "short";
+  var T = S.snd;
+  if (!T.preA) T.preA = {on:false, file:"beep_04", min:1};
+  if (!T.preI) T.preI = {on:true, file:"beep_07a", min:1};
   var row = function(on, act, x, t, d, test){ return '<div class="bgm snd' + (on ? " on" : "") + '"><button type="button" class="bgmr" data-act="' + act + '" data-x="' + x + '" role="radio" aria-checked="' + on + '"><i></i><span><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : "") + '</span></button>' +
-    (test ? '<button type="button" class="spk" data-act="test" data-x="' + test + '" aria-label="تجربة ' + t + '">' + SPK + '</button>' : '<span class="spk off">' + SPK0 + '</span>') + '</div>'; };
-  var grp = function(k, list){ return '<div class="bgms sm" role="radiogroup">' + list.map(function(o){ return row(T[k] === o[0], "sndSet", k + "|" + o[0], o[1], o[2], o[3]); }).join("") + '</div>'; };
+    '<button type="button" class="spk" data-act="test" data-x="' + test + '" aria-label="تجربة ' + t + '">' + SPK + '</button></div>'; };
   var head = function(t, d){ return '<div class="ssub"><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : "") + '</div>'; };
-  var mine = "من ملفاتك";
-  var BEEPS = [["beep_07a","نغمة 1","beep-07a (" + mine + ")"],["beep_06","نغمة 2","beep-06 (" + mine + ")"],["beep_b","نغمة 3: صفارة","wbeeep (" + mine + ")"],["beep_t","نغمة 4: قصيرة جداً","wteet (" + mine + ")"],
-    ["drop1","نغمة 5: قطرة","w1drop (" + mine + ")"],["drop3","نغمة 6: ثلاث قطرات","w3drop (" + mine + ")"],["alert1","نغمة 7: تنبيه","alert1 (" + mine + ")"],["alert3","نغمة 8: تنبيه متكرر","w3alerts (" + mine + ")"]];
-  var bf = T.beep ? (T.beepFile || "beep_07a") : "off";
+  var part = function(k, title, what, maxMin){ var P = T[k];
+    return head(title) +
+      '<div class="trow"><button type="button" class="tchk' + (P.on ? " on" : "") + '" data-act="preOn" data-x="' + k + '" role="checkbox" aria-checked="' + !!P.on + '"><i></i><span>تشغيل ' + title + '</span></button></div>' +
+      (P.on ? numIn("قبل " + what + " بـ", "snd." + k + ".min", 0, maxMin, 1, "دقيقة", "0 = وقت " + what + " نفسه") +
+        '<div class="bgms sm" role="radiogroup">' + TONES.map(function(o){ return row(P.file === o[0], "preFile", k + "|" + o[0], o[1], o[2], "pt:" + o[0]); }).join("") + '</div>' : ""); };
+  var rem = (S.sndRem && S.sndRem.items || []).length;
   return card("الأصوات",
     (T.mute ? '<p class="note warn">⚠ الأصوات مكتومة الآن في هذه الشاشة. فعّل «تشغيل الأصوات» في آخر هذه البطاقة.</p>' : "") +
-    head("1. نغمة التنبيه عند الأذان والإقامة", "صوت قصير يُسمع وقت الأذان ووقت الإقامة إذا لم تختر صوت أذان أو إقامة أدناه") +
-    '<div class="bgms sm" role="radiogroup">' +
-      row(tn === "none", "toneSet", "none", "بدون نغمة", "إيقاف صوت التنبيه للأذان والإقامة") +
-      row(tn === "short", "toneSet", "short", "نغمة قصيرة", "MP3 - مناسبة لمعظم شاشات الأندرويد · beep-04 (" + mine + ")", "toneShort") +
-      row(tn === "clear", "toneSet", "clear", "نغمة واضحة", "WAV - صوت تنبيه بديل · beep-04 (" + mine + ")", "toneClear") + '</div>' +
-    head("2. صوت الأذان") +
-    grp("azan", [["none","بدون صوت أذان","تُسمع نغمة التنبيه بدلاً منه"],["short","أذان قصير","صوت التطبيق الحالي","sf:azan.mp3"],["short2","أذان قصير 2","short_azan (" + mine + ")","sf:azan_old.mp3"],
-      ["long","الأذان كاملاً","وفي الفجر أذان بـ«الصلاة خير من النوم» audio_fajr (" + mine + ")","sf:azan_long.mp3"],["custom","ملف من الجهاز","MP3 تختاره من جهازك", T.azanId ? "azan" : ""]]) +
-    (T.azan === "custom" ? '<div class="fld"><span><b>ملف الأذان</b>' + (T.azanId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="azan"></div>' : "") +
-    (T.azan === "long" ? '<div class="trow"><button type="button" class="tchk' + (T.fajrLong !== false ? " on" : "") + '" data-act="sndFajr" role="checkbox" aria-checked="' + (T.fajrLong !== false) + '"><i></i><span>أذان الفجر بـ«الصلاة خير من النوم»</span></button><button type="button" class="spk" data-act="test" data-x="sf:azan_fajr.mp3" aria-label="تجربة أذان الفجر">' + SPK + '</button></div>' : "") +
-    head("3. صوت الإقامة") +
-    grp("iqama", [["none","بدون صوت إقامة","تُسمع نغمة التنبيه بدلاً منه"],["short","إقامة قصيرة","صوت التطبيق الحالي","sf:iqama.mp3"],["short2","إقامة قصيرة 2","short_iqama (" + mine + ")","sf:iqama_old.mp3"],["custom","ملف من الجهاز","MP3 تختاره من جهازك", T.iqamaId ? "iqama" : ""]]) +
-    (T.iqama === "custom" ? '<div class="fld"><span><b>ملف الإقامة</b>' + (T.iqamaId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="iqama"></div>' : "") +
-    head("4. التنبيه قبل الإقامة بدقيقة") +
-    '<div class="bgms sm" role="radiogroup">' + row(bf === "off", "sndBeep", "off", "بدون تنبيه") +
-      BEEPS.map(function(o){ return row(bf === o[0], "sndBeep", o[0], o[1], o[2], "sf:" + o[0] + ".mp3"); }).join("") + '</div>' +
-    head("5. عام") +
+    part("preA", "نغمة التنبيه قبل الأذان", "الأذان", 30) +
+    part("preI", "نغمة التنبيه قبل الإقامة", "الإقامة", 10) +
+    head("عام") +
     togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت في هذه الشاشة") +
-    numIn("مستوى الصوت", "snd.vol", 0, 1, 0.1),
-    "اضغط السماعة بجانب أي صوت لسماعه. تمنع المتصفحات الصوت قبل أول لمسة، فاضغط «تفعيل الصوت» مرة بعد فتح الشاشة.");
+    numIn("مستوى الصوت", "snd.vol", 0, 1, 0.1) +
+    "",
+    "المساجد فيها مؤذن، لذلك لا يُشغَّل صوت أذان ولا إقامة. الأصوات نغمتا تنبيه فقط، واضغط السماعة بجانب أي نغمة لسماعها.");
 }
-R.sounds = function(){ return toneCard() + remCard(); };
+R.sounds = function(){ return toneCard() + ((S.sndRem && S.sndRem.items || []).length ? remCard() : ""); }; // التنبيهات المجدولة تظهر فقط لمن أضافها سابقاً
 /* التنبيهات الصوتية المجدولة: قبل/بعد صلاة أو عند منتصف الليل والثلث الأخير */
 var REM_REF = [["fajr","الفجر"],["sunrise","الشروق"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"],["mid","منتصف الليل"],["third","الثلث الأخير من الليل"]];
 var REM_SND = [["beep","صوت تنبيه قصير"],["iqama","صوت الإقامة"],["azan","صوت الأذان"],["none","بدون صوت (رسالة فقط)"]];
@@ -2210,6 +2201,8 @@ function onClick(e){
       calEdit = null; commit(); render(); toast("تم التعديل"); break;
     case "calReset": delete S.overrides[x]; commit(); render(); break;
     case "toneSet": S.snd.tone = x; A.save(); render(); if (x !== "none") { A.unlock(); setTimeout(function(){ A.play(x === "clear" ? "toneClear" : "toneShort"); }, 350); } break;
+    case "preOn": S.snd[x].on = !S.snd[x].on; A.save(); render(); break;
+    case "preFile": (function(){ var q = x.split("|"); S.snd[q[0]].file = q[1]; A.save(); render(); A.unlock(); setTimeout(function(){ A.play("pt:" + q[1]); }, 300); })(); break;
     case "sndSet": (function(){ var q = x.split("|"); S.snd[q[0]] = q[1]; A.save(); render(); })(); break;
     case "sndBeep": if (x === "off") S.snd.beep = false; else { S.snd.beep = true; S.snd.beepFile = x; } A.save(); render(); break;
     case "sndMore": R.sounds.more = true; render(); break;

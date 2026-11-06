@@ -17,7 +17,7 @@ var DEF = {
   azanScreen:true, azanDur:4, duaAfterAzan:true,
   lastMinOnly:false, noIqWait:false, lastMinBlack:false, iqNowOn:true, iqNowSec:30, circle:true, ringStyle:"clock", iqTimes:false, red90:true, nm:{size:1, frame:false, frameW:2, frameColor:"#8C7552", bg:0.35, shadow:0.4}, notifyOn:true, notifyAll:true, notifyMsg:"من فضلك اغلق الهاتف",
   hadithOn:true, hadithSec:60, hadithText:"قال رسول الله ﷺ: «من صلى علي واحدة صلى الله عليه عشرا»",
-  snd:{azan:"short", iqama:"short", tone:"short", beep:true, beepFile:"beep_07a", fajrLong:true, vol:1, mute:false},
+  snd:{azan:"none", iqama:"none", tone:"none", beep:true, beepFile:"beep_07a", fajrLong:true, vol:1, mute:false, v2:1, preA:{on:false, file:"beep_04", min:1}, preI:{on:true, file:"beep_07a", min:1}},
   sndRem:{items:[]},
   ayat:{on:false, sec:20, mode:"default", list:"", pos:"mid"},
   fri:{on:true, adhanTime:"", khutbah:30, dur:15, hide:true, showHijri:true, showGreg:true},
@@ -58,7 +58,14 @@ function merge(def, v){
 }
 var S;
 /* 17.87: «نغمة التطبيق» عند الأذان والإقامة. الإعدادات المحفوظة قبلها تبقى بدون نغمة، فلا يتغير صوت مسجد اختار الصمت */
-function sndFix(o){ if (o && o.snd && typeof o.snd === "object" && o.snd.tone === undefined) o.snd.tone = "none"; return o; }
+function sndFix(o){ if (o && o.snd && typeof o.snd === "object" && o.snd.tone === undefined) o.snd.tone = "none";
+  /* 17.94: المساجد فيها مؤذن، فالأصوات نغمتا تنبيه فقط: قبل الأذان وقبل الإقامة. يتوقف صوت الأذان والإقامة،
+     ويبقى التنبيه قبل الإقامة كما كان (مع رسالة الجوال سابقاً) بنغمته المختارة */
+  if (o && o.snd && typeof o.snd === "object" && !o.snd.v2) { var T = o.snd;
+    T.preI = {on: o.notifyOn !== false && T.beep !== false, file: T.beepFile || "beep_07a", min: 1};
+    T.preA = {on: false, file: "beep_04", min: 1};
+    T.azan = "none"; T.iqama = "none"; T.tone = "none"; T.v2 = 1; }
+  return o; }
 try { S = merge(DEF, sndFix(JSON.parse(localStorage.getItem(LS_KEY) || "null"))); } catch(e){ S = clone(DEF); }
 // تشغيل أول مرة: الإعدادات الافتراضية هي أحدث تصميم، فلا تُطبَّق عليها تحويلات الإصدارات القديمة
 // (كانت تفعّل إخفاء الشاشة ليلاً وضحى تلقائياً في الأجهزة الجديدة)
@@ -1333,7 +1340,11 @@ function play(kind, pk){
   if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "short2" ? "snd/azan_old.mp3" : S.snd.azan === "long" ? (pk === "fajr" && S.snd.fajrLong !== false ? "snd/azan_fajr.mp3" : "snd/azan_long.mp3") : "";
   if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : S.snd.iqama === "short2" ? "snd/iqama_old.mp3" : "";
   var BEEPS = {beep_07a:1, beep_06:1, beep_b:1, beep_t:1, drop1:1, drop3:1, alert1:1, alert3:1};
-  if (kind === "beep") src = S.snd.beep ? "snd/" + (BEEPS[S.snd.beepFile] ? S.snd.beepFile : "beep_07a") + ".mp3" : "";
+  // نغمتا التنبيه قبل الأذان وقبل الإقامة («beep» للتنبيهات المجدولة بنغمة ما قبل الإقامة)
+  var toneSrc = function(f){ return f === "beep_04w" ? "snd/beep_04.wav" : f === "beep_04" ? "snd/beep_04.mp3" : "snd/" + (BEEPS[f] ? f : "beep_07a") + ".mp3"; };
+  if (kind === "preA") src = toneSrc((S.snd.preA || {}).file);
+  if (kind === "beep" || kind === "preI") src = toneSrc((S.snd.preI || {}).file || S.snd.beepFile);
+  if (/^pt:\w+$/.test(kind)) src = toneSrc(kind.slice(3)); // تجربة نغمة من الإعدادات
   var custom = (kind === "azan" && S.snd.azan === "custom") ? S.snd.azanId : (kind === "iqama" && S.snd.iqama === "custom") ? S.snd.iqamaId : "";
   // نغمة التطبيق: تُسمع عند الأذان والإقامة إذا لم يُختر صوت أذان أو إقامة (مثل تطبيق روائع السابق)
   var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/beep_04.wav" : tn === "short" ? "snd/beep_04.mp3" : ""; // نغمتا تطبيق روائع السابق (نفس النغمة بصيغتين)
@@ -1375,11 +1386,16 @@ function soundReminders(now, ph){
 }
 function events(now, ph){
   try { soundReminders(now, ph); } catch(e){}
+  // نغمة التنبيه قبل الأذان: للصلاة القادمة (أو الحالية إذا كان التنبيه وقت الأذان نفسه)
+  var PA = S.snd.preA || {};
+  if (PA.on) [ph.next, ph.cur].forEach(function(q){ if (!q || q.k === "sunrise" || q.k === "eid") return;
+    var at = q.A - Math.max(0, +PA.min || 0)*60000, kk = q.k + "@" + q.A + "pa";
+    if (now >= at && now - at < 5000 && !fired[kk]) { fired[kk] = 1; play("preA"); } });
   var p = ph.cur; if (!p || p.k === "eid") return;
   var k = p.k + "@" + p.A;
   var fire = function(id, at, fn){ if (now >= at && now - at < 5000 && !fired[k + id]) { fired[k + id] = 1; fn(); } };
   fire("a", p.A, function(){ play("azan", p.k); });
-  if (S.notifyOn) fire("b", p.I - 60000, function(){ play("beep"); });
+  var PI = S.snd.preI || {}; if (PI.on) fire("b", p.I - Math.max(0, +PI.min || 0)*60000, function(){ play("preI"); }); // قبل الإقامة
   fire("i", p.I, function(){ play("iqama"); });
 }
 
