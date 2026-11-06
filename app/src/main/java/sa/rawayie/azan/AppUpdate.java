@@ -76,7 +76,9 @@ public class AppUpdate extends BroadcastReceiver {
         final File f = pending;
         if (f == null) return;
         final Context app = a.getApplicationContext();
-        if (Build.VERSION.SDK_INT >= 26 && !app.getPackageManager().canRequestPackageInstalls()) {
+        // وضع «مالك الجهاز»: التثبيت صامت بدون إذن ولا ضغط «تثبيت»
+        final boolean own = DevCtl.owner(app);
+        if (!own && Build.VERSION.SDK_INT >= 26 && !app.getPackageManager().canRequestPackageInstalls()) {
             if (!"perm".equals(state)) {
                 set(app, "perm");
                 try {
@@ -87,7 +89,7 @@ public class AppUpdate extends BroadcastReceiver {
             return;
         }
         // حتى يعود التطبيق وحده بعد التثبيت: أندرويد 10 فما فوق يحتاج إذن «الظهور فوق التطبيقات الأخرى» (يُطلب مرة واحدة، والتحديث يكمل ولو رُفض)
-        if (Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(app) && !askedOverlay) {
+        if (!own && Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(app) && !askedOverlay) {
             askedOverlay = true; set(app, "perm");
             try {
                 Toast.makeText(a, "حتى تعود الشاشة وحدها بعد التحديث: اسمح بالظهور فوق التطبيقات الأخرى، ثم ارجع للشاشة", Toast.LENGTH_LONG).show();

@@ -233,8 +233,9 @@ function pollSync(){
     if (j.ver) verKick(String(j.ver));
     if (!j.has) return push();                                             // أول ربط: ترفع الشاشة إعداداتها
     if (j.config && (j.config.rev || 0) !== (S.remote.rev || 0)) applyCfg(j.config);
+    if (j.dcmd) handleDcmd(j.dcmd);
     return handleCmd(j.cmd);
-  }).then(function(){ ok(); netOk(); }).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); netFail(); }); // موقع بإضافة قديمة: الطريقة السابقة
+  }).then(function(){ ok(); netOk(); if (Date.now() < dcFast) { clearTimeout(state.fastT); state.fastT = setTimeout(poll, 8000); } }).catch(function(e){ if (e && e.noRoute) { state.noSync = true; return poll(); } fail(e); netFail(); }); // موقع بإضافة قديمة: الطريقة السابقة
 }
 /* إصدار أحدث على الموقع: تطلب الشاشة التحديث فوراً (كل 3 دقائق كحد أقصى حتى يصل) */
 var verKickAt = 0;
@@ -248,6 +249,29 @@ function handleCmd(cmd){
     var left = cmd.exp && cmd.now ? cmd.exp - cmd.now : (cmd.until ? cmd.until - Date.now() : 0), age = cmd.now ? cmd.now - cmd.at : Date.now() - cmd.at;
     if (cmd.at !== (S.remote.lastCmd || 0)) { S.remote.lastCmd = cmd.at; origSave(); if (cmd.type === "msg" || cmd.type === "resetpass" || cmd.type === "setpass" || (cmd.type === "appupdate" && age < 3 * 864e5) || age < 180000) runCmd(cmd, left); }
     else if (cmd.type === "msg" && left > 0 && !msgOn()) showMsg(cmd, left); // بعد إعادة تشغيل الشاشة تعود الرسالة ما دامت مدتها باقية
+}
+/* ===== إعدادات جهاز أندرويد من لوحة الإدارة =====
+   أمر واحد لكل جهاز (معلومات، صوت، إضاءة، لقطة شاشة، واي فاي، إعادة تشغيل...) ينفّذه التطبيق ثم يرسل النتيجة
+   ومعلومات الجهاز. بعد أي أمر تتصل الشاشة كل 8 ثوانٍ لمدة 5 دقائق حتى تكون الأوامر التالية سريعة */
+var dcFast = 0;
+function handleDcmd(dc){
+  if (!dc || !dc.id || dc.id === S.remote.lastDcmd) return;
+  S.remote.lastDcmd = dc.id; origSave(); dcFast = Date.now() + 5*60000;
+  var AN = window.RawayieAndroid, rep = {id:dc.id, op:dc.op};
+  var send = function(){ try { if (AN && AN.devInfo) rep.info = JSON.parse(AN.devInfo()); } catch(e){}
+    return req("POST", "/devrep", rep).catch(function(){}); };
+  if (!AN || !AN.devCmd) { rep.res = {ok:false, msg:AN ? "حدّث تطبيق أندرويد حتى تعمل إعدادات الجهاز" : "هذه الشاشة تعمل من متصفح، وإعدادات الجهاز لتطبيق أندرويد فقط"}; return send(); }
+  if (dc.op === "shot") {
+    var b64 = ""; try { b64 = AN.shot() || ""; } catch(e){}
+    if (!b64) { rep.res = {ok:false, msg:"تعذّر أخذ لقطة الشاشة"}; return send(); }
+    var bin = atob(b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var u = url("/media") + "&id=" + encodeURIComponent("shot" + String(devId()).toLowerCase().replace(/[^a-z0-9]/g, ""));
+    return fetch(u, {method:"POST", cache:"no-store", headers:{"Content-Type":"image/jpeg"}, body:new Blob([arr], {type:"image/jpeg"})})
+      .then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ rep.res = j && j.url ? {ok:true, msg:"لقطة الشاشة جاهزة"} : {ok:false, msg:"تعذّر رفع لقطة الشاشة"}; if (j && j.url) rep.shot = j.url; return send(); })
+      .catch(function(){ rep.res = {ok:false, msg:"تعذّر رفع لقطة الشاشة"}; return send(); });
+  }
+  try { rep.res = JSON.parse(AN.devCmd(String(dc.op), JSON.stringify(dc.args || {}))); } catch(e){ rep.res = {ok:false, msg:"تعذّر التنفيذ"}; }
+  return send();
 }
 /* رسائل على الشاشة أثناء تحديث التطبيق، حتى يعرف من أمام الشاشة ما يحدث */
 var updLast = "";

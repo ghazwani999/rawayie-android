@@ -11,6 +11,10 @@
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- وضع «مالك الجهاز»: إضافة شبكة واي فاي من لوحة الإدارة -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <!-- تحديث التطبيق بأمر من لوحة الإدارة وموافقة مشرف المسجد -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- إعادة تشغيل الشاشة بدقة بعد انتهاء الصلاة -->

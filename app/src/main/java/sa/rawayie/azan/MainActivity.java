@@ -503,6 +503,7 @@ public class MainActivity extends Activity {
         super.onResume();
         KeepAlive.shown(this); // حارس الشاشة: يعيدها إذا خرج منها الجهاز بدون قصد
         AppUpdate.resume(this); // تحديث منزّل ينتظر إذن تثبيت التحديثات
+        DevCtl.onResume(this); // إعدادات الجهاز من الموقع: الإضاءة، وقفل الجهاز في وضع مالك الجهاز
         if (web != null) { web.onResume(); web.resumeTimers(); }
         otaKick(); // الشاشة عادت للواجهة: تحقق من تحديث ملفات الشاشة
         hideBars();
@@ -1041,6 +1042,10 @@ public class MainActivity extends Activity {
             return "{\"win\":\"" + dv.getWidth() + "x" + dv.getHeight() + "\",\"rot\":" + nativeRotDeg() + ",\"fill\":" + fillsScreen() + ",\"failed\":" + rotFailed + "}";
         }
         @JavascriptInterface public void setCssRot(int r) { runOnUiThread(() -> MainActivity.this.setCssRot(r)); }
+        /* إعدادات الجهاز من لوحة الإدارة في الموقع */
+        @JavascriptInterface public String devInfo() { return DevCtl.info(MainActivity.this); }
+        @JavascriptInterface public String devCmd(String op, String args) { return DevCtl.run(MainActivity.this, op, args); }
+        @JavascriptInterface public String shot() { return DevCtl.shot(MainActivity.this); }
         @JavascriptInterface public void setPrefer4k(boolean on) {
             getSharedPreferences("rawayie", MODE_PRIVATE).edit().putBoolean("prefer4k", on).apply();
             runOnUiThread(MainActivity.this::applyDisplayMode);

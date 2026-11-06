@@ -2,5 +2,6 @@ package sa.rawayie.azan;
 
 import android.app.admin.DeviceAdminReceiver;
 
-/** صلاحية «إطفاء الشاشة» فقط: يستخدمها التطبيق لإطفاء الشاشة وقت الصلاة ثم يعيد تشغيلها */
+/** صلاحية «إطفاء الشاشة» وقت الصلاة، وهو نفسه مستقبل وضع «مالك الجهاز»:
+ *  adb shell dpm set-device-owner sa.rawayie.azan/.AdminReceiver */
 public class AdminReceiver extends DeviceAdminReceiver { }

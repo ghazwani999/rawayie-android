@@ -1923,8 +1923,18 @@ function autoCard(){
     "يحتاجه جهاز الشاشة عند انقطاع الكهرباء أو إعادة التشغيل، فتعود الشاشة وحدها بدون تدخل.");
 }
 
+/* وضع «مالك الجهاز» في تطبيق أندرويد: حالته، وإلغاء قفل الجهاز من هنا إذا لم يكن الإنترنت متاحاً */
+function ownCard(){
+  var AN = window.RawayieAndroid, I = null; if (!AN || !AN.devInfo) return "";
+  try { I = JSON.parse(AN.devInfo()); } catch(e){ return ""; }
+  if (!I || !I.owner) return "";
+  return card("جهاز أندرويد: وضع «مالك الجهاز»",
+    '<p class="note">مفعّل ✓ يمكن إعادة تشغيل الجهاز وضبط الواي فاي والوقت وتحديث التطبيق بدون «تثبيت» من لوحة الإدارة في الموقع.</p>' +
+    '<p class="note">قفل الجهاز على تطبيق روائع: <b>' + (I.lock ? "مقفل" : "غير مقفل") + '</b></p>' +
+    '<div class="row-end">' + (I.lock ? btn("إلغاء قفل الجهاز", "devLock", "ghost", "off") : btn("قفل الجهاز على روائع", "devLock", "ghost", "on")) + '</div>');
+}
 R.general = function(){
-  return licCard() + clkCard() + card("رسالة بداية التشغيل",
+  return licCard() + ownCard() + clkCard() + card("رسالة بداية التشغيل",
     tog("تفعيل رسالة بداية التشغيل", "splash.on", "تظهر عند فتح التطبيق: البسملة ثم الشعار ثم اسم المسجد، وتختفي وحدها") +
     (S.splash.on !== false ? txt("النص في الأعلى", "splash.text", "الافتراضي: بسم الله الرحمن الرحيم") + tog("إظهار اسم المسجد", "splash.name") +
       txt("سطر إضافي أسفل الاسم", "splash.sub", "اختياري، مثل: حياكم الله. إذا تُرك فارغاً يظهر موقع المسجد") +
@@ -2203,6 +2213,7 @@ function onClick(e){
       calEdit = null; commit(); render(); toast("تم التعديل"); break;
     case "calReset": delete S.overrides[x]; commit(); render(); break;
     case "toneSet": S.snd.tone = x; A.save(); render(); if (x !== "none") { A.unlock(); setTimeout(function(){ A.play(x === "clear" ? "toneClear" : "toneShort"); }, 350); } break;
+    case "devLock": try { var rr = JSON.parse(window.RawayieAndroid.devCmd("lock", JSON.stringify({on:x === "on"}))); toast(rr.msg || ""); } catch (e3) {} setTimeout(render, 800); break;
     case "preOn": S.snd[x].on = !S.snd[x].on; A.save(); render(); break;
     case "preFile": (function(){ var q = x.split("|"); S.snd[q[0]].file = q[1]; A.save(); render(); A.unlock(); setTimeout(function(){ A.play("pt:" + q[1]); }, 300); })(); break;
     case "sndSet": (function(){ var q = x.split("|"); S.snd[q[0]] = q[1]; A.save(); render(); })(); break;
