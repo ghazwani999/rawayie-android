@@ -125,7 +125,7 @@ function hubLinks(h){ var L = h[5].filter(function(c){ return allowed(c[0]); });
   return card("خيارات أخرى", '<div class="tiles hublinks">' + L.map(function(c){ var sc = secOf(c[0]) || [c[0], c[0], "", "gear"];
     return '<button type="button" class="tile" data-sec="' + c[0] + '"><span class="ti">' + ico(sc[3]) + '</span><span class="tt"><b>' + esc(sc[1]) + '</b><small>' + esc(c[1]) + '</small></span></button>'; }).join("") + '</div>'); }
 function allowed(sec){ if (MERGED[sec]) return MERGED[sec].some(allowedOne); return allowedOne(sec); }
-function allowedOne(sec){ if (sec === "home") return true; if (/^m_/.test(sec)) return allowedOne("screens");
+function allowedOne(sec){ if (sec === "home") return true; if (sec === "friday" && S.mtype === "masjid") return false; // مسجد بلا جمعة: لا تظهر إعداداتها if (/^m_/.test(sec)) return allowedOne("screens");
   if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
     return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0) || (w === "screens" && ms.indexOf("times") >= 0)); } if (siteLocked()) { sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && devSecs().indexOf(sec) >= 0; }
   if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
@@ -183,7 +183,7 @@ R.mosque = function(){
   var opts = Object.keys(regions).sort(function(a, b){ return window.REGIONS[a].localeCompare(window.REGIONS[b], "ar"); }).map(function(r){
     return '<optgroup label="' + esc(window.REGIONS[r]) + '">' + regions[r].sort(function(a, b){ return a[1].localeCompare(b[1], "ar"); })
       .map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === S.city ? " selected" : "") + '>' + esc(c[1]) + '</option>'; }).join("") + '</optgroup>'; }).join("");
-  return card("المسجد", txt("اسم المسجد", "mosque") + tog("إظهار اسم المسجد على الشاشة", "look.showName") +
+  return card("المسجد", txt("اسم المسجد", "mosque") + sel("نوع المسجد", "mtype", [["jami","جامع: تُقام فيه الجمعة"],["masjid","مسجد: بدون جمعة"]], "عند اختيار «مسجد» يتوقف برنامج الجمعة وتختفي إعداداتها") + tog("إظهار اسم المسجد على الشاشة", "look.showName") +
       sel("اللغة", "lang", [["ar","العربية"],["en","English"],["bn","বাংলা"]]) +
       tog("إظهار الشعار", "look.logo", "الشعار في وسط الشاشة") +
       '<div class="fld"><span><b>صورة الشعار</b><small>' + (S.look.logoId ? "شعار مخصص من الجهاز" : "الهلال والمسجد") + '. يفضّل صورة PNG بخلفية شفافة</small></span><span class="nb"><label class="btn sm ghost">تغيير الشعار<input type="file" accept="image/*" data-up="logo" hidden></label>' + (S.look.logoId ? btn("الشعار الافتراضي", "logoReset", "sm ghost") : "") + '</span></div>' +
@@ -374,7 +374,7 @@ R.friday = function(){
 /* ===== صفحات البطاقات الست: أهم الخيارات فقط، والتفاصيل في الأقسام التابعة ===== */
 R.h_mosque = function(){
   var h = "";
-  if (allowedOne("mosque")) h += card("المسجد", txt("اسم المسجد", "mosque"));
+  if (allowedOne("mosque")) h += card("المسجد", txt("اسم المسجد", "mosque") + sel("نوع المسجد", "mtype", [["jami","جامع: تُقام فيه الجمعة"],["masjid","مسجد: بدون جمعة"]], "عند اختيار «مسجد» يتوقف برنامج الجمعة وتختفي إعداداتها"));
   if (allowedOne("times")) h += card("دقائق الإقامة بعد الأذان", ["fajr","dhuhr","asr","maghrib","isha"].map(function(k){ return numIn(PN[k], "iq." + k, 0, 90, 1, "دقيقة"); }).join(""));
   return h + hubLinks(HUBS[0]);
 };
@@ -1223,26 +1223,34 @@ function slFrame(sl, w, cls){ var d = slDims(sl), sc = w/d[0];
   return '<div class="sfw ' + (cls || "") + '" style="width:' + w + 'px;height:' + Math.round(d[1]*sc) + 'px"><div class="sframe" data-sl="' + esc(sl.id) + '" style="width:' + d[0] + 'px;height:' + d[1] + 'px;transform:scale(' + sc + ')"></div></div>'; }
 function slItems(){ return S.slides.items; }
 function slById(id){ var l = slItems(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; }
-R.slides = function(){
-  var items = slItems().map(function(sl, i){
-    if (slEdit === sl.id) return "";
-    var full = [sl.title, sl.body].filter(function(x){ return x && String(x).trim(); }).join(" ۞ ").replace(/\s*\n+\s*/g, " ");
-    var label = full || (sl.img ? "شريحة صورة" : "شريحة فارغة"), info = [];
-    if (sl.img && sl.full) info.push("ملء الشاشة"); if (sl.sec) info.push(sl.sec + " ثانية"); if (sl.active === false) info.push("متوقفة");
-    return '<li class="sitem sline' + (sl.active === false ? " off" : "") + '">' + (sl.img ? slFrame(sl, 150) : "") + '<div class="slt"><b class="sll">' + esc(label) + '</b>' + (info.length ? '<small>' + esc(info.join(" · ")) + '</small>' : "") + '</div>' +
+/* قسم الإعلانات: ① وسط الشاشة (تحت الساعة) ② بملء الشاشة (نص أو صورة) ③ أسفل الشاشة (الشريط المتحرك).
+   ① و② من نفس الشرائح: الشريحة العادية تظهر وسط الشاشة، والتي عليها «ملء الشاشة» تظهر بملء الشاشة */
+function slList(full){
+  return slItems().filter(function(sl){ return !!sl.full === !!full; }).map(function(sl){
+    if (slEdit === sl.id) return '<li class="ed">' + slForm() + '</li>';
+    var txt = [sl.title, sl.body].filter(function(x){ return x && String(x).trim(); }).join(" ۞ ").replace(/\s*\n+\s*/g, " ");
+    var label = txt || (sl.img ? "إعلان بصورة" : "إعلان فارغ"), info = [];
+    if (sl.sec) info.push(sl.sec + " ثانية"); if (sl.active === false) info.push("متوقف");
+    return '<li class="sitem sline' + (sl.active === false ? " off" : "") + '">' + (sl.img ? slFrame(sl, full ? 90 : 150) : "") + '<div class="slt"><b class="sll">' + esc(label) + '</b>' + (info.length ? '<small>' + esc(info.join(" · ")) + '</small>' : "") + '</div>' +
       '<span>' + btn("↑", "sUp", "sm ghost", sl.id) + btn("تحرير", "sEdit", "sm ghost", sl.id) + btn("نسخ", "sDup", "sm ghost", sl.id) + btn("حذف", "sDel", "sm danger", sl.id) + '</span></li>';
   }).join("");
-  return card("استعراض الشرائح",
-    tog("تفعيل الشرائح", "slides.on") + tog("عرض الشرائح بشكل عشوائي", "slides.random") +
-    sel("حركة الشرائح", "slides.move", [["none","ثابتة في مكانها"],["ltr","تتحرك من اليسار إلى اليمين"],["rtl","تتحرك من اليمين إلى اليسار"],["band","ثابتة في شريط تحت الساعة (الشريط السفلي يتحرك)"]], "المتحركة تظهر في سطر واحد مستقيم، ومدتها حسب طول النص. «ثابتة في شريط» تعرض كل آية بدون حركة حسب الثواني المختارة. شرائح الصور تبقى ثابتة") +
+}
+function slSettingsCard(){ return card("طريقة عرض الإعلانات (① و②)",
+    tog("تفعيل الإعلانات وسط الشاشة وبملء الشاشة", "slides.on") + tog("عرض الإعلانات بترتيب عشوائي", "slides.random") +
+    sel("حركة إعلانات وسط الشاشة", "slides.move", [["none","ثابتة في مكانها"],["ltr","تتحرك من اليسار إلى اليمين"],["rtl","تتحرك من اليمين إلى اليسار"],["band","ثابتة في شريط تحت الساعة (الشريط السفلي يتحرك)"]], "المتحركة تظهر في سطر واحد مستقيم، ومدتها حسب طول النص. «ثابتة في شريط» تعرض كل آية بدون حركة حسب الثواني المختارة. شرائح الصور تبقى ثابتة") +
     (S.slides.move === "band" ? numIn("مدة ظهور كل آية", "slides.sec", 3, 120, 1, "ثانية", "ثم تظهر الآية التالية مباشرة. يمكن تحديد مدة خاصة لكل آية من محررها")  + '<p class="note">سرعة شريط الإعلانات السفلي من قسم «الإعلانات» (أسفل الشاشة)</p>' :
-     S.slides.move && S.slides.move !== "none" ? '<p class="note">سرعة الحركة هي نفس سرعة شريط الإعلانات، وتُضبط من قسم «الإعلانات» (أسفل الشاشة). مدة الشريحة حسب طول النص</p>' : numIn("وقت العرض لكل شريحة", "slides.sec", 3, 120, 1, "ثانية")) + numIn("تظهر الشريحة كل", "slides.every", 10, 900, 10, "ثانية") +
-    sel("مكان الشرائح", "slides.pos", [["zone","مكان الساعة والعد التنازلي"],["below","تحت الساعة وفوق جدول الصلوات"]], "«تحت الساعة» يبقي الساعة ظاهرة، وتصغر صفوف الصلوات قليلاً وقت الشريحة"),
-    "الشريحة التي تختار لها «ملء الشاشة» في محررها تظهر بملء الشاشة دائماً. للتجربة: اضغط 3 مرات على اسم صلاة الظهر فتظهر كل الشرائح متتالية، ولإيقاف أي شريحة المسها") +
-  (slEdit ? card(slEdit === "new" ? "شريحة جديدة" : "تحرير الشريحة", slForm()) : "") +
-  card("الشرائح", '<ul class="slist">' + (items || (slEdit ? "" : '<li class="empty">لا توجد شرائح بعد</li>')) + '</ul>' +
-    '<div class="row-end">' + btn("إضافة شريحة نصية", "sNew") + btn("إضافة الأدعية والآيات الجاهزة", "sPreset", "ghost") + '<label class="btn ghost">إضافة صور<input type="file" accept="image/*" multiple data-up="slide" hidden></label>' +
-    (slItems().length ? btn("حذف الكل", "sClear", "danger ghost") : "") + '</div>');
+     S.slides.move && S.slides.move !== "none" ? '<p class="note">سرعة الحركة هي نفس سرعة شريط الإعلانات، وتُضبط من قسم «الإعلانات» (أسفل الشاشة). مدة الشريحة حسب طول النص</p>' : numIn("وقت العرض لكل شريحة", "slides.sec", 3, 120, 1, "ثانية")) + numIn("تظهر الإعلانات كل", "slides.every", 10, 900, 10, "ثانية") +
+    sel("مكان إعلانات وسط الشاشة", "slides.pos", [["zone","مكان الساعة والعد التنازلي"],["below","تحت الساعة وفوق جدول الصلوات"]], "«تحت الساعة» يبقي الساعة ظاهرة، وتصغر صفوف الصلوات قليلاً وقت الشريحة"),
+    "الشريحة التي تختار لها «ملء الشاشة» في محررها تظهر بملء الشاشة دائماً. للتجربة: اضغط 3 مرات على اسم صلاة الظهر فتظهر كل الشرائح متتالية، ولإيقاف أي شريحة المسها"); }
+R.slides = function(kind){
+  var full = kind === "full", L = slList(full), isNew = slEdit === "new" && slDraft && !!slDraft.full === full;
+  return card(full ? "إعلانات بملء الشاشة" : "إعلانات وسط الشاشة",
+    '<ul class="slist">' + (L || (isNew ? "" : '<li class="empty">لا توجد إعلانات بعد</li>')) + (isNew ? '<li class="ed">' + slForm() + '</li>' : "") + '</ul>' +
+    '<div class="row-end">' + (full
+      ? btn("إضافة إعلان نصي بملء الشاشة", "sNew", "", "full") + '<label class="btn ghost">إضافة صورة بملء الشاشة<input type="file" accept="image/*" multiple data-up="slidefull" hidden></label>'
+      : btn("إضافة إعلان", "sNew", "", "mid") + '<label class="btn ghost">إضافة صور<input type="file" accept="image/*" multiple data-up="slide" hidden></label>' + btn("الأدعية والآيات الجاهزة", "sPreset", "ghost")) +
+    (L ? btn("حذف الكل", "sClear", "danger ghost", full ? "full" : "mid") : "") + '</div>',
+    full ? "تغطي الشاشة كاملة مدة عرضها، ثم تعود الشاشة. المقاس المناسب للصورة: 1080×1920 للشاشة العمودية، و1920×1080 للأفقية" : "تظهر تحت الساعة وفوق جدول الصلوات بالتناوب. المقاس المناسب للصورة: 940×720 للعمودية و850×720 للأفقية");
 };
 function spIn(label, k, type, a, b, st, suf){
   var v = slDraft[k], i = id();
@@ -1460,6 +1468,15 @@ var UI_SETS = [
   // الأزرق الهادئ: محراب أزرق، جدول هادئ بلا عناوين أعمدة، الإقامة بالدقائق، التاريخان الهجري والميلادي، وكل الصلوات واضحة
   ["الأزرق الهادئ", "محراب أزرق، جدول هادئ، الإقامة بالدقائق، والتاريخان", "#2154bd", "#F2D49B", "hr19.jpg", "vr00.jpg", "none", "std", "round", "#3B93E3",
     {"look.tblStyle":"classic", "look.thead":false, "look.iqFmt":"min", "look.dimPast":false, "look.shadow":true, "look.rowAuto":true, "look.rowOpacity":0.18, "look.rowShadow":0, "look.rowRadius":18, "look.hiOn":true, "look.hiFrame":false, "look.centerP":true, "look.dateStyle":"line", "dateMode":"both", "look.showCount":true}]];
+/* مدة شاشة الإعلانات: دائماً، أو مؤقتاً من وقت إلى وقت ثم تعود الشاشة لنفس محتوى الشاشات الأخرى */
+function dtIn(label, p, hint){ var i = id(), v = String(get(p) || "").slice(0, 16);
+  return '<label class="fld" for="' + i + '"><span><b>' + esc(label) + '</b>' + (hint ? '<small>' + esc(hint) + '</small>' : "") + '</span><input type="datetime-local" id="' + i + '" data-p="' + p + '" data-t="str" value="' + esc(v) + '" dir="ltr"></label>'; }
+function muWhenCard(){ var M = S.multi || {}, tmp = !!(M.from || M.until || M.temp);
+  var st = !tmp ? "دائماً" : (function(){ try { return A.dualOn && A.dualOn() ? "تعمل الآن كشاشة إعلانات" : "خارج المدة: تعرض الآن نفس محتوى الشاشات الأخرى"; } catch(e){ return ""; } })();
+  return '<div class="subbox"><p class="note"><b>مدة شاشة الإعلانات</b> · ' + esc(st) + '</p>' +
+    segBtns("muWhen", [["always","دائماً"],["temp","مؤقتاً في وقت محدد"]], tmp ? "temp" : "always") +
+    (tmp ? dtIn("تبدأ في", "multi.from", "اتركه فارغاً لتبدأ الآن") + dtIn("تنتهي في", "multi.until", "بعدها تعود الشاشة لنفس محتوى الشاشة الأخرى تلقائياً") +
+      '<div class="row-end">' + [["2h","ساعتان"],["1d","يوم"],["3d","3 أيام"],["7d","أسبوع"]].map(function(x){ return btn("من الآن لمدة " + x[1], "muFor", "ghost sm", x[0]); }).join("") + '</div>' : "") + '</div>'; }
 R.display = function(){
   var o = dispOri(), now = (function(){ try { return A.orient(); } catch(e){ return ""; } })();
   var MU = S.multi || {};
@@ -1476,7 +1493,7 @@ R.display = function(){
       ((slotIn ? true : MU.role === "second") ? '<div class="subbox"><p class="note">المحتوى الذي يتناوب على شاشة الإعلانات:</p>' +
         tog("لوحات العرض", "multi.boards") + tog("الشرائح", "multi.slides") + tog("التذكيرات التلقائية", "multi.remind") +
         tog("أذكار الصباح والمساء", "multi.adhkar", "الصباح من الفجر إلى الظهر، والمساء من العصر إلى العشاء") + tog("الذكر الثابت", "multi.hadith") + tog("إعلانات المسجد", "multi.news") +
-        numIn("مدة عرض كل محتوى", "multi.sec", 5, 120, 5, "ثانية") + '</div>' : "") : "")) +
+        numIn("مدة عرض كل محتوى", "multi.sec", 5, 120, 5, "ثانية") + '</div>' : "") + muWhenCard() : "")) +
     card("واجهات إسلامية جاهزة", '<p class="note">اضغط على واجهة لتطبيقها بالكامل: الخلفية والزخرفة والتخطيط والألوان. يمكنك بعدها تعديل أي جزء منها</p><div class="uiset">' +
       UI_SETS.map(function(u, i){ return '<button type="button" class="uis" data-act="uiSet" data-x="' + i + '" style="--a:' + u[2] + ';--b:' + u[3] + '"><i></i><b>' + esc(u[0]) + '</b><small>' + esc(u[1]) + '</small></button>'; }).join("") + '</div>') +
     card("نمط الشاشة",
@@ -1936,7 +1953,7 @@ function searchRun(q){
   if (!sIndex) sIndex = buildIndex();
   var words = q.split(/\s+/).map(function(w){ return w.length > 3 && w.indexOf("ال") === 0 ? w.slice(2) : w; }), seen = {}, hit = function(t){ t = norm(t); for (var i = 0; i < words.length; i++) if (t.indexOf(words[i]) < 0) return false; return true; };
   var secs = SECTIONS.filter(function(sc){ return allowed(sc[0]) && hit(sc[1] + " " + sc[2]); }).map(function(sc){ return {sec:sc[0], label:sc[1], card:"", hint:sc[2], top:true}; });
-  var res = secs.concat(sIndex.filter(function(x){ if (!hit(x.label + " " + x.hint)) return false;
+  var res = secs.concat(sIndex.filter(function(x){ if (!hit(x.label + " " + x.hint) || (x.sec && !allowed(x.sec))) return false;
     var k = x.sec + "|" + x.label; if (seen[k]) return false; seen[k] = 1; return true; })).slice(0, 40);
   grp.hidden = true; box.hidden = false;
   box.innerHTML = res.length ? res.map(function(x){ var sc = secOf(x.sec);
@@ -2003,6 +2020,7 @@ function onChange(e){
   if (el.id === "gcity") { if (el.value !== "") { genPick(+el.value); render(); } return; }
   if (el.id === "gimp") { if (el.files[0]) genImport(el.files[0]); el.value = ""; return; }
   if (/^custom\./.test(el.dataset.p || "")) setTimeout(function(){ A.clearCache(); A.rebuild(); if (el.dataset.p === "custom.method" || el.dataset.p === "custom.ishaBy" || el.dataset.p === "custom.tzName" || el.dataset.p === "custom.src" || el.dataset.p === "custom.on") render(); }, 0);
+  if (el.dataset.p === "mtype") setTimeout(function(){ S.fri.on = S.mtype !== "masjid"; A.save(); A.clearCache(); A.rebuild(); render(); }, 0); // جامع/مسجد: تشغيل برنامج الجمعة أو إيقافه
   if (el.dataset.p === "keepUnlock") setTimeout(function(){ keepSave(); lockSave(); render(); }, 0);
   if (el.dataset.p === "lastMinOnly") { var lw = $("#lmwarn"); if (lw) lw.hidden = !el.checked; } // توضيح فوري عند التفعيل
   if (el.id === "spimg") { var f9 = el.files[0]; if (!f9) return; shrink(f9, 3840).then(function(b){ var id9 = A.uid(); return A.IDB.put(id9, b).then(function(){ slDraft.img = id9; render(); }); }).catch(function(){ toast("تعذر حفظ الصورة"); }); return; }
@@ -2089,7 +2107,7 @@ function upload(el){
   if (kind === "bkfile") { openFile(files[0]); el.value = ""; return; }
   var one = function(f, max){ var id = A.uid(); return (f.type.indexOf("image") === 0 ? shrink(f, max) : Promise.resolve(f)).then(function(b){ return A.IDB.put(id, b).then(function(){ return id; }); }); };
   var fail = function(){ toast("تعذر حفظ الملف على هذا الجهاز"); };
-  if (kind === "slide") { Promise.all(files.map(function(f){ return one(f, 3840); })).then(function(ids){ S.slides.items = S.slides.items.concat(ids.map(function(m){ return {id:A.uid(), img:m, imgMode:"contain", active:true}; })); commit(); render(); toast("تمت إضافة " + ids.length + " شريحة"); }).catch(fail); return; }
+  if (kind === "slide" || kind === "slidefull") { var fullUp = kind === "slidefull"; if (!fullUp) S.slides.pos = "below"; Promise.all(files.map(function(f){ return one(f, 3840); })).then(function(ids){ S.slides.items = S.slides.items.concat(ids.map(function(m){ return {id:A.uid(), img:m, imgMode:fullUp ? "cover" : "contain", full:fullUp, active:true}; })); var wasOff = !S.slides.on; S.slides.on = true; /* إضافة صورة إعلان تفعّل عرض الشرائح، وإلا لا تظهر على الشاشة */ commit(); render(); if (wasOff) setTimeout(function(){ toast("وفُعّل عرض الشرائح حتى تظهر على الشاشة"); }, 2300); toast("تمت إضافة " + ids.length + " شريحة"); }).catch(fail); return; }
   var f = files[0];
   if (kind.indexOf("sp:") === 0) { var pth = kind.slice(3); one(f, 3840).then(function(id){ var old = get(pth); if (old && old.indexOf("file:") < 0 && !/^(https?:)?\/\//.test(old)) A.IDB.del(old); put(pth, id); commit(); render(); toast("تم الحفظ بنجاح"); }).catch(fail); return; }
   one(f, kind === "logo" ? 1200 : kind === "wm" ? 2000 : 3840).then(function(id){
@@ -2222,6 +2240,9 @@ function onClick(e){
     case "setOri": S.look.orient = x; commit(); render(); break;
     case "dispOri": R.display.o = x; render(); break;
     case "dispH24": S.look.h24 = x === "24"; commit(); render(); break;
+    case "muWhen": S.multi = S.multi || {}; if (x === "always") { S.multi.from = ""; S.multi.until = ""; S.multi.temp = false; } else S.multi.temp = true; commit(); render(); break;
+    case "muFor": S.multi = S.multi || {}; (function(){ var ms = {"2h":2*36e5, "1d":864e5, "3d":3*864e5, "7d":7*864e5}[x] || 864e5, f = function(t){ var z = A.zp(t); return A.dkey(z.Y, z.M, z.D) + "T" + A.two(z.h) + ":" + A.two(z.m); };
+      S.multi.temp = true; S.multi.from = f(Date.now()); S.multi.until = f(Date.now() + ms); })(); commit(); render(); toast("شاشة الإعلانات تعمل الآن حتى " + S.multi.until.replace("T", " الساعة ")); break;
     case "muMode": S.multi = S.multi || {}; S.multi.mode = x === "dual" ? "dual" : "single"; commit(); render(); break;
     case "muAds": S.multi = S.multi || {}; S.multi.adsSlot = +x || 2; commit(); render(); toast("شاشة الإعلانات الآن: الشاشة " + (+x || 2)); break;
     case "muRole": S.multi = S.multi || {}; S.multi.role = x === "second" ? "second" : "main"; commit(); render(); toast(x === "second" ? "هذه الشاشة الآن للمحتوى" : "هذه الشاشة الآن للمواقيت"); break;
@@ -2233,7 +2254,7 @@ function onClick(e){
     case "nSave":
       if (!$("#ntext").value.trim()) { toast("من فضلك اكتب نص الرسالة"); return; }
       newsDraftSave(); render(); toast("تم الحفظ بنجاح"); break;
-    case "sNew": slEdit = "new"; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); slDraft.id = "new"; slDraft.title = ""; slDraft.body = "اكتب نص الشريحة هنا"; slDraft.bFont = "Amiri"; slDraft.bColor = "#EBD1A0"; slDraft.bSize = 64; slDraft.bgOp = 0; render(); body.scrollTop = 0; break;
+    case "sNew": slEdit = "new"; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); slDraft.id = "new"; slDraft.title = ""; slDraft.body = "اكتب نص الشريحة هنا"; slDraft.bFont = "Amiri"; slDraft.bColor = "#EBD1A0"; slDraft.bSize = 64; slDraft.bgOp = 0; slDraft.body = "اكتب نص الإعلان هنا"; if (x === "full") { slDraft.full = true; slDraft.bSize = 96; } else if (x === "mid") { slDraft.full = false; S.slides.pos = "below"; } if (!S.slides.on) S.slides.on = true; render(); setTimeout(function(){ var f = $("#sbody li.ed"); if (f) body.scrollTop = f.offsetTop - 80; }, 30); break; /* ① تحت الساعة، ② بملء الشاشة */
     case "sEdit": slEdit = x; slDraft = JSON.parse(JSON.stringify(A.SLIDE_DEF)); var src = slById(x); for (var kk in src) slDraft[kk] = src[kk]; render(); body.scrollTop = 0; break;
     case "sPreset": var pre = window.SLIDE_PRESET || [], have = {}; slItems().forEach(function(q){ have[q.body] = 1; }); var addN = 0;
       pre.forEach(function(tx, k){ if (have[tx]) return; var ns = JSON.parse(JSON.stringify(A.SLIDE_DEF)); ns.id = A.uid() + k; ns.title = ""; ns.body = tx; ns.bFont = "Amiri"; ns.bColor = "#EBD1A0"; ns.bSize = 64; ns.bgOp = 0; S.slides.items.push(ns); addN++; });
@@ -2241,11 +2262,11 @@ function onClick(e){
     case "sCancel": slEdit = null; slDraft = null; render(); break;
     case "sSave": var it2 = JSON.parse(JSON.stringify(slDraft));
       if (slEdit === "new") { it2.id = A.uid(); S.slides.items.push(it2); } else S.slides.items[idx(S.slides.items, slEdit)] = it2;
-      slEdit = null; slDraft = null; commit(); render(); toast("تم حفظ الشريحة"); break;
+      slEdit = null; slDraft = null; commit(); render(); toast("تم حفظ الإعلان"); break;
     case "sDup": var c3 = JSON.parse(JSON.stringify(slById(x))); c3.id = A.uid(); S.slides.items.splice(idx(S.slides.items, x) + 1, 0, c3); commit(); render(); break;
     case "sDel": var d3 = slById(x); if (d3 && d3.img && !S.slides.items.some(function(q){ return q !== d3 && q.img === d3.img; })) A.IDB.del(d3.img); S.slides.items.splice(idx(S.slides.items, x), 1); commit(); render(); break;
     case "sUp": move(S.slides.items, idx(S.slides.items, x)); commit(); render(); break;
-    case "sClear": S.slides.items.forEach(function(q){ if (q.img) A.IDB.del(q.img); }); S.slides.items = []; commit(); render(); break;
+    case "sClear": if (!confirm("حذف كل " + (x === "full" ? "إعلانات الشاشة الكاملة" : x === "mid" ? "إعلانات وسط الشاشة" : "الإعلانات") + "؟")) break; S.slides.items = S.slides.items.filter(function(q){ var del = !x || (x === "full") === !!q.full; if (del && q.img) A.IDB.del(q.img); return !del; }); commit(); render(); break;
     case "spSeg": var q2 = x.split(":"); slDraft[q2[0]] = q2[1]; $$('[data-act="spSeg"]', body).forEach(function(bt){ if (bt.dataset.x.split(":")[0] === q2[0]) bt.classList.toggle("on", bt.dataset.x === x); }); slPreview(); break;
     case "spImgDel": slDraft.img = ""; render(); break;
     case "bAdd": boardEdit = "new"; render(); break;
@@ -2570,8 +2591,9 @@ document.addEventListener("contextmenu", function(e){
   // طريقة العرض الجاهزة أولاً (أكثر ما يحتاجه المشرف)، ثم المواقيت، ثم تفاصيل شاشات الأذان والإقامة مطوية
   R.times = function(){ return (allowedOne("times") ? subSec("المواقيت والإقامة", "دقائق الإقامة وتعديل أوقات الأذان") + T0() : "") +
     (allowedOne("screens") ? subSec("شاشات الأذان والإقامة", "رسالة الأذان وشاشة الأذان وعداد الإقامة ورسالة الجوال والحديث") + R.screens(true) : ""); };
-  R.news = function(){ return (allowedOne("news") ? subSec("① إعلانات أسفل الشاشة", "الشريط المتحرك والرسائل والتذكيرات") + N0() : "") +
-    (allowedOne("slides") ? subSec("② إعلانات أعلى الشاشة", "الشرائح: صور ونصوص تظهر بالتناوب أعلى الشاشة") + R.slides() : ""); };
+  R.news = function(){ return (allowedOne("slides") ? subSec("① إعلانات وسط الشاشة", "تظهر تحت الساعة وفوق جدول الصلوات") + R.slides("mid") +
+      subSec("② إعلانات الشاشة الكاملة", "نص أو صورة بملء الشاشة") + R.slides("full") + slSettingsCard() : "") +
+    (allowedOne("news") ? subSec("③ إعلانات أسفل الشاشة", "نصوص متحركة: الشريط والرسائل والتذكيرات") + N0() : ""); };
 })();
 window.SETTINGS = {keep:function(){ return newsDraftSave(); }, lock:function(){ unlocked = false; role = "admin"; lastAct = 0; lockSave(); keepSave(); if (panel && !panel.hidden) close(); }, open:open, close:close, back:back, stepBack:stepBack, refresh:function(){ if (panel && !panel.hidden && !(newsEdit && $("#ntext"))) render(); }};
 })();

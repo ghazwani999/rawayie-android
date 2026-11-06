@@ -10,7 +10,7 @@ var DEF = {
   lang:"ar", mosque:"تطبيق روائع الأذان للمساجد", addr:"", alerts:[], ann:{on:true, azan:"حان الآن موعد أذان صلاة {الصلاة}، وذلك في {المسجد}", iqama:"حان الآن موعد إقامة صلاة {الصلاة}"}, splash:{on:true, sec:6, text:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", name:true, sub:""}, city:"dammam",
   custom:{on:false, lat:26.4207, lng:50.0888, tz:180, tzName:"", method:"uq", name:"", country:"", fajr:18, isha:17, ishaMin:90, ishaBy:"angle", maghribMin:0, asr:"std", high:"angle", src:"calc", table:null},
   adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, shift:0, summer:false, ramadan30:false, hijriAdj:0,
-  iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{},
+  iq:{fajr:25,dhuhr:20,asr:20,maghrib:10,isha:20}, duha:15, overrides:{}, mtype:"jami",
   pd:{fajr:12,dhuhr:10,asr:10,maghrib:8,isha:10},
   hidePrayer:true, blackTime:true, blackDate:false, blackMsg:true, blackSize:1, hideSunrise:20, hideIsha:30, wakeBefore:20,
   offPrayer:false, offSleep:false, lockMin:15, devOpen:false, devSecs:["rotate","sounds"], sleepIsha:false, sleepSunrise:false, wakeFajr:20, wakeDhuhr:20, sleepLook:"black", sleepMsgOn:true, sleepMsgIsha:"", sleepMsgSunrise:"",
@@ -1052,7 +1052,12 @@ function renderTicker(){
 function mySlot(){ var R = S.remote || {}; return R.on && R.server && +R.slot > 0 ? +R.slot : 0; }
 function s2Band(){ var M = S.multi || {}; return M.slides !== false && S.slides.move && S.slides.move !== "none" && S.slides.items.some(function(x){ return x && typeof x === "object" && !x.img && x.active !== false && (x.title || x.body); }); }
 function s2Text(){ return S.slides.items.filter(function(x){ return x && typeof x === "object" && !x.img && x.active !== false && (x.title || x.body); }); }
-function isSecond(){ var M = S.multi || {}; if (M.mode !== "dual") return false; var n = mySlot();
+/* شاشة الإعلانات مؤقتة: من وقت إلى وقت (بتوقيت المسجد). خارج المدة تعود لنفس محتوى الشاشات الأخرى */
+function dualOn(){ var M = S.multi || {}; if (M.mode !== "dual") return false; if (!M.from && !M.until) return true;
+  var z = zp(Date.now()), k = dkey(z.Y, z.M, z.D) + "T" + two(z.h) + ":" + two(z.m);
+  if (M.from && k < String(M.from).slice(0, 16)) return false; if (M.until && k >= String(M.until).slice(0, 16)) return false; return true; }
+var secBuilt = null;
+function isSecond(){ var M = S.multi || {}; if (!dualOn()) return false; var n = mySlot();
   return n ? n === (+M.adsSlot || 2) : M.role === "second"; }
 var s2State = {i:-1, until:0, key:""};
 function secondItems(now){
@@ -1722,6 +1727,7 @@ function offCheck(now, ph){
 }
 function tick(force){
   var now = Date.now(), z = zp(now), ph = phase(now);
+  if (z.s < 2 || secBuilt === null) { var sb = isSecond(); if (secBuilt !== null && sb !== secBuilt) { secBuilt = sb; rebuild(); return; } secBuilt = sb; } // بداية أو نهاية مدة شاشة الإعلانات
   safe("off", function(){ offCheck(now, ph); });
   safe("rotg", rotGuard);
   safe("wxdn", wxDayNight);
@@ -1852,7 +1858,7 @@ window.APP = {S:S, DEF:DEF, bgList:bgList, nextBg:function(){ nextBg(false, true
   previewBlack:function(ms, sleep, kind){ previewSleep = !!sleep; previewKind = kind || ""; previewBlackUntil = Date.now() + ms; if (ovEl) { ovKey = ""; ovEl.dataset.bl = "~"; } },
   previewAnn:function(mode){ previewAnnMode = mode; previewAnnUntil = Date.now() + 8000; },
   orient:function(){ return orient(); }, zkPreview:zkPreview, scrMsg:function(t){ scrMsg(t); },
-  mySlot:mySlot, isSecond:isSecond, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, uqCityId:uqCityId, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
+  mySlot:mySlot, isSecond:isSecond, dualOn:dualOn, dayTimes:dayTimes, renderSlide:renderSlide, SLIDE_DEF:SLIDE_DEF, zp:zp, zms:zms, dkey:dkey, hijri:hijri, fmtT:fmtT, uqCityId:uqCityId, loadCity:loadCity, UQD:UQD, cityInfo:cityInfo,
   play:play, unlock:unlock, fit:fit, resetAll:function(){ try { localStorage.removeItem(LS_KEY); } catch(e){} location.reload(); },
   setAll:function(o){ var n = mvFix(merge(DEF, o)); if (n.look) n.look.rotOk = +n.look.rot || 0; for (var k in S) delete S[k]; for (var k2 in n) S[k2] = n[k2]; save(); rebuild(); },
   fitSlide:fitSlide, remTest:function(r){ remRun(r); }, REM_NAMES:REM_NAMES, clearCache:function(){ dayCache = {}; lastRowKey = ""; lastDay = ""; }, tzOffset:tzOffset, remindList:remindList, VERSION:VERSION, METHODS:METHODS, checkVersion:checkVersion};
