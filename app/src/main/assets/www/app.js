@@ -1332,13 +1332,13 @@ function play(kind, pk){
   if (kind === "azanFajr") { kind = "azan"; pk = "fajr"; }
   if (kind === "azan") src = S.snd.azan === "short" ? "snd/azan.mp3" : S.snd.azan === "short2" ? "snd/azan_old.mp3" : S.snd.azan === "long" ? (pk === "fajr" && S.snd.fajrLong !== false ? "snd/azan_fajr.mp3" : "snd/azan_long.mp3") : "";
   if (kind === "iqama") src = S.snd.iqama === "short" ? "snd/iqama.mp3" : S.snd.iqama === "short2" ? "snd/iqama_old.mp3" : "";
-  var BEEPS = {beep_07a:1, beep_b:1, beep_t:1, drop1:1, drop3:1};
+  var BEEPS = {beep_07a:1, beep_06:1, beep_b:1, beep_t:1, drop1:1, drop3:1, alert1:1, alert3:1};
   if (kind === "beep") src = S.snd.beep ? "snd/" + (BEEPS[S.snd.beepFile] ? S.snd.beepFile : "beep_07a") + ".mp3" : "";
   var custom = (kind === "azan" && S.snd.azan === "custom") ? S.snd.azanId : (kind === "iqama" && S.snd.iqama === "custom") ? S.snd.iqamaId : "";
   // نغمة التطبيق: تُسمع عند الأذان والإقامة إذا لم يُختر صوت أذان أو إقامة (مثل تطبيق روائع السابق)
-  var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/alert3.mp3" : tn === "short" ? "snd/alert1.mp3" : ""; // نغمات تطبيق روائع السابق
+  var tn = S.snd.tone || "short", tsrc = tn === "clear" ? "snd/beep_04.wav" : tn === "short" ? "snd/beep_04.mp3" : ""; // نغمتا تطبيق روائع السابق (نفس النغمة بصيغتين)
   if (kind === "tone") src = tsrc;
-  if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/alert3.mp3" : "snd/alert1.mp3"; // تجربة نغمة من الإعدادات
+  if (/^tone[A-Z]/.test(kind)) src = kind === "toneClear" ? "snd/beep_04.wav" : "snd/beep_04.mp3"; // تجربة نغمة من الإعدادات
   if ((kind === "azan" || kind === "iqama") && !src && !custom) src = tsrc;
   var go = function(u){ if (!u) return; try { audio.pause(); audio.src = u; audio.volume = +S.snd.vol; var p = audio.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} };
   if (custom) mediaURL(custom).then(go); else go(src);
