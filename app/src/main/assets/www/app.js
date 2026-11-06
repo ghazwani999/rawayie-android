@@ -1932,3 +1932,23 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   // رجوع الشاشة للوضع الطبيعي: يترك المؤشر
   setInterval(function(){ if (locked && !rot()) { try { D.exitPointerLock(); } catch(e){} } }, 1000);
 })();
+
+/* ===== إخفاء مؤشر الفأرة بعد 4 ثوانٍ بدون حركة =====
+   الفأرة أو ريموت المؤشر (Air Mouse) يُظهر سهماً كان يبقى على الشاشة. يختفي بعد التوقف وفوراً عند أزرار الريموت،
+   ويعود مع أول حركة. يشمل مؤشر النظام (cursor:none) والمؤشر المرسوم في الشاشة المدوّرة بالمتصفح (.vcur).
+   تطبيق أندرويد يخفي مؤشره بنفسه أيضاً (MainActivity: sysCursorIdle و cursorIdle) */
+(function(){
+  "use strict";
+  var D = document, root = D.documentElement, t = 0, IDLE = 4000;
+  var st = D.createElement("style");
+  st.textContent = "html.nocur,html.nocur *{cursor:none!important}html.nocur .vcur{display:none!important}";
+  (D.head || root).appendChild(st);
+  function hide(){ clearTimeout(t); root.classList.add("nocur"); }
+  function wake(e){
+    if (e && e.pointerType && e.pointerType !== "mouse") return; // اللمس لا يُظهر مؤشراً
+    root.classList.remove("nocur"); clearTimeout(t); t = setTimeout(hide, IDLE);
+  }
+  ["mousemove", "mousedown", "wheel", "pointermove"].forEach(function(n){ D.addEventListener(n, wake, {passive:true, capture:true}); });
+  D.addEventListener("keydown", hide, true); // أزرار الريموت
+  hide();
+})();

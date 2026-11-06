@@ -23,6 +23,7 @@ import android.os.SystemClock;
 import android.view.Display;
 import android.view.InputDevice;
 import android.view.MotionEvent;
+import android.view.PointerIcon;
 import android.widget.FrameLayout;
 import android.view.KeyEvent;
 import android.view.View;
@@ -795,6 +796,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE)) sysCursorActive();
         if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
             if (vx < 0) { vx = ev.getX(); vy = ev.getY(); }
             web.requestFocus(); web.requestPointerCapture();
@@ -806,6 +808,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE)) sysCursorActive();
         // ضغطة الفأرة الأولى قبل الإمساك بها: تمسك الفأرة بدل الضغط في المكان الخطأ
         if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
             if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) { if (vx < 0) { vx = ev.getX(); vy = ev.getY(); } web.requestFocus(); web.requestPointerCapture(); showCursor(); }
@@ -835,10 +838,32 @@ public class MainActivity extends Activity {
         if (cursor != null) cursor.setVisibility(View.GONE);
     }
 
+    /* إخفاء مؤشر النظام في الوضع العادي (الشاشة غير مدوّرة): كان السهم يبقى ظاهراً ما دامت فأرة أو ريموت بمؤشر موصولاً.
+       يختفي بعد نفس المدة بلا حركة، وفوراً عند أزرار الريموت، ويعود مع أول حركة.
+       صفحة الشاشة تخفيه أيضاً بـ cursor:none (app.js)، وهذا احتياط لنسخ WebView التي لا تطبّق ذلك */
+    private boolean sysCursorHidden = false;
+    private final Runnable sysCursorIdle = () -> {
+        if (vDown) { ui.postDelayed(this.sysCursorIdle, CURSOR_IDLE_MS); return; }
+        if (Build.VERSION.SDK_INT >= 24 && web != null) {
+            try { web.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)); sysCursorHidden = true; } catch (Throwable ignored) { }
+        }
+    };
+
+    private void sysCursorActive() {
+        if (sysCursorHidden && Build.VERSION.SDK_INT >= 24 && web != null) {
+            try { web.setPointerIcon(null); } catch (Throwable ignored) { }
+            sysCursorHidden = false;
+        }
+        ui.removeCallbacks(sysCursorIdle); ui.postDelayed(sysCursorIdle, CURSOR_IDLE_MS);
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() == KeyEvent.ACTION_DOWN && cursor != null && cursor.getVisibility() == View.VISIBLE
                 && !e.isFromSource(InputDevice.SOURCE_MOUSE) && !vDown) hideCursor();
+        if (e.getAction() == KeyEvent.ACTION_DOWN && cssRot == 0 && !sysCursorHidden && !e.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            ui.removeCallbacks(sysCursorIdle); sysCursorIdle.run();
+        }
         return super.dispatchKeyEvent(e);
     }
 
