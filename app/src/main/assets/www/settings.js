@@ -127,7 +127,10 @@ function hubLinks(h){ var L = h[5].filter(function(c){ return allowed(c[0]); });
     return '<button type="button" class="tile" data-sec="' + c[0] + '"><span class="ti">' + ico(sc[3]) + '</span><span class="tt"><b>' + esc(sc[1]) + '</b><small>' + esc(c[1]) + '</small></span></button>'; }).join("") + '</div>'); }
 function allowed(sec){ if (MERGED[sec]) return MERGED[sec].some(allowedOne); return allowedOne(sec); }
 function allowedOne(sec){ if (sec === "home") return true; if (sec === "friday" && S.mtype === "masjid") return false; // مسجد بلا جمعة: لا تظهر إعداداتها if (/^m_/.test(sec)) return allowedOne("screens");
-  if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true; var w = WP_SEC[sec];
+  if (window.RAWAYIE_MANAGE) { if (MANAGE_HIDE[sec]) return false; var ms = manageSecs(); if (!ms) return true;
+    // صلاحيات المشرف الدقيقة: قسم بقسم (x_news، x_look…)، وأقسام الجهاز والصلاحيات للمدير فقط
+    if (!ms.length || ms.some(function(k){ return k.indexOf("x_") === 0; })) return !ADMIN_ONLY[sec] && ms.indexOf("x_" + (sec === "shadow" ? "hilite" : sec)) >= 0;
+    var w = WP_SEC[sec];
     return !!w && (ms.indexOf(w) >= 0 || (w === "slides" && ms.indexOf("boards") >= 0) || (sec === "rotate" && ms.indexOf("look") >= 0) || (w === "screens" && ms.indexOf("times") >= 0)); } if (siteLocked()) { sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && devSecs().indexOf(sec) >= 0; }
   if (!S.pass || role === "admin") return true; sec = PERM_OF[sec] || sec; return !ADMIN_ONLY[sec] && (S.sup.sections || []).indexOf(sec) >= 0; }
 /* الأقسام المسموح تعديلها من جهاز المسجد وهو مرتبط بالموقع وبدون كلمة سر (يحددها المدير من الموقع) */
