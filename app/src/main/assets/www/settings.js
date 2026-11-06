@@ -634,21 +634,20 @@ function toneCard(){
     opt("short", "نغمة قصيرة", "MP3 - مناسبة لمعظم شاشات الأندرويد", "toneShort") +
     opt("clear", "نغمة واضحة", "WAV - صوت تنبيه بديل", "toneClear") + '</div>' +
     '<div class="tuse">' + chk("sndUse", "", use, "استخدم الصوت للأذان (MP3)") +
-    '<div class="tsub">' + chk("sndOne", "azan", useA, nmA, !use, "azan") +
-      (useA ? kinds("azan", [["short","قصير"],["short2","قصير (التطبيق السابق)"],["long","كامل"],["custom","ملف من الجهاز"]]) +
-        (T.azan === "custom" ? '<div class="fld"><span><b>ملف الأذان</b>' + (T.azanId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="azan"></div>' : "") +
-        (T.azan === "long" ? chk("sndFajr", "", T.fajrLong !== false, "أذان الفجر بـ«الصلاة خير من النوم»", false, "azanFajr") : "") : "") +
-      chk("sndOne", "iqama", useI, nmI, !use, "iqama") +
-      (useI ? kinds("iqama", [["short","قصير"],["short2","قصير (التطبيق السابق)"],["custom","ملف من الجهاز"]]) +
-        (T.iqama === "custom" ? '<div class="fld"><span><b>ملف الإقامة</b>' + (T.iqamaId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="iqama"></div>' : "") : "") +
-    '</div></div>' +
+    '<div class="tsub">' + chk("sndOne", "azan", useA, "استخدام صوت أذان قصير", !use) + chk("sndOne", "iqama", useI, "استخدام صوت إقامة قصير", !use) + '</div></div>' +
     (more ? '<div class="tuse">' +
       togInv("تشغيل الأصوات", "snd.mute", "عند «لا» لا يُشغَّل أي صوت: النغمة والأذان والإقامة والتنبيهات") +
+      (useA ? sel("نوع صوت الأذان", "snd.azan", [["short","صوت أذان قصير"],["short2","صوت أذان قصير (التطبيق السابق)"],["long","الأذان كاملاً"],["custom","ملف من الجهاز"]]) +
+        (T.azan === "custom" ? '<div class="fld"><span><b>ملف الأذان</b>' + (T.azanId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="azan"></div>' : "") +
+        (T.azan === "long" ? tog("أذان الفجر بـ«الصلاة خير من النوم»", "snd.fajrLong") : "") : "") +
+      (useI ? sel("نوع صوت الإقامة", "snd.iqama", [["short","صوت إقامة قصير"],["short2","صوت إقامة قصير (التطبيق السابق)"],["custom","ملف من الجهاز"]]) +
+        (T.iqama === "custom" ? '<div class="fld"><span><b>ملف الإقامة</b>' + (T.iqamaId ? "<small>تم اختيار ملف</small>" : "") + '</span><input type="file" accept="audio/*" data-up="iqama"></div>' : "") : "") +
+      '<div class="row-end">' + (useA ? btn("تجربة الأذان", "test", "ghost", "azan") : "") + (useA && T.azan === "long" && T.fajrLong !== false ? btn("تجربة أذان الفجر", "test", "ghost", "azanFajr") : "") + (useI ? btn("تجربة الإقامة", "test", "ghost", "iqama") : "") + '</div>' +
       numIn("مستوى الصوت", "snd.vol", 0, 1, 0.1) +
       tog("صوت تنبيه قبل الإقامة بدقيقة", "snd.beep") +
       (T.beep ? sel("نغمة التنبيه قبل الإقامة", "snd.beepFile", [["beep_07a","نغمة 1"],["beep_06","نغمة 2"],["beep_b","نغمة 3: صفارة"],["beep_t","نغمة 4: قصيرة جداً"],["drop1","نغمة 5: قطرة"],["drop3","نغمة 6: ثلاث قطرات"],["alert1","نغمة 7: تنبيه"],["alert3","نغمة 8: تنبيه متكرر"]]) + '<div class="row-end">' + btn("تجربة التنبيه", "test", "ghost", "beep") + '</div>' : "") +
       '</div>' : '<div class="row-end">' + btn("خيارات أخرى", "sndMore", "sm ghost") + '</div>'),
-    use ? "عند الأذان يُسمع " + (useA ? nmA : "النغمة") + "، وعند الإقامة " + (useI ? nmI : "النغمة") + ". تمنع المتصفحات الصوت قبل أول لمسة، فاضغط «تفعيل الصوت» مرة بعد فتح الشاشة."
+    use ? "عند الأذان يُسمع " + (useA ? nmA : "النغمة") + "، وعند الإقامة " + (useI ? nmI : "النغمة") + ". لتغيير نوع الصوت (كامل أو من الجهاز) افتح «خيارات أخرى»."
         : "تُسمع النغمة عند الأذان وعند الإقامة. فعّل «استخدم الصوت للأذان» لسماع صوت الأذان والإقامة بدلاً منها.");
 }
 R.sounds = function(){ return toneCard() + remCard(); };
