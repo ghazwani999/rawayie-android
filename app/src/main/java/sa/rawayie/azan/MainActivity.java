@@ -867,6 +867,8 @@ public class MainActivity extends Activity {
         return super.dispatchKeyEvent(e);
     }
 
+    static final double MOUSE_BASE = 1.6; // سرعة الفأرة الأساسية في الشاشة المدوّرة
+
     private boolean onVMouse(MotionEvent ev) {
         if (web == null) return false;
         int a = ev.getActionMasked();
@@ -875,12 +877,21 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 23 && a == MotionEvent.ACTION_BUTTON_PRESS && (ev.getActionButton() & sec) != 0) { onBackPressed(); return true; }
         if ((a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_BUTTON_RELEASE) && (ev.getButtonState() & sec) != 0 && !vDown) return true;
         if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE || a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_UP) {
-            float dx = ev.getX(), dy = ev.getY();
             if (a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE) {
-                double t = Math.toRadians(cssRot);
-                float k = 1.4f;
-                vx += (float) (dx * Math.cos(t) - dy * Math.sin(t)) * k;
-                vy += (float) (dx * Math.sin(t) + dy * Math.cos(t)) * k;
+                /* أندرويد يجمع حركات الفأرة في دفعة واحدة لكل إطار: كل عينة فيها حركة صغيرة.
+                   كان يُؤخذ آخر عينة فقط، فتضيع أغلب الحركة (بطء)، ويضيع من أحد المحورين أكثر من الآخر (اتجاه مائل).
+                   الآن تُجمع كل العينات */
+                float dx = 0, dy = 0;
+                for (int h = 0, hs = ev.getHistorySize(); h < hs; h++) { dx += ev.getHistoricalX(h); dy += ev.getHistoricalY(h); }
+                dx += ev.getX(); dy += ev.getY();
+                // التدوير بمضاعفات 90 درجة فقط: قيم صحيحة (0 أو 1 أو -1) بلا كسور تميل الاتجاه
+                int c = (int) Math.round(Math.cos(Math.toRadians(cssRot))), sn = (int) Math.round(Math.sin(Math.toRadians(cssRot)));
+                /* السرعة: الإمساك بالفأرة يلغي تسارع النظام، فيُحسب هنا: الحركة البطيئة دقيقة، والسريعة تقطع الشاشة بسرعة.
+                   وتكبر مع عرض الشاشة حتى لا تبطؤ على الشاشات الكبيرة */
+                double m = Math.hypot(dx, dy);
+                float k = (float) (MOUSE_BASE * Math.max(1.0, web.getWidth() / 1920.0) * (1.0 + Math.min(m / 6.0, 3.0)));
+                vx += (dx * c - dy * sn) * k;
+                vy += (dx * sn + dy * c) * k;
                 vx = Math.max(0, Math.min(web.getWidth() - 1, vx));
                 vy = Math.max(0, Math.min(web.getHeight() - 1, vy));
                 showCursor();
