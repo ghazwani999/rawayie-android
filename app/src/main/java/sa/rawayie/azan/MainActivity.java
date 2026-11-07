@@ -202,12 +202,6 @@ public class MainActivity extends Activity {
                     if (imeBlock) { hideIme(); return null; }
                     return super.onCreateInputConnection(o);
                 }
-                // سهم الفأرة: معتدل للأعلى في كل الصفحة (الصفحة نفسها تطلب السهم المائل المعتاد)، ومخفي بعد الخمول
-                @Override public PointerIcon onResolvePointerIcon(MotionEvent e, int i) {
-                    if (Build.VERSION.SDK_INT < 24) return super.onResolvePointerIcon(e, i);
-                    if (sysCursorHidden) return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_NULL);
-                    PointerIcon up = upIcon(); return up != null ? up : super.onResolvePointerIcon(e, i);
-                }
             };
         } catch (Throwable t) {
             web = null;
@@ -798,25 +792,12 @@ public class MainActivity extends Activity {
         cssRot = ((r % 360) + 360) % 360;
         if (cursor != null) cursor.setRotation(cssRot);
         if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && web.hasPointerCapture()) web.releasePointerCapture();
-        sysCaptured = false;
         if (cssRot == 0) hideCursor();
-    }
-
-    /* بعض الريموتات (وضع الفأرة أو الجيروسكوب) ترسل حركات صغيرة جداً باستمرار حتى والريموت على الطاولة،
-       فكان مؤقت الإخفاء يبدأ من جديد دائماً ولا يختفي السهم. الحركة أقل من 3 نقاط لا تُحسب حركة */
-    private float lmx = -1, lmy = -1;
-    private boolean realMove(MotionEvent ev) {
-        int a = ev.getActionMasked();
-        if (a != MotionEvent.ACTION_HOVER_MOVE && a != MotionEvent.ACTION_MOVE) return true; // ضغط أو تمرير: حركة حقيقية
-        float x = ev.getX(), y = ev.getY();
-        boolean big = lmx < 0 || Math.abs(x - lmx) + Math.abs(y - lmy) >= 3f;
-        if (big) { lmx = x; lmy = y; }
-        return big;
     }
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent ev) {
-        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE) && realMove(ev)) sysCursorActive();
+        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE)) sysCursorActive();
         if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
             if (vx < 0) { vx = ev.getX(); vy = ev.getY(); }
             web.requestFocus(); web.requestPointerCapture();
@@ -840,7 +821,7 @@ public class MainActivity extends Activity {
     private void showCursor() {
         if (cursor == null || web == null) return;
         if (vx < 0) { vx = web.getWidth() / 2f; vy = web.getHeight() / 2f; }
-        cursor.setVisibility(View.VISIBLE); cursor.setX(vx - cursor.getWidth() / 2f); cursor.setY(vy); cursor.bringToFront();
+        cursor.setVisibility(View.VISIBLE); cursor.setX(vx); cursor.setY(vy); cursor.bringToFront();
         ui.removeCallbacks(cursorIdle); ui.postDelayed(cursorIdle, CURSOR_IDLE_MS);
     }
 
@@ -862,38 +843,16 @@ public class MainActivity extends Activity {
        يختفي بعد نفس المدة بلا حركة، وفوراً عند أزرار الريموت، ويعود مع أول حركة.
        صفحة الشاشة تخفيه أيضاً بـ cursor:none (app.js)، وهذا احتياط لنسخ WebView التي لا تطبّق ذلك */
     private boolean sysCursorHidden = false;
-    private boolean sysCaptured = false; // الوضع العادي: الفأرة ممسوكة فقط لإخفاء السهم
     private final Runnable sysCursorIdle = () -> {
         if (vDown) { ui.postDelayed(this.sysCursorIdle, CURSOR_IDLE_MS); return; }
         if (Build.VERSION.SDK_INT >= 24 && web != null) {
             try { web.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)); sysCursorHidden = true; } catch (Throwable ignored) { }
         }
-        /* تغيير شكل السهم لا يُطبَّق حتى تتحرك الفأرة، فكان السهم يبقى ظاهراً. الإمساك بالفأرة يخفيه فوراً على كل الأجهزة،
-           وأول حركة حقيقية تفلتها فيعود السهم في مكانه */
-        if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && !web.hasPointerCapture() && hasWindowFocus()) {
-            try { web.requestFocus(); web.requestPointerCapture(); sysCaptured = true; sysCursorHidden = true; } catch (Throwable ignored) { }
-        }
     };
 
-    private PointerIcon upIcon;
-    private PointerIcon upIcon() {
-        if (Build.VERSION.SDK_INT < 24) return null;
-        if (upIcon == null) {
-            try {
-                int sz = Math.max(40, Math.round(getResources().getDisplayMetrics().density * 24));
-                android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(sz, sz, android.graphics.Bitmap.Config.ARGB_8888);
-                Paint f = new Paint(Paint.ANTI_ALIAS_FLAG), l = new Paint(Paint.ANTI_ALIAS_FLAG);
-                f.setColor(Color.WHITE); l.setColor(Color.BLACK); l.setStyle(Paint.Style.STROKE); l.setStrokeWidth(Math.max(2f, sz / 16f));
-                CursorView.drawArrow(new Canvas(b), sz, sz, new Path(), f, l);
-                upIcon = PointerIcon.create(b, sz / 2f, 1f);
-            } catch (Throwable t) { upIcon = null; }
-        }
-        return upIcon;
-    }
     private void sysCursorActive() {
-        if (sysCaptured && Build.VERSION.SDK_INT >= 26 && web != null) { try { web.releasePointerCapture(); } catch (Throwable ignored) { } sysCaptured = false; }
         if (sysCursorHidden && Build.VERSION.SDK_INT >= 24 && web != null) {
-            try { web.setPointerIcon(upIcon()); } catch (Throwable ignored) { }
+            try { web.setPointerIcon(null); } catch (Throwable ignored) { }
             sysCursorHidden = false;
         }
         ui.removeCallbacks(sysCursorIdle); ui.postDelayed(sysCursorIdle, CURSOR_IDLE_MS);
@@ -914,19 +873,6 @@ public class MainActivity extends Activity {
     private boolean onVMouse(MotionEvent ev) {
         if (web == null) return false;
         int a = ev.getActionMasked();
-        if (cssRot == 0) { // إمساك الإخفاء فقط: أول حركة حقيقية أو ضغطة تعيد السهم
-            float tx = 0, ty = 0;
-            for (int h = 0, hs = ev.getHistorySize(); h < hs; h++) { tx += Math.abs(ev.getHistoricalX(h)); ty += Math.abs(ev.getHistoricalY(h)); }
-            tx += Math.abs(ev.getX()); ty += Math.abs(ev.getY());
-            if (a != MotionEvent.ACTION_MOVE && a != MotionEvent.ACTION_HOVER_MOVE || tx + ty >= 2f) sysCursorActive();
-            return true;
-        }
-        if ((a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE) && !vDown) { // ارتجاف الريموت لا يُظهر المؤشر
-            float tx = 0, ty = 0;
-            for (int h = 0, hs = ev.getHistorySize(); h < hs; h++) { tx += Math.abs(ev.getHistoricalX(h)); ty += Math.abs(ev.getHistoricalY(h)); }
-            tx += Math.abs(ev.getX()); ty += Math.abs(ev.getY());
-            if (tx + ty < 1.5f) return true;
-        }
         // الزر الأيمن وزر الرجوع في الفأرة: خطوة للخلف (مثل زر الرجوع في الريموت)
         int sec = MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_BACK;
         if (Build.VERSION.SDK_INT >= 23 && a == MotionEvent.ACTION_BUTTON_PRESS && (ev.getActionButton() & sec) != 0) { onBackPressed(); return true; }
@@ -980,14 +926,12 @@ public class MainActivity extends Activity {
         private final Path p = new Path();
         CursorView(android.content.Context c) {
             super(c); fill.setColor(Color.WHITE); line.setColor(Color.BLACK); line.setStyle(Paint.Style.STROKE); line.setStrokeWidth(2.5f);
-            setPivotY(0); setElevation(1000f);
+            setPivotX(0); setPivotY(0); setElevation(1000f);
         }
-        @Override protected void onSizeChanged(int w, int h, int ow, int oh) { super.onSizeChanged(w, h, ow, oh); setPivotX(w / 2f); }
-        @Override protected void onDraw(Canvas c) { drawArrow(c, getWidth(), getHeight(), p, fill, line); }
-        /* سهم معتدل رأسه للأعلى تماماً (بدل السهم المائل لليسار): يأخذ اتجاه الشاشة الرأسية أو الأفقية كما هي */
-        static void drawArrow(Canvas c, float w, float h, Path p, Paint fill, Paint line) {
-            p.reset(); p.moveTo(w * .5f, 1.5f); p.lineTo(w * .92f, h * .58f); p.lineTo(w * .62f, h * .5f); p.lineTo(w * .62f, h * .97f);
-            p.lineTo(w * .38f, h * .97f); p.lineTo(w * .38f, h * .5f); p.lineTo(w * .08f, h * .58f); p.close();
+        @Override protected void onDraw(Canvas c) {
+            float w = getWidth(), h = getHeight();
+            p.reset(); p.moveTo(1, 1); p.lineTo(1, h * .82f); p.lineTo(w * .28f, h * .62f); p.lineTo(w * .45f, h * .98f);
+            p.lineTo(w * .6f, h * .9f); p.lineTo(w * .43f, h * .56f); p.lineTo(w * .78f, h * .56f); p.close();
             c.drawPath(p, fill); c.drawPath(p, line);
         }
     }
