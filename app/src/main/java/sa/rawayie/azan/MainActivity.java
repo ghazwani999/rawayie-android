@@ -792,12 +792,25 @@ public class MainActivity extends Activity {
         cssRot = ((r % 360) + 360) % 360;
         if (cursor != null) cursor.setRotation(cssRot);
         if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && web.hasPointerCapture()) web.releasePointerCapture();
+        sysCaptured = false;
         if (cssRot == 0) hideCursor();
+    }
+
+    /* بعض الريموتات (وضع الفأرة أو الجيروسكوب) ترسل حركات صغيرة جداً باستمرار حتى والريموت على الطاولة،
+       فكان مؤقت الإخفاء يبدأ من جديد دائماً ولا يختفي السهم. الحركة أقل من 3 نقاط لا تُحسب حركة */
+    private float lmx = -1, lmy = -1;
+    private boolean realMove(MotionEvent ev) {
+        int a = ev.getActionMasked();
+        if (a != MotionEvent.ACTION_HOVER_MOVE && a != MotionEvent.ACTION_MOVE) return true; // ضغط أو تمرير: حركة حقيقية
+        float x = ev.getX(), y = ev.getY();
+        boolean big = lmx < 0 || Math.abs(x - lmx) + Math.abs(y - lmy) >= 3f;
+        if (big) { lmx = x; lmy = y; }
+        return big;
     }
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent ev) {
-        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE)) sysCursorActive();
+        if (cssRot == 0 && ev.isFromSource(InputDevice.SOURCE_MOUSE) && realMove(ev)) sysCursorActive();
         if (cssRot != 0 && Build.VERSION.SDK_INT >= 26 && web != null && ev.isFromSource(InputDevice.SOURCE_MOUSE) && !web.hasPointerCapture()) {
             if (vx < 0) { vx = ev.getX(); vy = ev.getY(); }
             web.requestFocus(); web.requestPointerCapture();
@@ -828,7 +841,7 @@ public class MainActivity extends Activity {
     /* إخفاء المؤشر الخاص: إطفاء وضع الفأرة في الريموت لا يرسل للتطبيق أي إشارة، فكان المؤشر يبقى معلقاً على الشاشة.
        يختفي الآن بعد ثوانٍ بلا حركة، وفوراً عند استخدام أزرار الريموت، ويعود في مكانه مع أول حركة للفأرة.
        الفأرة تبقى ممسوكة (لا يُفلت الإمساك) حتى لا يظهر مؤشر النظام غير المدوّر */
-    static final long CURSOR_IDLE_MS = 4000;
+    static final long CURSOR_IDLE_MS = 5000; // يختفي السهم بعد 5 ثوانٍ بلا حركة
     private final Runnable cursorIdle = () -> {
         if (vDown) { ui.postDelayed(this.cursorIdle, CURSOR_IDLE_MS); return; } // أثناء السحب لا يختفي
         if (cursor != null) cursor.setVisibility(View.GONE);
@@ -843,14 +856,21 @@ public class MainActivity extends Activity {
        يختفي بعد نفس المدة بلا حركة، وفوراً عند أزرار الريموت، ويعود مع أول حركة.
        صفحة الشاشة تخفيه أيضاً بـ cursor:none (app.js)، وهذا احتياط لنسخ WebView التي لا تطبّق ذلك */
     private boolean sysCursorHidden = false;
+    private boolean sysCaptured = false; // الوضع العادي: الفأرة ممسوكة فقط لإخفاء السهم
     private final Runnable sysCursorIdle = () -> {
         if (vDown) { ui.postDelayed(this.sysCursorIdle, CURSOR_IDLE_MS); return; }
         if (Build.VERSION.SDK_INT >= 24 && web != null) {
             try { web.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)); sysCursorHidden = true; } catch (Throwable ignored) { }
         }
+        /* تغيير شكل السهم لا يُطبَّق حتى تتحرك الفأرة، فكان السهم يبقى ظاهراً. الإمساك بالفأرة يخفيه فوراً على كل الأجهزة،
+           وأول حركة حقيقية تفلتها فيعود السهم في مكانه */
+        if (cssRot == 0 && Build.VERSION.SDK_INT >= 26 && web != null && !web.hasPointerCapture() && hasWindowFocus()) {
+            try { web.requestFocus(); web.requestPointerCapture(); sysCaptured = true; sysCursorHidden = true; } catch (Throwable ignored) { }
+        }
     };
 
     private void sysCursorActive() {
+        if (sysCaptured && Build.VERSION.SDK_INT >= 26 && web != null) { try { web.releasePointerCapture(); } catch (Throwable ignored) { } sysCaptured = false; }
         if (sysCursorHidden && Build.VERSION.SDK_INT >= 24 && web != null) {
             try { web.setPointerIcon(null); } catch (Throwable ignored) { }
             sysCursorHidden = false;
@@ -873,6 +893,19 @@ public class MainActivity extends Activity {
     private boolean onVMouse(MotionEvent ev) {
         if (web == null) return false;
         int a = ev.getActionMasked();
+        if (cssRot == 0) { // إمساك الإخفاء فقط: أول حركة حقيقية أو ضغطة تعيد السهم
+            float tx = 0, ty = 0;
+            for (int h = 0, hs = ev.getHistorySize(); h < hs; h++) { tx += Math.abs(ev.getHistoricalX(h)); ty += Math.abs(ev.getHistoricalY(h)); }
+            tx += Math.abs(ev.getX()); ty += Math.abs(ev.getY());
+            if (a != MotionEvent.ACTION_MOVE && a != MotionEvent.ACTION_HOVER_MOVE || tx + ty >= 2f) sysCursorActive();
+            return true;
+        }
+        if ((a == MotionEvent.ACTION_MOVE || a == MotionEvent.ACTION_HOVER_MOVE) && !vDown) { // ارتجاف الريموت لا يُظهر المؤشر
+            float tx = 0, ty = 0;
+            for (int h = 0, hs = ev.getHistorySize(); h < hs; h++) { tx += Math.abs(ev.getHistoricalX(h)); ty += Math.abs(ev.getHistoricalY(h)); }
+            tx += Math.abs(ev.getX()); ty += Math.abs(ev.getY());
+            if (tx + ty < 1.5f) return true;
+        }
         // الزر الأيمن وزر الرجوع في الفأرة: خطوة للخلف (مثل زر الرجوع في الريموت)
         int sec = MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_BACK;
         if (Build.VERSION.SDK_INT >= 23 && a == MotionEvent.ACTION_BUTTON_PRESS && (ev.getActionButton() & sec) != 0) { onBackPressed(); return true; }

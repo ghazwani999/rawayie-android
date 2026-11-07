@@ -1984,13 +1984,15 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
    تطبيق أندرويد يخفي مؤشره بنفسه أيضاً (MainActivity: sysCursorIdle و cursorIdle) */
 (function(){
   "use strict";
-  var D = document, root = D.documentElement, t = 0, IDLE = 4000;
+  var D = document, root = D.documentElement, t = 0, IDLE = 5000, lx = -1, ly = -1; // يختفي السهم بعد 5 ثوانٍ بلا حركة
   var st = D.createElement("style");
   st.textContent = "html.nocur,html.nocur *{cursor:none!important}html.nocur .vcur{display:none!important}";
   (D.head || root).appendChild(st);
   function hide(){ clearTimeout(t); root.classList.add("nocur"); }
   function wake(e){
     if (e && e.pointerType && e.pointerType !== "mouse") return; // اللمس لا يُظهر مؤشراً
+    // ارتجاف ريموت الفأرة (أقل من 3 نقاط) لا يُعد حركة، وإلا لا يختفي السهم أبداً
+    if (e && (e.type === "mousemove" || e.type === "pointermove")) { if (lx >= 0 && Math.abs(e.clientX - lx) + Math.abs(e.clientY - ly) < 3) return; lx = e.clientX; ly = e.clientY; }
     root.classList.remove("nocur"); clearTimeout(t); t = setTimeout(hide, IDLE);
   }
   ["mousemove", "mousedown", "wheel", "pointermove"].forEach(function(n){ D.addEventListener(n, wake, {passive:true, capture:true}); });
