@@ -2688,10 +2688,13 @@ function hm12(v){ v = String(v || ""); if (!/^\d{1,2}:\d{2}/.test(v)) return v; 
   if (window.__t12) return; window.__t12 = true;
   var css = document.createElement("style");
   css.textContent = ".t12w{position:relative;display:inline-block;max-width:100%}.t12w>input[type=time]{color:transparent!important;-webkit-text-fill-color:transparent}" +
-    ".t12w>input[type=time]::-webkit-datetime-edit{opacity:0}.t12v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font:inherit;font-weight:700;white-space:nowrap;direction:rtl}" +
+    ".t12w>input[type=time]::-webkit-datetime-edit{opacity:0}.t12v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font:inherit;font-weight:700;white-space:nowrap;direction:rtl;box-sizing:border-box;padding:0 2.6em}" +
     ".t12v.empty{opacity:.55;font-weight:400}";
   (document.head || document.documentElement).appendChild(css);
-  function show(inp){ var v = inp.parentNode && inp.parentNode.querySelector(".t12v"); if (!v) return; var t = hm12(inp.value); v.textContent = t || "--:-- "; v.classList.toggle("empty", !t); }
+  /* النص فوق مربع الوقت نفسه (موضعه ومقاسه)، ويترك مكان أيقونة الساعة فلا يتداخل معها */
+  function show(inp){ var v = inp.parentNode && inp.parentNode.querySelector(".t12v"); if (!v) return; var t = hm12(inp.value); v.textContent = t || "--:-- "; v.classList.toggle("empty", !t);
+    var w = inp.parentNode; if (!w.dataset.fit) { w.dataset.fit = "1"; var cs = getComputedStyle(inp); if (cs.display === "block" || cs.width === w.parentNode.clientWidth + "px" || /100%/.test(inp.style.width)) { w.style.display = "block"; } }
+    if (inp.offsetWidth) { v.style.inset = "auto"; v.style.left = inp.offsetLeft + "px"; v.style.top = inp.offsetTop + "px"; v.style.width = inp.offsetWidth + "px"; v.style.height = inp.offsetHeight + "px"; } }
   function wrap(inp){ if (inp.dataset.t12) return; inp.dataset.t12 = "1"; var w = document.createElement("span"); w.className = "t12w";
     inp.parentNode.insertBefore(w, inp); w.appendChild(inp); var v = document.createElement("span"); v.className = "t12v"; v.setAttribute("aria-hidden", "true"); w.appendChild(v); show(inp); }
   function scan(root){ Array.prototype.forEach.call((root || document).querySelectorAll ? (root || document).querySelectorAll('input[type="time"]') : [], wrap); }
